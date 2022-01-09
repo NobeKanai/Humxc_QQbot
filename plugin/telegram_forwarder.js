@@ -41,7 +41,7 @@ const token = config.token;
 //事件管理器
 const telegram = new EventEmitter();
 //更新消息的间隔
-var updateTime = 1000;
+var updateTime = 10000;
 var httpsTimeout = 3000;
 var update_id;
 init();
@@ -53,16 +53,20 @@ telegram.on("message", (message) => {
   console.log(message);
 });
 function getUpdate() {
-  let method = "getUpdates " + update_id;
+  let method = "getUpdates?offset=-1";
   getHttp(method).then((update) => {
-    telegram.emit("message", JSON.parse(update.toString()));
+    let data = JSON.parse(update.toString());
+    if (data.result[0].update_id != update_id) {
+      update_id = data.result[0].update_id;
+      telegram.emit("message", data.result[0].message);
+    }
   });
 }
 function init() {
   let method = "getUpdates";
   getHttp(method).then((update) => {
     let data = JSON.parse(update.toString());
-    update_id = data.result.slice(-1).update_id;
+    update_id = data.result.slice(-1)[0].update_id;
   });
 }
 
