@@ -1,4 +1,8 @@
-!/lib/*
-!/plugin/*
-!/QQbot.js
-!/config.js
+node_modules
+.vscode
+data
+
+!lib/*
+!plugin/*
+!QQbot.js
+!config.js
