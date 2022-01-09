@@ -6,5 +6,5 @@ var oicqConfig = config.oicqConfig;
 var clients = new Array();
 //加载配置
 botConfigs.forEach((botConfig) => {
- clients.push(createClient(oicqConfig,botConfig))
+  clients.push(createClient(oicqConfig, botConfig));
 });
