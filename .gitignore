@@ -1,9 +1,20 @@
 node_modules
 .vscode
 data
+oicq
+test
+plugin_data
 
 !lib/*
 !plugin/*
 !QQbot.js
 !config.js
 
+a.js
+a.json
+m.js
+QQbot copy.js
+test.js
+data/1124922489/token
+plugin_data/telegram_forwarder/key.pem
+plugin_data/telegram_forwarder/crt.pem
