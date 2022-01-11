@@ -1,5 +1,6 @@
-*
-!lib/*
-!plugin/*
-!QQbot.js
-!config.js
+node_modules
+oicq-main
+plugin_data
+pcakage.json
+pcakage-lock.json
+data
