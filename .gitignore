@@ -1,10 +1,4 @@
-node_modules
-.vscode
-data
-oicq
-test
-plugin_data
-
+*
 !lib/*
 !plugin/*
 !QQbot.js
