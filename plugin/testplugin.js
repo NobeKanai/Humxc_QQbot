@@ -7,13 +7,18 @@ class testplugin {
     this.name = "自带插件";
     this.client = client;
     this.oicq = client.getOicq();
-    const config = [
+    this.page = {
+      pageName: "set",
+      subPage: [{ pageName: "help" }],
+    };
+    this.config = [
       {
         trigger: "EVENT",
         eventName: "message",
         method: this.fun1,
       },
       {
+        page: "set",
         trigger: "KEYWORD",
         keyWord: "吃饭",
         method: this.fun2,
@@ -28,7 +33,6 @@ class testplugin {
         method: this.fun4,
       },
     ];
-    this.config = config;
   }
   getConfig() {
     return this.config;
