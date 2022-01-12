@@ -12,7 +12,7 @@ export class BotClient {
   /** 插件列表 */
   private pluginList: string[];
   /** 加载的插件 */
-  private plugin: any;
+  private plugin: Array<any> = [];
   constructor(oicqConfig: any, botConfig: any) {
     this.oicqConfig = oicqConfig;
     this.qq = botConfig.account;
