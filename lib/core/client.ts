@@ -1,5 +1,5 @@
 import { createClient, Client, MessageEvent } from "oicq";
-
+import { loadPlugin } from "./pluginLoader";
 export class BotClient {
   /** oicq客户端的配置 */
   private oicqConfig: any;
@@ -11,7 +11,8 @@ export class BotClient {
   public readonly admin: Set<number>;
   /** 插件列表 */
   private pluginList: string[];
-
+  /** 加载的插件 */
+  private plugin: any;
   constructor(oicqConfig: any, botConfig: any) {
     this.oicqConfig = oicqConfig;
     this.qq = botConfig.account;
@@ -23,6 +24,9 @@ export class BotClient {
         this.oicqConfig[botConfig.account]
       );
     this.oicq = createClient(this.qq, this.oicqConfig.general);
+    //加载插件
+    loadPlugin(this.plugin, this.pluginList);
+
     //登录
     this.oicq
       .on("system.login.qrcode", function (e) {
