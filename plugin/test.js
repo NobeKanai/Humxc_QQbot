@@ -17,4 +17,3 @@ module.exports.test = class test extends plugin {
     this.area = "GLOBAL";
   }
 };
-console.log(new test());

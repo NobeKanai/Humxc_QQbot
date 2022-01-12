@@ -25,7 +25,7 @@ export class BotClient {
       );
     this.oicq = createClient(this.qq, this.oicqConfig.general);
     //加载插件
-    loadPlugin(this.plugin, this.pluginList);
+    loadPlugin(this.qq, this.plugin, this.pluginList);
 
     //登录
     this.oicq

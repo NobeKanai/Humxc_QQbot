@@ -20,7 +20,7 @@ module.exports = {
       //管理员账户
       admin: [2928607724],
       //插件列表(string[]类型,plugin文件夹内js文件的名称)仅输入"ALL"将加载所有插件，留空则不添加插件
-      pluginList: ["test"],
+      pluginList: ["test.js"],
     },
     //多个QQ号就在这个数组里添加多个配置
   ],
