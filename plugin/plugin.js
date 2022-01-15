@@ -1,8 +1,8 @@
 pluginConfig = {
   /** 触发方式： "EVENT"(事件) | "RUNTIME"(插件被加载时运行) | "KEYWORD"(关键词) | "SETTIME"(定时) */
-  trigger: "EVENT",
+  /** 只允许在area为"GLOBAL"时使用"EVENT"，否则不会被加载 */
   /** 
-   触发事件: 支持oicq库的事件，详细内容查看oicq/lib/events.d.ts
+   触发事件(_event): 支持oicq库的事件，详细内容查看oicq/lib/events.d.ts
    好友申请: "friend"
    群申请: "group"
    通知: "notice"
@@ -49,6 +49,7 @@ pluginConfig = {
    隐藏事件: 监听所有收到的包: "internal.sso"
    隐藏事件: 对方正在输入: "internal.input"  _event
    */
+  trigger: "EVENT",
   _event: "message",
   /** 满足上述设置的条件时，便会运行run函数 */
   run: (e) => {

@@ -1,4 +1,4 @@
-import fs from "fs";
+const fs = require("fs");
 import path = require("path");
 var pluginPath = path.join(process.cwd(), "plugin");
 export function loadPlugin(
@@ -51,3 +51,4 @@ export function loadPlugin(
 
   console.log(qq + " - 插件加载完毕!");
 }
+export function parsePlugin() {}
