@@ -1,6 +1,4 @@
-import exp from "constants";
 import { createClient, Client, MessageEvent, Config } from "oicq";
-import { loadPlugin } from "./pluginLoader";
 export interface BotConfig extends Config {
   password: string;
   admin: Array<number> | undefined;

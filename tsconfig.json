@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "./js",
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
 
     "newLine": "LF",
@@ -99,5 +100,5 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "include": ["lib"]
+  "include": ["lib", "QQbot.js"]
 }
