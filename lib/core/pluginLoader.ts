@@ -2,6 +2,7 @@ const fs = require("fs");
 import path = require("path");
 var pluginPath = path.join(process.cwd(), "plugin");
 export function loadPlugin(
+  client: any,
   qq: number,
   plugin: Array<any>,
   pluginList: string[]
@@ -33,15 +34,15 @@ export function loadPlugin(
   }
   function loadFile(list: Array<string>) {
     list.forEach((file: string) => {
-      console.log(qq + " - 正在加载[" + path.basename(file) + "]");
+      client.logger.info("正在加载创建[" + path.basename(file) + "]");
       let p;
       try {
         p = require(file);
       } catch (error) {
-        console.log(
-          qq + " - 加载[" + path.basename(file) + "]时出错，已跳过该插件"
+        client.logger.warn(
+          "加载[" + path.basename(file) + "]时出错，已跳过该插件"
         );
-        console.log(error);
+        client.logger.info(error);
       }
       for (let key in p) {
         plugin.push(p[key]);
@@ -49,6 +50,6 @@ export function loadPlugin(
     });
   }
 
-  console.log(qq + " - 插件加载完毕!");
+  client.logger.info("插件加载完毕!");
 }
 export function parsePlugin() {}

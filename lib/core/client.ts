@@ -1,6 +1,5 @@
 import { createClient, Client, MessageEvent } from "oicq";
 import { loadPlugin } from "./pluginLoader";
-import { Plugin } from "./plugin";
 export class BotClient {
   /** oicq客户端的配置 */
   private oicqConfig: any;
@@ -17,7 +16,10 @@ export class BotClient {
   private pluginObject: Array<any> = [];
   /** 事件列表 */
   private _event: Map<string, Array<any>> = new Map();
+  logger: any;
+  password: string;
   constructor(oicqConfig: any, botConfig: any) {
+    this.password = botConfig.password;
     this.oicqConfig = oicqConfig;
     this.qq = botConfig.account;
     this.admin = new Set<number>(botConfig.admin);
@@ -28,8 +30,9 @@ export class BotClient {
         this.oicqConfig[botConfig.account]
       );
     this.oicq = createClient(this.qq, this.oicqConfig.general);
+    this.logger = this.oicq.logger;
     //加载插件
-    loadPlugin(this.qq, this.pluginClass, this.pluginList);
+    loadPlugin(this, this.qq, this.pluginClass, this.pluginList);
     //解析插件
     this.pluginClass.forEach((cla) => {
       this.pluginObject.push(new cla(this));
@@ -91,18 +94,22 @@ export class BotClient {
     });
 
     //登录
-    this.oicq
-      .on("system.login.qrcode", function (e) {
-        //扫码后按回车登录
-        process.stdin.once("data", () => {
-          this.login();
-        });
-      })
-      .login();
+    if (this.password != "" || this.password != undefined) {
+      this.oicq.login("hxcstc0710010018");
+    } else {
+      this.oicq
+        .on("system.login.qrcode", function (e) {
+          //扫码后按回车登录
+          process.stdin.once("data", () => {
+            this.login();
+          });
+        })
+        .login();
+    }
 
     //登录成功
     this.oicq.on("system.online", () => {
-      console.log(this.qq + ":已经登录!");
+      this.logger.info("已经登录!");
     });
   }
 

@@ -67,6 +67,6 @@ module.exports = class plugin {
   info = "这是用来测试的插件";
   /** 配置信息,用数组来存储多个配置 */
   config = [pluginConfig];
-  /** 插件运行时数据隔离: "GLOBAL" "PRIVATE"(私聊) "GROUP"(群聊) */
+  /** 插件运行时数据隔离: "GLOBAL"(全局) "PRIVATE"(私聊) "GROUP"(群聊) */
   area = "GLOBAL";
 };

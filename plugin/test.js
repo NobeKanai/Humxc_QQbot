@@ -1,6 +1,5 @@
 "use strict";
 const plugin = require("./plugin");
-const { Client } = require("oicq")
 module.exports.test = class test extends plugin {
   constructor(botClient) {
     super();
