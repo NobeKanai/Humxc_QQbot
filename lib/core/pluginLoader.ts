@@ -62,7 +62,6 @@ export function loadPlugin(client: BotClient) {
             client.logger.debug(`${key}: ${p.config[key]}`);
           }
         }
-        client.logger.debug(`----------`);
       } else {
         client.logger.warn(`插件缺少关键配置，已取消加载`);
         continue;
@@ -94,17 +93,16 @@ export function loadPlugin(client: BotClient) {
       }
 
       //注册事件
-      let events: Array<Array<string>> = p.config.Event;
+      let events: Array<string> = p.config.Event;
       for (let i = 0; i < events.length; i++) {
-        const event = events[i];
         client.registeEvent(
-          event[0],
-          `${p.config.SessionArea.toLowerCase()}.${p.config.PluginName}.${
-            event[1]
-          }`
+          events[i],
+          `${p.config.SessionArea.toLowerCase()}.${p.config.PluginName}`
         );
       }
     }
+
+    client.logger.debug(`----------`);
   }
 
   client.logger.info("插件加载完毕!");

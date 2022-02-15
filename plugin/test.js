@@ -16,12 +16,15 @@ module.exports.config = {
    * oicq的具体的事件列表见:TODO
    * 也可以添加自定义事件
    */
-  Event: [["message", "func1"]],
+  Event: ["message"],
 };
 module.exports.test = class test {
   constructor(botClient) {
     /** 机器人客户端 */
     this.bot = botClient;
+  }
+  event(d) {
+    console.log("触发");
   }
   func1(e) {
     console.log(this);

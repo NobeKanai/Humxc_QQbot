@@ -23,10 +23,8 @@ export class Session {
       const plugin = pluginList[i];
     }
   }
-  run(data: any, path: Array<string>) {
-    let p = this.plugins.get(path[1]);
-    console.log(p);
-
-    console.log(eval(`p.${path[2]}`)(data));
+  event(eventName: string, data: any, pluginName: string) {
+    let p = this.plugins.get(pluginName);
+    p.event(eventName, data);
   }
 }

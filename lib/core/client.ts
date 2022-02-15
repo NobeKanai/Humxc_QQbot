@@ -55,7 +55,7 @@ export class BotClient extends Client {
     }
   }
   registeEvent(event: string, path: string) {
-    this.logger.debug(`已监听事件${event}`);
+    this.logger.debug(`${path}已监听事件${event}`);
     this.on(event, (data: any) => {
       this.triggerEvent(event, data, path);
     });
@@ -63,7 +63,7 @@ export class BotClient extends Client {
   triggerEvent(event: string, data: any, _path: string) {
     let path = _path.split(".");
     this.logger.debug(`${_path}触发了事件${event}`);
-    this.getSession(path[0], "global").run(data, path);
+    this.getSession(path[0], "global").event(event, data, path[1]);
   }
   //** 机器人登录 */
   botLogin() {
