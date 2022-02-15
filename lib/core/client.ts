@@ -1,119 +1,48 @@
-import { createClient, Client, MessageEvent } from "oicq";
+import exp from "constants";
+import { createClient, Client, MessageEvent, Config } from "oicq";
 import { loadPlugin } from "./pluginLoader";
-export class BotClient {
-  /** oicq客户端的配置 */
-  private oicqConfig: any;
-  /** oicq客户端 */
-  private oicq: Client;
-  /** 机器人的qq */
-  public readonly qq: number;
-  /** 管理员列表 */
-  public readonly admin: Set<number>;
-  /** 插件列表 */
-  private pluginList: string[];
-  /** 加载的插件类 */
-  private pluginClass: Array<any> = [];
-  private pluginObject: Array<any> = [];
-  /** 事件列表 */
-  private _event: Map<string, Array<any>> = new Map();
-  logger: any;
+export interface BotConfig extends Config {
   password: string;
-  constructor(oicqConfig: any, botConfig: any) {
-    this.password = botConfig.password;
-    this.oicqConfig = oicqConfig;
-    this.qq = botConfig.account;
-    this.admin = new Set<number>(botConfig.admin);
-    this.pluginList = botConfig.pluginList;
-    if (this.oicqConfig[botConfig.account] != undefined)
-      this.oicqConfig.general = Object.assign(
-        this.oicqConfig.general,
-        this.oicqConfig[botConfig.account]
-      );
-    this.oicq = createClient(this.qq, this.oicqConfig.general);
-    this.logger = this.oicq.logger;
-    //加载插件
-    loadPlugin(this, this.qq, this.pluginClass, this.pluginList);
-    //解析插件
-    this.pluginClass.forEach((cla) => {
-      this.pluginObject.push(new cla(this));
-    });
-    this.pluginObject.forEach((pluginObj) => {
-      switch (pluginObj.area) {
-        //加载GLOBAL插件
-        case "GLOBAL":
-          // for (let index = 0; index < pluginObj.config.length; index++) {
-          //   switch (pluginObj.config[index].trigger) {
-          //     //添加EVEVNT
-          //     case "EVENT":
-          //       this._event.set(
-          //         pluginObj.config[index]._event,
-          //         pluginObj.config[index].run
-          //       );
-          //       break;
-
-          //     default:
-          //       break;
-          //   }
-          // }
-          pluginObj.config.forEach(
-            (config: {
-              trigger: string;
-              _event: Array<string>;
-              run: Function;
-            }) => {
-              switch (config.trigger) {
-                //添加EVEVNT
-                case "EVENT":
-                  config._event.forEach((eventName) => {
-                    if (!this._event.has(eventName)) {
-                      this._event.set(eventName, new Array<any>());
-                    }
-                    this._event.get(eventName)?.push(pluginObj);
-                  });
-
-                  break;
-
-                default:
-                  break;
-              }
-            }
-          );
-          break;
-
-        default:
-          break;
-      }
-    });
-    //设置事件
-
-    this._event.forEach((value, key) => {
-      console.log(key);
-      this.oicq.on(key, (e) =>
-        value.forEach((obj) => obj.eventTrigger(key, e))
-      );
-    });
-
-    //登录
-    if (this.password != "" || this.password != undefined) {
-      this.oicq.login("hxcstc0710010018");
+  admin: Array<number> | undefined;
+  pluginList: Array<string> | undefined;
+}
+export class BotClient extends Client {
+  /** 账户密码 */
+  private password: string | undefined;
+  /** 管理员列表 */
+  private admin: Array<number> | undefined;
+  /** 插件列表 */
+  private pluginList: string[] | undefined;
+  /** 加载的插件 */
+  private globalPlugin: Array<any> = [];
+  private privatePlugin: Array<any> = [];
+  private groupPlugin: Array<any> = [];
+  constructor(uin: number, conf?: BotConfig) {
+    super(uin, conf);
+    this.admin = conf?.admin;
+    this.password = conf?.password;
+    this.pluginList = conf?.pluginList;
+  }
+  async shutDown() {
+    this.logger.warn("正在关闭...");
+    if (this.isOnline()) {
+      await this.logout();
+      this.removeAllListeners();
+      return true;
     } else {
-      this.oicq
-        .on("system.login.qrcode", function (e) {
-          //扫码后按回车登录
-          process.stdin.once("data", () => {
-            this.login();
-          });
-        })
-        .login();
+      return false;
     }
-
-    //登录成功
-    this.oicq.on("system.online", () => {
-      this.logger.info("已经登录!");
-    });
   }
-
-  getOicq() {
-    return this.oicq;
+  botLogin() {
+    if (this.password != "" || this.password != undefined) {
+      this.login(this.password);
+    } else {
+      //TODO:验证码登录
+    }
   }
+}
+/** 创建一个客户端 (=new Client) */
+export function createBot(uin: number, config?: BotConfig) {
+  if (isNaN(Number(uin))) throw new Error(uin + " is not an OICQ account");
+  return new BotClient(Number(uin), config);
 }
