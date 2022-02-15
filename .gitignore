@@ -1,9 +1,8 @@
 node_modules
 oicq-main
-plugin_data
 pcakage.json
 pcakage-lock.json
 data
 config.js
 .vscode
-js
+test

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./js",
+    "outDir": "./test",
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
 
     "newLine": "LF",
