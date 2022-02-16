@@ -41,7 +41,7 @@ export function loadPlugin(client: BotClient) {
       let p: any;
       try {
         p = require(file);
-      } catch (error: any) {
+      } catch (error) {
         client.logger.warn(
           "加载[" + path.basename(file) + "]时出错，已跳过该插件"
         );
