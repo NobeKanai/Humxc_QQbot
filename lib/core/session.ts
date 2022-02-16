@@ -27,7 +27,7 @@ export class Session {
     let p = this.plugins.get(pluginName);
     p.event(eventName, data);
   }
-  keyWord(keyWord: string, data: any, pluginName: string) {
+  keyword(keyWord: string, data: any, pluginName: string) {
     let p = this.plugins.get(pluginName);
     p.keyword(keyWord, data);
   }

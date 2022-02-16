@@ -5,4 +5,4 @@ pcakage-lock.json
 data
 config.js
 .vscode
-test
+test/data

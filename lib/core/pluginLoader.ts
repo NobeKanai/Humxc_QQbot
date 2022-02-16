@@ -41,11 +41,11 @@ export function loadPlugin(client: BotClient) {
       let p: any;
       try {
         p = require(file);
-      } catch (error) {
+      } catch (error: any) {
         client.logger.warn(
           "加载[" + path.basename(file) + "]时出错，已跳过该插件"
         );
-        client.logger.info(error);
+        client.errorCallAdmin(error);
         continue;
       }
 

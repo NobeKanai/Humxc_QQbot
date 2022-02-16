@@ -4,8 +4,10 @@ import { Session } from "./session";
 export interface BotConfig extends Config {
   password: string;
   admin: Array<number> | undefined;
-  pluginList: Array<string> | undefined;
+  plugin_list: Array<string> | undefined;
+  error_call_admin: boolean | undefined;
 }
+
 export class BotClient extends Client {
   /** 账户密码 */
   private password: string | undefined;
@@ -13,6 +15,8 @@ export class BotClient extends Client {
   private admin: Array<number> | undefined;
   /** 插件列表 */
   public pluginList: string[] | undefined;
+  /** 发送错误给管理员 */
+  public error_call_admin: boolean | undefined = false;
   /** 加载的插件 */
   private Plugins: any = {
     global: {},
@@ -31,7 +35,8 @@ export class BotClient extends Client {
     super(uin, conf);
     this.admin = conf?.admin;
     this.password = conf?.password;
-    this.pluginList = conf?.pluginList;
+    this.pluginList = conf?.plugin_list;
+    this.error_call_admin = conf?.error_call_admin;
     this.Plugins = loadPlugin(this);
     this.sessions.global.set(
       "global",
@@ -47,6 +52,23 @@ export class BotClient extends Client {
     );
     this.KeywordListenr();
   }
+  errorCallAdmin(error: any) {
+    this.logger.error(error);
+
+    if (error.name == "Error") {
+      if (this.isOnline() && this.admin != undefined) {
+        for (let i = 0; i < this.admin.length; i++) {
+          this.sendPrivateMsg(this.admin[i], error.message);
+        }
+      }
+    } else {
+      if (this.isOnline() && this.admin != undefined) {
+        for (let i = 0; i < this.admin.length; i++) {
+          this.sendPrivateMsg(this.admin[i], error);
+        }
+      }
+    }
+  }
   async shutDown() {
     this.logger.warn("正在关闭...");
     if (this.isOnline()) {
@@ -57,12 +79,14 @@ export class BotClient extends Client {
       return false;
     }
   }
-
+  restart() {
+    this.emit("restart", this.uin + "");
+  }
   getSession(sessionArea: string, sessionID: string) {
     if (this.sessions[sessionArea].has(sessionID)) {
       return this.sessions[sessionArea].get(sessionID);
     } else {
-      this.logger.error(`没有找到会话`);
+      this.errorCallAdmin(`没有找到会话`);
     }
   }
   registeEvent(event: string, path: string) {
@@ -101,21 +125,56 @@ export class BotClient extends Client {
         }
         break;
       default:
-        this.logger.error(`触发事件时出现了意想不到的错误`);
-        this.logger.error(event);
-        this.logger.error(_path);
-        this.logger.error(data);
+        this.errorCallAdmin(`触发事件时出现了意想不到的错误`);
+        this.errorCallAdmin(event);
+        this.errorCallAdmin(_path);
+        this.errorCallAdmin(data);
         break;
     }
 
     this.getSession(path[0], sessionID).event(event, data, path[1]);
   }
   KeywordListenr() {
-    this.on("message", (data) => {
+    this.on("message", (data: any) => {
       for (const key of this.keywords.keys()) {
         if (data.raw_message.search(new RegExp(key)) != -1) {
+          //消息匹配了关键词
           let path: any = this.keywords.get(key)?.split(".");
-          this.getSession(path[0], "global").Keyword(key, data, path[1]);
+          this.logger.debug(`${this.keywords.get(key)}触发了关键词:${key}`);
+          let sessionID = path[0];
+          switch (path[0]) {
+            case "global":
+              break;
+            case "group":
+              if (data.group_id != undefined) {
+                sessionID = data.group_id;
+                if (!this.sessions.group.has(sessionID)) {
+                  this.sessions.group.set(
+                    sessionID,
+                    new Session(this, sessionID, "group", this.Plugins.group)
+                  );
+                }
+              }
+              break;
+            case "private":
+              if (data.from_id != undefined) {
+                sessionID = data.from_id;
+                if (!this.sessions.private.has(sessionID)) {
+                  this.sessions.private.set(
+                    sessionID,
+                    new Session(this, sessionID, "group", this.Plugins.private)
+                  );
+                }
+              }
+              break;
+            default:
+              this.errorCallAdmin(`触发关键词时出现了意想不到的错误`);
+              this.errorCallAdmin(key);
+              this.errorCallAdmin(this.keywords.get(key));
+              this.errorCallAdmin(data);
+              break;
+          }
+          this.getSession(path[0], sessionID).keyword(key, data, path[1]);
         }
       }
     });
