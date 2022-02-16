@@ -1,5 +1,5 @@
 "use strict";
-module.exports.config = {
+module.exports.PluginConfig = {
   /** 插件名称(必需) */
   PluginName: "testPlugin",
   /** 机器人版本 */
@@ -19,7 +19,7 @@ module.exports.config = {
   Event: ["message", "system.online"],
   Keyword: ["关键词", `a+`, `重启`],
 };
-module.exports.test = class test {
+module.exports.Plugin = class {
   constructor(botClient) {
     /** 机器人客户端 */
     this.bot = botClient;
@@ -30,7 +30,7 @@ module.exports.test = class test {
         console.log("登陆了");
         break;
       case "message":
-        this.bot.logger.info(`收到了好多条消息 - ${data.raw_message}`);
+        this.bot.logger.info(`收到了一条消息 - ${data.raw_message}`);
         break;
       default:
         break;

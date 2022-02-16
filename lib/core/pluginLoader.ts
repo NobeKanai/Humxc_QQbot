@@ -50,16 +50,17 @@ export function loadPlugin(client: BotClient) {
       }
 
       if (
-        p.config != undefined ||
-        p.config.PluginName != undefined ||
-        p.config.PluginName != "" ||
-        p.config.PluginClass != undefined ||
-        p.config.PluginClass != ""
+        !(
+          p.PluginConfig == undefined ||
+          p.Plugin == undefined ||
+          p.PluginConfig.PluginName == undefined ||
+          p.PluginConfig.PluginName == ""
+        )
       ) {
         client.logger.debug(`----------`);
-        for (const key in p.config) {
-          if (Object.prototype.hasOwnProperty.call(p.config, key)) {
-            client.logger.debug(`${key}: ${p.config[key]}`);
+        for (const key in p.PluginConfig) {
+          if (Object.prototype.hasOwnProperty.call(p.PluginConfig, key)) {
+            client.logger.debug(`${key}: ${p.PluginConfig[key]}`);
           }
         }
       } else {
@@ -68,45 +69,43 @@ export function loadPlugin(client: BotClient) {
       }
 
       //根据SessionAeea分类
-      switch (p.config.SessionArea) {
+      switch (p.PluginConfig.SessionArea) {
         case "GLOBAL":
-          if (Object.prototype.hasOwnProperty.call(p, p.config.PluginClass)) {
-            let pluginClass = p[p.config.PluginClass];
-            Plugins.global[p.config.PluginName] = pluginClass;
-          }
+          Plugins.global[p.PluginConfig.PluginName] = p.Plugin;
+
           break;
         case "GROUP":
-          if (Object.prototype.hasOwnProperty.call(p, p.config.PluginClass)) {
-            let pluginClass = p[p.config.PluginClass];
-            Plugins.group[p.config.PluginName] = pluginClass;
-          }
+          Plugins.group[p.PluginConfig.PluginName] = p.Plugin;
+
           break;
         case "PRIVATE":
-          if (Object.prototype.hasOwnProperty.call(p, p.config.PluginClass)) {
-            let pluginClass = p[p.config.PluginClass];
-            Plugins.private[p.config.PluginName] = pluginClass;
-          }
+          Plugins.private[p.PluginConfig.PluginName] = p.Plugin;
+
           break;
         default:
           client.logger.warn(`插件没有设置或者设置了不支持的SessionArea`);
           continue;
       }
       //描述插件位置的路径
-      let plugin_path: string = `${p.config.SessionArea.toLowerCase()}.${
-        p.config.PluginName
+      let plugin_path: string = `${p.PluginConfig.SessionArea.toLowerCase()}.${
+        p.PluginConfig.PluginName
       }`;
       //注册事件
-      if (p.config.Event != undefined || p.config.Event != "") {
-        let events: Array<string> = p.config.Event;
+      if (!(p.PluginConfig.Event == undefined || p.PluginConfig.Event == "")) {
+        let events: Array<string> = p.PluginConfig.Event;
         for (let i = 0; i < events.length; i++) {
           client.registeEvent(events[i], plugin_path);
-          client.logger.debug(`${p.config.PluginName}已监听事件:${events[i]}`);
+          client.logger.debug(
+            `${p.PluginConfig.PluginName}已监听事件:${events[i]}`
+          );
         }
       }
 
       //注册关键词
-      if (p.config.keyword != undefined || p.config.keyword != "") {
-        let keywords: Array<string> = p.config.Keyword;
+      if (
+        !(p.PluginConfig.keyword == undefined || p.PluginConfig.keyword == "")
+      ) {
+        let keywords: Array<string> = p.PluginConfig.Keyword;
         for (let i = 0; i < keywords.length; i++) {
           client.keywords.set(keywords[i], plugin_path);
         }
