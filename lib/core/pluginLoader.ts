@@ -91,14 +91,25 @@ export function loadPlugin(client: BotClient) {
           client.logger.warn(`插件没有设置或者设置了不支持的SessionArea`);
           continue;
       }
-
+      //描述插件位置的路径
+      let plugin_path: string = `${p.config.SessionArea.toLowerCase()}.${
+        p.config.PluginName
+      }`;
       //注册事件
-      let events: Array<string> = p.config.Event;
-      for (let i = 0; i < events.length; i++) {
-        client.registeEvent(
-          events[i],
-          `${p.config.SessionArea.toLowerCase()}.${p.config.PluginName}`
-        );
+      if (p.config.Event != undefined || p.config.Event != "") {
+        let events: Array<string> = p.config.Event;
+        for (let i = 0; i < events.length; i++) {
+          client.registeEvent(events[i], plugin_path);
+          client.logger.debug(`${p.config.PluginName}已监听事件:${events[i]}`);
+        }
+      }
+
+      //注册关键词
+      if (p.config.keyword != undefined || p.config.keyword != "") {
+        let keywords: Array<string> = p.config.Keyword;
+        for (let i = 0; i < keywords.length; i++) {
+          client.keywords.set(keywords[i], plugin_path);
+        }
       }
     }
 

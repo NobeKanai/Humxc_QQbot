@@ -25,6 +25,8 @@ export class BotClient extends Client {
     group: new Map(),
     private: new Map(),
   };
+  //关键词存储
+  keywords: Map<string, string> = new Map();
   constructor(uin: number, conf?: BotConfig) {
     super(uin, conf);
     this.admin = conf?.admin;
@@ -35,6 +37,15 @@ export class BotClient extends Client {
       "global",
       new Session(this, "global", "GLOBAL", this.Plugins.global)
     );
+    this.sessions.group.set(
+      "group",
+      new Session(this, "group", "GROUP", this.Plugins.group)
+    );
+    this.sessions.private.set(
+      "private",
+      new Session(this, "private", "PRIVATE", this.Plugins.private)
+    );
+    this.KeywordListenr();
   }
   async shutDown() {
     this.logger.warn("正在关闭...");
@@ -47,23 +58,73 @@ export class BotClient extends Client {
     }
   }
 
-  getSession(sessionArea: string, sesssionID: string) {
-    if (this.sessions[sessionArea].has(sesssionID)) {
-      return this.sessions[sessionArea].get("global");
+  getSession(sessionArea: string, sessionID: string) {
+    if (this.sessions[sessionArea].has(sessionID)) {
+      return this.sessions[sessionArea].get(sessionID);
     } else {
       this.logger.error(`没有找到会话`);
     }
   }
   registeEvent(event: string, path: string) {
-    this.logger.debug(`${path}已监听事件${event}`);
     this.on(event, (data: any) => {
       this.triggerEvent(event, data, path);
     });
   }
+
   triggerEvent(event: string, data: any, _path: string) {
-    let path = _path.split(".");
     this.logger.debug(`${_path}触发了事件${event}`);
-    this.getSession(path[0], "global").event(event, data, path[1]);
+    let path = _path.split(".");
+    let sessionID = path[0];
+    switch (path[0]) {
+      case "global":
+        break;
+      case "group":
+        if (data.group_id != undefined) {
+          sessionID = data.group_id;
+          if (!this.sessions.group.has(sessionID)) {
+            this.sessions.group.set(
+              sessionID,
+              new Session(this, sessionID, "group", this.Plugins.group)
+            );
+          }
+        }
+        break;
+      case "private":
+        if (data.from_id != undefined) {
+          sessionID = data.from_id;
+          if (!this.sessions.private.has(sessionID)) {
+            this.sessions.private.set(
+              sessionID,
+              new Session(this, sessionID, "group", this.Plugins.private)
+            );
+          }
+        }
+        break;
+      default:
+        this.logger.error(`触发事件时出现了意想不到的错误`);
+        this.logger.error(event);
+        this.logger.error(_path);
+        this.logger.error(data);
+        break;
+    }
+
+    this.getSession(path[0], sessionID).event(event, data, path[1]);
+  }
+  KeywordListenr() {
+    this.on("message", (data) => {
+      for (const key of this.keywords.keys()) {
+        if (data.raw_message.search(new RegExp(key)) != -1) {
+          let path: any = this.keywords.get(key)?.split(".");
+          this.getSession(path[0], "global").Keyword(key, data, path[1]);
+        }
+      }
+    });
+  }
+  sessionCreater() {
+    this.on("message.group", (data) => {});
+  }
+  registeKeyword(Keyword: string, path: string) {
+    this.keywords.set(Keyword, path);
   }
   //** 机器人登录 */
   botLogin() {

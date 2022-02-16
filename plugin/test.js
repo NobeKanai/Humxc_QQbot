@@ -6,10 +6,10 @@ module.exports.config = {
   BotVersion: "0.0.1",
   /** 插件版本 */
   PluginVersion: "1.0.0",
+  /** 插件运行时数据隔离: "GLOBAL" "PRIVATE"(私聊) "GROUP"(群聊) */
+  SessionArea: "GROUP",
   /** 说明 */
   Info: "这是用来测试的插件啊",
-  /** 插件运行时数据隔离: "GLOBAL" "PRIVATE"(私聊) "GROUP"(群聊) */
-  SessionArea: "GLOBAL",
   /** 导入插件的类 */
   PluginClass: "test",
   /** 注册事件,二维数组表示,前一个参数为事件名称，后一个参数为函数名称
@@ -17,6 +17,7 @@ module.exports.config = {
    * 也可以添加自定义事件
    */
   Event: ["message"],
+  Keyword: ["关键词", `a+`],
 };
 module.exports.test = class test {
   constructor(botClient) {
@@ -25,6 +26,9 @@ module.exports.test = class test {
   }
   event(d) {
     console.log("触发");
+  }
+  keyword(keyWorld, data) {
+    console.log("关键词" + keyWorld);
   }
   func1(e) {
     console.log(this);
