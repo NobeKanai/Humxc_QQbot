@@ -1,11 +1,18 @@
 import { createClient, Client, MessageEvent, Config } from "oicq";
 import { loadPlugin } from "./pluginLoader";
 import { Session } from "./session";
+import Log4js from "log4js";
 export interface BotConfig extends Config {
+  //机器人的QQ密码
   password: string;
+  //管理员列表
   admin: Array<number> | undefined;
+  //插件列表
   plugin_list: Array<string> | undefined;
+  //是否将错误消息发送给管理员
   error_call_admin: boolean | undefined;
+  //是否保存日志到文件
+  save_log_file: boolean | undefined;
 }
 
 export class BotClient extends Client {
@@ -33,6 +40,23 @@ export class BotClient extends Client {
   keywords: Map<string, string> = new Map();
   constructor(uin: number, conf?: BotConfig) {
     super(uin, conf);
+    if (conf?.save_log_file != undefined && conf?.save_log_file) {
+      Log4js.configure({
+        appenders: {
+          production: {
+            type: "dateFile",
+            filename: "log/bot.log",
+            alwaysIncludePattern: true,
+            keepFileExt: true,
+            daysToKeep: 30,
+          },
+        },
+        categories: {
+          default: { appenders: ["production"], level: "debug" },
+        },
+      });
+    }
+
     this.admin = conf?.admin;
     this.password = conf?.password;
     this.pluginList = conf?.plugin_list;

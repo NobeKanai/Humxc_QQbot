@@ -49,15 +49,16 @@ module.exports.Plugin = class {
       console.log(message);
     });
     this.bot.logger.debug("设置任务");
-    // test();
 
-    this.getHttp("update")
-      .then((list) => {
-        this.sendImg(this.hasDifferent(list));
-      })
-      .catch((error) => {
-        this.bot.errorCallAdmin(error);
-      });
+    setInterval(() => {
+      this.getHttp("update")
+        .then((list) => {
+          this.sendImg(this.hasDifferent(list));
+        })
+        .catch((error) => {
+          this.bot.errorCallAdmin(error);
+        });
+    }, 600000);
   }
   getHttp(_path = "") {
     return new Promise((resolve, reject) => {
