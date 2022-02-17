@@ -29,7 +29,7 @@ for (const qq of bots.keys()) {
         startBot(qq);
     }
     else {
-        logger.error(`错误的QQ号:[${qq}]`);
+        logger.error(`错误的QQ号:[${qq}],请尝试修改config.js`);
         continue;
     }
 }
