@@ -10,9 +10,9 @@ export interface BotConfig extends Config {
   //插件列表
   plugin_list: Array<string> | undefined;
   //是否将错误消息发送给管理员
-  error_call_admin: boolean | undefined;
+  error_call_admin: string | undefined;
   //是否保存日志到文件
-  save_log_file: boolean | undefined;
+  save_log_file: string | undefined;
 }
 
 export class BotClient extends Client {
@@ -23,7 +23,8 @@ export class BotClient extends Client {
   /** 插件列表 */
   public pluginList: string[] | undefined;
   /** 发送错误给管理员 */
-  public error_call_admin: boolean | undefined = false;
+  public error_call_admin: string | undefined = "false";
+
   /** 加载的插件 */
   private Plugins: any = {
     global: {},
@@ -40,7 +41,7 @@ export class BotClient extends Client {
   keywords: Map<string, string> = new Map();
   constructor(uin: number, conf?: BotConfig) {
     super(uin, conf);
-    if (conf?.save_log_file != undefined && conf?.save_log_file) {
+    if (conf?.save_log_file != undefined && conf?.save_log_file == "true") {
       Log4js.configure({
         appenders: {
           production: {
@@ -78,17 +79,18 @@ export class BotClient extends Client {
   }
   errorCallAdmin(error: any) {
     this.logger.error(error);
-
-    if (error.name == "Error") {
-      if (this.isOnline() && this.admin != undefined) {
-        for (let i = 0; i < this.admin.length; i++) {
-          this.sendPrivateMsg(this.admin[i], error.message);
+    if (this.error_call_admin == "true") {
+      if (error.name == "Error") {
+        if (this.isOnline() && this.admin != undefined) {
+          for (let i = 0; i < this.admin.length; i++) {
+            this.sendPrivateMsg(this.admin[i], error.message);
+          }
         }
-      }
-    } else {
-      if (this.isOnline() && this.admin != undefined) {
-        for (let i = 0; i < this.admin.length; i++) {
-          this.sendPrivateMsg(this.admin[i], error);
+      } else {
+        if (this.isOnline() && this.admin != undefined) {
+          for (let i = 0; i < this.admin.length; i++) {
+            this.sendPrivateMsg(this.admin[i], error);
+          }
         }
       }
     }
@@ -226,7 +228,7 @@ export class BotClient extends Client {
   }
 }
 /** 创建一个客户端 (=new Client) */
-export function createBot(uin: number, config?: BotConfig) {
+export function createBot(uin: string, config?: BotConfig) {
   if (isNaN(Number(uin))) throw new Error(uin + " is not an OICQ account");
   return new BotClient(Number(uin), config);
 }
