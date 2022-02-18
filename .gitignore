@@ -6,3 +6,5 @@ config.js
 .vscode
 test/data
 log
+App/config.js
+App/data

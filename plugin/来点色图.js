@@ -58,7 +58,7 @@ module.exports.Plugin = class {
         .catch((error) => {
           this.bot.errorCallAdmin(error);
         });
-    }, 10000);
+    }, 600000);
   }
   getHttp(_path = "") {
     return new Promise((resolve, reject) => {
