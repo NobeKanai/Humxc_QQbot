@@ -103,7 +103,7 @@ export function loadPlugin(client: BotClient) {
 
       //注册关键词
       if (
-        !(p.PluginConfig.keyword == undefined || p.PluginConfig.keyword == "")
+        !(p.PluginConfig.Keyword == undefined || p.PluginConfig.Keyword == "")
       ) {
         let keywords: Array<string> = p.PluginConfig.Keyword;
         for (let i = 0; i < keywords.length; i++) {

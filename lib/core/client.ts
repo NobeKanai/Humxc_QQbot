@@ -122,7 +122,7 @@ export class BotClient extends Client {
   }
 
   triggerEvent(event: string, data: any, _path: string) {
-    this.logger.debug(`${_path}触发了事件${event}`);
+    this.logger.debug(`${_path} 触发了事件 ${event}`);
     let path = _path.split(".");
     let sessionID = path[0];
     switch (path[0]) {
