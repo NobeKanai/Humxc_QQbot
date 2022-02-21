@@ -1,6 +1,6 @@
 const NodeRSA = require("node-rsa");
 const http = require("http");
-const { getConig, saveConfig } = require("../lib/pluginFather");
+const { getConfig, saveConfig } = require("../lib/pluginFather");
 var defaultConfig = {
   QQ: "用户的qq",
   PhoneNumber: "电话号码(必填)",
@@ -35,11 +35,9 @@ module.exports.Plugin = class {
     this.intervalID = 0;
     this.name = "Fuck掌上智慧校园";
     this.bot = bot;
-    this.config = getConig(bot, this.name, defaultConfig);
+    this.config = getConfig(this, defaultConfig);
   }
-  saveConfig() {
-    saveConfig(this.bot, this.name, this.config);
-  }
+
   event(eventName) {
     switch (eventName) {
       case "system.online":
@@ -118,7 +116,7 @@ module.exports.Plugin = class {
     this.config.Token = json.rows[0].token;
     this.config.Studid = json.rows[0].studentID;
     this.config.Cardid = json.rows[0].cardid;
-    this.saveConfig();
+    saveConfig(this);
   }
   async 查询用量() {
     if (!this.inited) {
@@ -196,7 +194,7 @@ module.exports.Plugin = class {
       case "1":
         if (this.config.Waterid != json.rows[0].waterid) {
           this.config.Waterid = json.rows[0].waterid;
-          this.saveConfig();
+          saveConfig(this);
         }
         if (json.rows[0].info == "OPENOK") {
           resp = "水阀:" + json.rows[0].dormitory + " 被成功开启";

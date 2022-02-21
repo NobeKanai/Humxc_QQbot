@@ -1,120 +1,118 @@
-import { BotClient } from "./core/client";
 import path from "path";
-import { json } from "stream/consumers";
-const fs = require("fs");
-export function getConig(
-  bot: BotClient,
-  pluginName: string,
-  defaultConfig: any = "{}"
-) {
-  let config = defaultConfig;
-  if (pluginName == undefined || pluginName == "") {
+import fs from "fs";
+//获取配置对象
+export function getConfig(plugin: any, defaultConfig: any) {
+  if (plugin.name == undefined || plugin.name == "") {
     throw new Error("创建配置文件失败 - 没有插件名称");
   }
-  let configPath = path.join(
+  let configDir = path.join(
     require?.main?.path || process.cwd(),
     "data",
-    bot.uin + "",
-    pluginName,
-    "config.json"
+    plugin.bot.uin + "",
+    plugin.name
   );
-
-  try {
-    if (fs.existsSync(configPath)) {
-      config = JSON.parse(fs.readFileSync(configPath).toString());
-    } else {
-      function mkdirsSync(dirName: string) {
-        if (fs.existsSync(dirName)) {
-          return true;
-        } else {
-          if (mkdirsSync(path.dirname(dirName))) {
-            fs.mkdirSync(dirName);
-            return true;
-          }
-        }
-      }
-      mkdirsSync(path.dirname(configPath));
-      saveConfig(bot, pluginName, config);
+  let configPath = path.join(configDir, "config.json");
+  if (fs.existsSync(configPath)) {
+    return readJson(configPath);
+  } else {
+    //配置文件不存在，创建文件
+    try {
+      makeJson(configDir, "config.json", defaultConfig);
+    } catch (error) {
+      plugin.bot.logger.error(error);
     }
-  } catch (err) {
-    bot.errorCallAdmin(err);
+
+    return defaultConfig;
   }
-  return config;
 }
-export function saveConfig(bot: BotClient, pluginName: string, config: any) {
-  let configPath = path.join(
+//保存配置对象到文件
+export function saveConfig(plugin: any) {
+  let configDir = path.join(
     require?.main?.path || process.cwd(),
     "data",
-    bot.uin + "",
-    pluginName,
-    "config.json"
+    plugin.bot.uin + "",
+    plugin.name
   );
   try {
-    fs.writeFileSync(configPath, JSON.stringify(config));
+    makeJson(configDir, "config.json", plugin.config);
   } catch (error) {
-    bot.errorCallAdmin(error);
+    plugin.bot.logger.error(error);
   }
 }
-export function getConfigDir(bot: BotClient, pluginName: string) {
+//获取数据对象
+export function getData(plugin: any, defaultConfig: any) {
+  if (plugin.name == undefined || plugin.name == "") {
+    throw new Error("创建数据文件失败 - 没有插件名称");
+  }
+  let configDir = path.join(
+    require?.main?.path || process.cwd(),
+    "data",
+    plugin.bot.uin + "",
+    plugin.name
+  );
+  let configPath = path.join(configDir, "data.json");
+  if (fs.existsSync(configPath)) {
+    return readJson(configPath);
+  } else {
+    //配置文件不存在，创建文件
+    try {
+      makeJson(configDir, "data.json", defaultConfig);
+    } catch (error) {
+      plugin.bot.logger.error(error);
+    }
+
+    return defaultConfig;
+  }
+}
+//保存数据对象到文件
+export function saveData(plugin: any) {
+  let configDir = path.join(
+    require?.main?.path || process.cwd(),
+    "data",
+    plugin.bot.uin + "",
+    plugin.name
+  );
+  try {
+    makeJson(configDir, "data.json", plugin.config);
+  } catch (error) {
+    plugin.bot.logger.error(error);
+  }
+}
+//获取插件数据目录
+export function getDir(plugin: any) {
   return path.join(
     require?.main?.path || process.cwd(),
     "data",
-    bot.uin + "",
-    pluginName,
-    "config.json"
+    plugin.bot.uin + "",
+    plugin.name
   );
 }
-export function getData(
-  bot: BotClient,
-  pluginName: string,
-  defaultData: any = "{}"
-) {
-  let data = defaultData;
-  if (pluginName == undefined || pluginName == "") {
-    throw new Error("创建数据文件失败 - 没有插件名称");
-  }
-  let dataPath = path.join(
-    require?.main?.path || process.cwd(),
-    "data",
-    bot.uin + "",
-    pluginName,
-    "data.json"
-  );
 
+function makeJson(jsonDir: string, jsonName: string, data: any) {
+  let filePath = path.join(jsonDir, jsonName);
   try {
-    if (fs.existsSync(dataPath)) {
-      data = JSON.parse(fs.readFileSync(dataPath).toString());
-    } else {
-      function mkdirsSync(dirName: string) {
-        if (fs.existsSync(dirName)) {
-          return true;
-        } else {
-          if (mkdirsSync(path.dirname(dirName))) {
-            fs.mkdirSync(dirName);
-            return true;
-          }
-        }
-      }
-      mkdirsSync(path.dirname(dataPath));
-      saveData(bot, pluginName, data);
+    if (!fs.existsSync(jsonDir)) {
+      mkDirsSync(jsonDir);
     }
-  } catch (err) {
-    bot.errorCallAdmin(err);
-  }
-  return data;
-}
-export function saveData(bot: BotClient, pluginName: string, data: any) {
-  let dataPath = path.join(
-    require?.main?.path || process.cwd(),
-    "data",
-    bot.uin + "",
-    pluginName,
-    "data.json"
-  );
-  try {
-    fs.writeFileSync(dataPath, JSON.stringify(data));
-    bot.logger.info(`已保存数据 - ${dataPath}}`);
+    fs.writeFileSync(filePath, JSON.stringify(data));
+    return filePath;
   } catch (error) {
-    bot.errorCallAdmin(error);
+    throw error;
   }
+}
+function mkDirsSync(dirName: string) {
+  if (fs.existsSync(dirName)) {
+    return true;
+  } else {
+    if (mkDirsSync(path.dirname(dirName))) {
+      fs.mkdirSync(dirName);
+      return true;
+    }
+  }
+}
+function readJson(jsonPath: string) {
+  if (fs.existsSync(jsonPath)) {
+    return JSON.parse(fs.readFileSync(jsonPath).toString());
+  }
+  return {};
 }

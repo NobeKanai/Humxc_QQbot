@@ -1,15 +1,15 @@
 var RconClient = require("rcon");
-const EventEmitter = require("events");
-const { getConig } = require("../lib/pluginFather");
+const { getConfig } = require("../lib/pluginFather");
+var defaultConfig={
 
-const eventEmitter = new EventEmitter();
+}
 module.exports.PluginConfig = {
   PluginName: "查服",
   BotVersion: "0.0.1",
   PluginVersion: "1.0.0",
   SessionArea: "GLOBAL",
   Info: "使用Rcon对mc服务器进行查服",
-  Event: ["system.online", "message.private"],
+  Event: ["system.online", "message.group"],
   Keyword: [`查服`],
 };
 module.exports.Plugin = class {
@@ -17,7 +17,7 @@ module.exports.Plugin = class {
     this.bot = bot;
     this.name = "查服";
     this.rcon = [];
-    this.config = getConig(this.bot, this.name, [
+    this.config = getConfig(this, [
       {
         name: "填一个名称",
         ip: "服务器的ip",

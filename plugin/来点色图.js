@@ -1,6 +1,6 @@
 "use strict";
 var http = require("https");
-const { getConig, getData, saveData } = require("../lib/pluginFather");
+const { getConfig, getData, saveData } = require("../lib/pluginFather");
 const path = require("path");
 
 const { segment } = require("oicq");
@@ -26,8 +26,8 @@ module.exports.Plugin = class {
   constructor(bot) {
     this.name = "give-me-20-Client";
     this.bot = bot;
-    this.config = getConig(bot, this.name, defaultConfig);
-    this.data = getData(bot, this.name, []);
+    this.config = getConfig(this, defaultConfig);
+    this.data = getData(this, []);
   }
   event(eventName, data) {
     switch (eventName) {
