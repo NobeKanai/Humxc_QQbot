@@ -252,7 +252,7 @@ module.exports.Plugin = class {
           }
         }
     }
-    saveData(this.bot, this.name, this.data);
+    saveData(this);
   }
   waitMessage(tips = "") {
     return new Promise((r, j) => {
