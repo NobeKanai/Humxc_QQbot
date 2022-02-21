@@ -13,7 +13,7 @@ module.exports.PluginConfig = {
   PluginVersion: "1.0.0",
   SessionArea: "GLOBAL",
   Info: "使用Rcon与MC服务器进行交互",
-  Keyword: [`^查服`],
+  Keyword: ["^查服", "^mc "],
 };
 module.exports.Plugin = class {
   constructor(bot) {
@@ -30,16 +30,32 @@ module.exports.Plugin = class {
     if (new Set(this.config.group).has(data.group_id)) {
       switch (keyword) {
         case "^查服":
-          this.rcon.sendCmd("list").then((msg) => {
-            if (msg == undefined) {
-              msg = "undefined";
-            }
-            data.reply(parseList(msg)).catch((err) => {
+          this.rcon
+            .sendCmd("list")
+            .then((msg) => {
+              data.reply(parseList(msg)).catch((err) => {
+                console.log(err);
+              });
+            })
+            .catch((msg) => {
+              data.reply(parseList(msg)).catch((err) => {
+                console.log(err);
+              });
+            });
+          break;
+
+        case "^mc ": {
+          let msg =
+            "§b<" +
+            data.sender.card +
+            ">§e " +
+            data.raw_message.substr(2, data.raw_message.length + 1);
+          this.rcon.sendCmd("say " + msg).catch((msg) => {
+            data.reply(msg).catch((err) => {
               console.log(err);
             });
           });
-
-          break;
+        }
       }
     }
   }
@@ -82,15 +98,14 @@ class rcon extends RconClient {
     return new Promise((resolve) => {
       this.login()
         .then(() => {
-          resolve;
           this.send(command);
         })
         .catch((err) => {
-          resolve(err.message);
+          reject(err.message);
         });
 
       this.once("error", (err) => {
-        resolve(err.message);
+        reject(err.message);
       }).once("response", (msg) => {
         resolve(msg);
       });
