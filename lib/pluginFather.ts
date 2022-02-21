@@ -40,40 +40,40 @@ export function saveConfig(plugin: any) {
   }
 }
 //获取数据对象
-export function getData(plugin: any, defaultConfig: any) {
+export function getData(plugin: any, defaultData: any) {
   if (plugin.name == undefined || plugin.name == "") {
     throw new Error("创建数据文件失败 - 没有插件名称");
   }
-  let configDir = path.join(
+  let dataDir = path.join(
     require?.main?.path || process.cwd(),
     "data",
     plugin.bot.uin + "",
     plugin.name
   );
-  let configPath = path.join(configDir, "data.json");
-  if (fs.existsSync(configPath)) {
-    return readJson(configPath);
+  let dataPath = path.join(dataDir, "data.json");
+  if (fs.existsSync(dataPath)) {
+    return readJson(dataPath);
   } else {
     //配置文件不存在，创建文件
     try {
-      makeJson(configDir, "data.json", defaultConfig);
+      makeJson(dataDir, "data.json", defaultData);
     } catch (error) {
       plugin.bot.logger.error(error);
     }
 
-    return defaultConfig;
+    return defaultData;
   }
 }
 //保存数据对象到文件
 export function saveData(plugin: any) {
-  let configDir = path.join(
+  let dataDir = path.join(
     require?.main?.path || process.cwd(),
     "data",
     plugin.bot.uin + "",
     plugin.name
   );
   try {
-    makeJson(configDir, "data.json", plugin.config);
+    makeJson(dataDir, "data.json", plugin.data);
   } catch (error) {
     plugin.bot.logger.error(error);
   }
