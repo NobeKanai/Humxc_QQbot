@@ -53,7 +53,9 @@ module.exports.Plugin = class {
         case "^开水":
           this.开水()
             .then((resp) => {
-              this.bot.sendPrivateMsg(this.config.QQ, resp);
+              this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
+                this.bot.logger.error(err);
+              });
             })
             .catch((err) => {
               this.bot.logger.warn(this.name + ":" + err);
@@ -64,7 +66,9 @@ module.exports.Plugin = class {
         case "^关水":
           this.关水()
             .then((resp) => {
-              this.bot.sendPrivateMsg(this.config.QQ, resp);
+              this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
+                this.bot.logger.error(err);
+              });
             })
             .catch((err) => {
               this.bot.logger.warn(this.name + ":" + err);
@@ -78,7 +82,11 @@ module.exports.Plugin = class {
     if (flag == true) {
       clearInterval(this.intervalID);
     }
-    this.bot.sendPrivateMsg(this.config.QQ, `${msg}\n澡币余额:${this.balance}`);
+    this.bot
+      .sendPrivateMsg(this.config.QQ, `${msg}\n澡币余额:${this.balance}`)
+      .catch((err) => {
+        this.bot.logger.error(err);
+      });
   }
   async init() {
     if (
@@ -235,11 +243,7 @@ module.exports.Plugin = class {
       this.config.PublicKey
     );
     let data = `param=${param}"&cardid=${this.config.Cardid}&token=${this.config.Token}&RoomNum=${this.config.RoomNum}&waterid=${this.config.Waterid}`;
-    clearInterval(this.intervalID);
-    await this.查询用量().catch((err) => {
-      this.特殊原因关水(err.message, true);
-      throw new Error("特殊原因关水");
-    });
+
     let json = await sendPose(
       this.config.APP请求地址前缀,
       this.config.水表关阀接口,
@@ -247,14 +251,33 @@ module.exports.Plugin = class {
     ).catch((err) => {
       throw err;
     });
-    if (json.code == "1" && json.rows[0].info == "CLOSEOK") {
-      resp =
-        "成功关闭\n本次消费澡币:" +
-        this.userMoney +
-        "\n剩余澡币:" +
-        this.balance;
-      this.bot.logger.info(this.name + ":关闭水阀");
+    switch (json.code) {
+      case "1":
+        if (json.rows[0].info == "CLOSEOK") {
+          resp =
+            "成功关闭\n本次消费澡币:" +
+            this.userMoney +
+            "\n剩余澡币:" +
+            this.balance;
+          this.bot.logger.info(this.name + ":关闭水阀");
+        }
+        break;
+      case "12342":
+        //登录信息过期
+        await this.login();
+        return await this.关水().catch((err) => {
+          throw err;
+        });
+
+      case "007":
+        resp = json.message;
+        break;
     }
+    clearInterval(this.intervalID);
+    await this.查询用量().catch((err) => {
+      this.特殊原因关水(err.message, true);
+      throw new Error("特殊原因关水");
+    });
     return resp;
   }
 };
