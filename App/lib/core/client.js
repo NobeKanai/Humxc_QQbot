@@ -100,7 +100,7 @@ class BotClient extends oicq_1.Client {
         });
     }
     triggerEvent(event, data, _path) {
-        this.logger.debug(`${_path}触发了事件${event}`);
+        this.logger.debug(`${_path} 触发了事件 ${event}`);
         let path = _path.split(".");
         let sessionID = path[0];
         switch (path[0]) {

@@ -25,7 +25,7 @@ module.exports.PluginConfig = {
   SessionArea: "GLOBAL",
   Info: "用来控制学校的水阀",
   Event: ["system.online"],
-  Keyword: ["开水", "关水"],
+  Keyword: ["^开水", "^关水"],
 };
 module.exports.Plugin = class {
   constructor(bot) {
@@ -50,29 +50,35 @@ module.exports.Plugin = class {
   keyword(keyword, data) {
     if (data.sender.user_id == this.config.QQ) {
       switch (keyword) {
-        case "开水":
+        case "^开水":
           this.开水()
             .then((resp) => {
               this.bot.sendPrivateMsg(this.config.QQ, resp);
             })
             .catch((err) => {
-              this.bot.logger.warn(err);
+              this.bot.logger.warn(this.name + ":" + err);
             });
 
           break;
 
-        case "关水":
+        case "^关水":
           this.关水()
             .then((resp) => {
               this.bot.sendPrivateMsg(this.config.QQ, resp);
             })
             .catch((err) => {
-              this.bot.logger.warn(err);
+              this.bot.logger.warn(this.name + ":" + err);
             });
 
           break;
       }
     }
+  }
+  特殊原因关水(msg, flag) {
+    if (flag == true) {
+      clearInterval(this.intervalID);
+    }
+    this.bot.sendPrivateMsg(this.config.QQ, `${msg}\n澡币余额:${this.balance}`);
   }
   async init() {
     if (
@@ -124,7 +130,10 @@ module.exports.Plugin = class {
     ).catch((err) => {
       throw err;
     });
+
     if (json.code == "1") {
+      this.userMoney += json.rows[0].usermoney;
+      this.balance = json.rows[0].balance;
       switch (json.rows[0].userflag) {
         case "2":
           throw new Error("你的账户余额已不足");
@@ -141,8 +150,6 @@ module.exports.Plugin = class {
         case "6":
           throw new Error("单次使用超过最大金额限制");
       }
-      this.userMoney += json.rows[0].usermoney;
-      this.balance = json.rows[0].balance;
     } else {
       this.bot.logger.warn(this.name + ":查询失败:\n", json);
     }
@@ -177,23 +184,34 @@ module.exports.Plugin = class {
     ).catch((err) => {
       throw err;
     });
-    if ((json.code = "1" && this.config.Waterid != json.rows[0].waterid)) {
-      this.config.Waterid = json.rows[0].waterid;
-      this.saveConfig();
-    }
-
-    if (json.code == "1" && json.rows[0].info == "OPENOK") {
-      resp = "水阀:" + json.rows[0].dormitory + " 被成功开启";
-      this.bot.logger.info(this.name + ":开启水阀");
-
-      this.intervalID = setInterval(() => {
-        this.查询用量().catch((err) => {
-          this.bot.logger.error(err);
+    switch (json.code) {
+      case "1":
+        if (this.config.Waterid != json.rows[0].waterid) {
+          this.config.Waterid = json.rows[0].waterid;
+          this.saveConfig();
+        }
+        if (json.rows[0].info == "OPENOK") {
+          resp = "水阀:" + json.rows[0].dormitory + " 被成功开启";
+          this.bot.logger.info(this.name + ":开启水阀");
+          this.intervalID = setInterval(() => {
+            this.查询用量().catch((err) => {
+              this.特殊原因关水(err.message);
+            });
+          }, 20000);
+        }
+        break;
+      case "12342":
+        //登录信息过期
+        await this.login();
+        return await this.开水().catch((err) => {
+          throw err;
         });
-      }, 20000);
-    } else if (json.code == "007") {
-      resp = json.rows[0].message;
+
+      case "007":
+        resp = json.message;
+        break;
     }
+
     return resp;
   }
   async 关水() {
@@ -219,7 +237,8 @@ module.exports.Plugin = class {
     let data = `param=${param}"&cardid=${this.config.Cardid}&token=${this.config.Token}&RoomNum=${this.config.RoomNum}&waterid=${this.config.Waterid}`;
     clearInterval(this.intervalID);
     await this.查询用量().catch((err) => {
-      this.bot.logger.error(err);
+      this.特殊原因关水(err.message, true);
+      throw new Error("特殊原因关水");
     });
     let json = await sendPose(
       this.config.APP请求地址前缀,
@@ -275,8 +294,7 @@ function sendPose(hostname, path, data) {
       headers: {
         "Content-Length": data.length,
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent":
-          "Dalvik/2.1.0 (Linux; U; Android 7.1.2; K30Pro Build/N2G47O)",
+        "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 7.1.2; HUAWEI P20)",
         Connection: "Keep-Alive",
         "Accept-Encoding": "gzip",
       },
@@ -284,6 +302,7 @@ function sendPose(hostname, path, data) {
 
     const req = http.request(options, (res) => {
       res.on("data", (d) => {
+        console.log(d.toString());
         resolve(JSON.parse(d.toString()));
       });
     });

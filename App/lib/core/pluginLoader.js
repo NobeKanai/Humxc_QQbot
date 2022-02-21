@@ -93,7 +93,7 @@ function loadPlugin(client) {
                 }
             }
             //注册关键词
-            if (!(p.PluginConfig.keyword == undefined || p.PluginConfig.keyword == "")) {
+            if (!(p.PluginConfig.Keyword == undefined || p.PluginConfig.Keyword == "")) {
                 let keywords = p.PluginConfig.Keyword;
                 for (let i = 0; i < keywords.length; i++) {
                     client.keywords.set(keywords[i], plugin_path);
