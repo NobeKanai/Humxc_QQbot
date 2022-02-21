@@ -49,7 +49,7 @@ module.exports.Plugin = class {
             "§b<" +
             data.sender.card +
             ">§e " +
-            data.raw_message.substr(2, data.raw_message.length + 1);
+            data.raw_message.substr(3, data.raw_message.length + 1);
           this.rcon.sendCmd("say " + msg).catch((msg) => {
             data.reply(msg).catch((err) => {
               console.log(err);
@@ -89,7 +89,7 @@ class rcon extends RconClient {
           reject(err);
         });
         this.connect();
-      }
+      } else resolve();
     });
   }
 
