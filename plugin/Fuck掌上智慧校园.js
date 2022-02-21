@@ -155,6 +155,15 @@ module.exports.Plugin = class {
 
         case "6":
           throw new Error("单次使用超过最大金额限制");
+        default:
+          if (this.userMoney > 5) {
+            this.bot
+              .sendPrivateMsg(this.config.QQ, "本次用水已经超过5元!")
+              .catch((err) => {
+                this.bot.logger.error(err);
+              });
+          }
+          break;
       }
     } else {
       this.bot.logger.warn(this.name + ":查询失败:\n", json);
