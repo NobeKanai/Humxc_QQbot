@@ -51,9 +51,10 @@ module.exports.Plugin = class {
         case "^开水":
           this.开水()
             .then((resp) => {
-              this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
-                this.bot.logger.error(err);
-              });
+              if (resp != undefined || resp != "")
+                this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
+                  this.bot.logger.error(err);
+                });
             })
             .catch((err) => {
               this.bot.logger.warn(this.name + ":" + err);
@@ -64,9 +65,10 @@ module.exports.Plugin = class {
         case "^关水":
           this.关水()
             .then((resp) => {
-              this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
-                this.bot.logger.error(err);
-              });
+              if (resp != undefined || resp != "")
+                this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
+                  this.bot.logger.error(err);
+                });
             })
             .catch((err) => {
               this.bot.logger.warn(this.name + ":" + err);
@@ -81,7 +83,10 @@ module.exports.Plugin = class {
       clearInterval(this.intervalID);
     }
     this.bot
-      .sendPrivateMsg(this.config.QQ, `${msg}\n澡币余额:${this.balance}`)
+      .sendPrivateMsg(
+        this.config.QQ,
+        `${msg}\n本次消费澡币:${this.userMoney}\n澡币余额:${this.balance}`
+      )
       .catch((err) => {
         this.bot.logger.error(err);
       });
@@ -243,6 +248,11 @@ module.exports.Plugin = class {
           });
       }, 5000);
     }
+    clearInterval(this.intervalID);
+    await this.查询用量().catch((err) => {
+      this.特殊原因关水(err.message);
+      return;
+    });
     let param = 加密和编码(
       `{"Studid":"${
         this.config.Studid
@@ -258,6 +268,7 @@ module.exports.Plugin = class {
     ).catch((err) => {
       throw err;
     });
+
     switch (json.code) {
       case "1":
         if (json.rows[0].info == "CLOSEOK") {
@@ -280,10 +291,7 @@ module.exports.Plugin = class {
         resp = json.message;
         break;
     }
-    clearInterval(this.intervalID);
-    await this.查询用量().catch((err) => {
-      this.特殊原因关水(err.message);
-    });
+
     return resp;
   }
 };
