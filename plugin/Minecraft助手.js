@@ -95,7 +95,7 @@ class rcon extends RconClient {
 
   //发送指令
   sendCmd(command) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this.login()
         .then(() => {
           this.send(command);

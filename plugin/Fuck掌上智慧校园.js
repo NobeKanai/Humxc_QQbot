@@ -210,7 +210,7 @@ module.exports.Plugin = class {
           this.bot.logger.info(this.name + ":开启水阀");
           this.intervalID = setInterval(() => {
             this.查询用量().catch((err) => {
-              this.特殊原因关水(err.message);
+              this.特殊原因关水(err.message, true);
             });
           }, 20000);
         }
@@ -282,8 +282,7 @@ module.exports.Plugin = class {
     }
     clearInterval(this.intervalID);
     await this.查询用量().catch((err) => {
-      this.特殊原因关水(err.message, true);
-      throw new Error("特殊原因关水");
+      this.特殊原因关水(err.message);
     });
     return resp;
   }
@@ -332,7 +331,7 @@ function sendPose(hostname, path, data) {
 
     const req = http.request(options, (res) => {
       res.on("data", (d) => {
-        console.log(d.toString());
+        // console.log(d.toString());
         resolve(JSON.parse(d.toString()));
       });
     });
