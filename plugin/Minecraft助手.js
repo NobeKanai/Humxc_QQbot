@@ -38,7 +38,7 @@ module.exports.Plugin = class {
               });
             })
             .catch((msg) => {
-              data.reply(parseList(msg)).catch((err) => {
+              data.reply(msg).catch((err) => {
                 console.log(err);
               });
             });
