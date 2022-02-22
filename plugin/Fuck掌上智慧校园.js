@@ -251,7 +251,7 @@ module.exports.Plugin = class {
     clearInterval(this.intervalID);
     await this.查询用量().catch((err) => {
       this.特殊原因关水(err.message);
-      return;
+      throw err;
     });
     let param = 加密和编码(
       `{"Studid":"${
