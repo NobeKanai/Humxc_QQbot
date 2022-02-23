@@ -83,13 +83,17 @@ export class BotClient extends Client {
       if (error.name == "Error") {
         if (this.isOnline() && this.admin != undefined) {
           for (let i = 0; i < this.admin.length; i++) {
-            this.sendPrivateMsg(this.admin[i], error.message);
+            this.sendPrivateMsg(this.admin[i], error.message).catch((err) => {
+              this.logger.error(err);
+            });
           }
         }
       } else {
         if (this.isOnline() && this.admin != undefined) {
           for (let i = 0; i < this.admin.length; i++) {
-            this.sendPrivateMsg(this.admin[i], error);
+            this.sendPrivateMsg(this.admin[i], error).catch((err) => {
+              this.logger.error(err);
+            });
           }
         }
       }

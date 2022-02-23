@@ -49,6 +49,20 @@ module.exports.Plugin = class {
       console.log(message);
     });
     this.bot.logger.debug("设置任务");
+    setTimeout(() => {
+      this.getHttp("update")
+        .then((list) => {
+          let imgList = this.hasDifferent(list);
+          if (imgList != undefined) {
+            this.sendImg(imgList).catch((err) => {
+              this.bot.errorCallAdmin(err);
+            });
+          }
+        })
+        .catch((error) => {
+          this.bot.errorCallAdmin(error);
+        });
+    }, 10000);
 
     setInterval(() => {
       this.getHttp("update")
@@ -111,7 +125,7 @@ module.exports.Plugin = class {
     if (imgList.length > 0) {
       return imgList;
     } else {
-      return false;
+      return undefined;
     }
   }
   async sendImg(imgNameList) {
