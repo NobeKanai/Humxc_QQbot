@@ -49,7 +49,7 @@ module.exports.Plugin = class {
       console.log(message);
     });
     this.bot.logger.debug("设置任务");
-    setTimeout(() => {
+    setInterval(() => {
       this.getHttp("update")
         .then((list) => {
           let imgList = this.hasDifferent(list);
@@ -58,16 +58,6 @@ module.exports.Plugin = class {
               this.bot.errorCallAdmin(err);
             });
           }
-        })
-        .catch((error) => {
-          this.bot.errorCallAdmin(error);
-        });
-    }, 10000);
-
-    setInterval(() => {
-      this.getHttp("update")
-        .then((list) => {
-          this.sendImg(this.hasDifferent(list));
         })
         .catch((error) => {
           this.bot.errorCallAdmin(error);
