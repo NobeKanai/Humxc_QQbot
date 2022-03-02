@@ -10,7 +10,7 @@ var defaultConfig = {
   sendTo: [
     {
       QQ: "发送对象的qq号码",
-      IsGroup: "布尔值，如果是群聊则为true否则为false",
+      IsGroup: "布尔值,如果是群聊则为true否则为false",
     },
   ],
 };
@@ -49,20 +49,22 @@ module.exports.Plugin = class {
       console.log(message);
     });
     this.bot.logger.debug("设置任务");
-    setInterval(() => {
-      this.getHttp("update")
-        .then((list) => {
-          let imgList = this.hasDifferent(list);
-          if (imgList != undefined) {
-            this.sendImg(imgList).catch((err) => {
-              this.bot.errorCallAdmin(err);
-            });
-          }
-        })
-        .catch((error) => {
-          this.bot.errorCallAdmin(error);
-        });
-    }, 600000);
+    this.work();
+  }
+  work() {
+    this.getHttp("update")
+      .then((list) => {
+        let imgList = this.hasDifferent(list);
+        if (imgList != undefined) {
+          this.sendImg(imgList).catch((err) => {
+            this.bot.errorCallAdmin(err);
+          });
+        }
+      })
+      .catch((error) => {
+        this.bot.errorCallAdmin(error);
+      });
+    setTimeout(this.work, 600000);
   }
   getHttp(_path = "") {
     return new Promise((resolve, reject) => {
