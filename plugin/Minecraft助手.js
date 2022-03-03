@@ -88,6 +88,9 @@ class rcon extends RconClient {
         this.once("error", (err) => {
           reject(err);
         });
+        this.once("server", (err) => {
+          reject(err);
+        });
         this.connect();
       } else resolve();
     });

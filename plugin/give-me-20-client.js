@@ -64,7 +64,9 @@ module.exports.Plugin = class {
       .catch((error) => {
         this.bot.errorCallAdmin(error);
       });
-    setTimeout(this.work, 600000);
+    setTimeout(() => {
+      this.work();
+    }, 600000);
   }
   getHttp(_path = "") {
     return new Promise((resolve, reject) => {
