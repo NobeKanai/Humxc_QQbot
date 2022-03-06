@@ -28,11 +28,12 @@ module.exports.Plugin = class {
     this.bot = bot;
     this.config = getConfig(this, defaultConfig);
     this.data = getData(this, []);
+    this.intervalID = undefined;
   }
   event(eventName, data) {
     switch (eventName) {
       case "system.online":
-        this.start();
+        this.reStart();
         break;
       case "message.private":
         if (data.sender.user_id == this.bot.uin) {
@@ -44,28 +45,25 @@ module.exports.Plugin = class {
     }
   }
 
-  start() {
+  reStart() {
+    if (this.intervalID != undefined) clearInterval(this.intervalID);
     this.bot.on("messageFromSelf", (message) => {
       console.log(message);
     });
     this.bot.logger.debug("设置任务");
-    this.work();
-  }
-  work() {
-    this.getHttp("update")
-      .then((list) => {
-        let imgList = this.hasDifferent(list);
-        if (imgList != undefined) {
-          this.sendImg(imgList).catch((err) => {
-            this.bot.errorCallAdmin(err);
-          });
-        }
-      })
-      .catch((error) => {
-        this.bot.errorCallAdmin(error);
-      });
-    setTimeout(() => {
-      this.work();
+    this.intervalID = setInterval(() => {
+      this.getHttp("update")
+        .then((list) => {
+          let imgList = this.hasDifferent(list);
+          if (imgList != undefined) {
+            this.sendImg(imgList).catch((err) => {
+              this.bot.errorCallAdmin(err);
+            });
+          }
+        })
+        .catch((error) => {
+          this.bot.errorCallAdmin(error);
+        });
     }, 600000);
   }
   getHttp(_path = "") {
