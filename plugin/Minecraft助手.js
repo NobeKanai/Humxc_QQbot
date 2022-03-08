@@ -1,4 +1,6 @@
 var RconClient = require("rcon");
+var http = require("http");
+var url = require("url")
 const { getConfig } = require("../lib/pluginFather");
 var defaultConfig = {
   name: "填一个名称",
@@ -25,6 +27,21 @@ module.exports.Plugin = class {
       parseInt(this.config.port),
       this.config.password
     );
+    http.createServer(function (request, response) {
+      // 发送 HTTP 头部
+      // HTTP 状态值: 200 : OK
+      // 内容类型: text/plain
+      response.writeHead(200, { "Content-Type": "text/plain" });
+  
+      // 发送响应数据 "Hello World"
+      response.end("Ok");
+      var urlObj = url.parse(request.url, true);
+      var query = urlObj.query;
+      let msg =decodeURI(query.message);
+    this.bot. sendGroupMsg(this.config.group[0],msg).catch(e=>console.log(e))
+  
+    })
+    .listen(8090);
   }
   keyword(keyword, data) {
     if (new Set(this.config.group).has(data.group_id)) {
@@ -59,6 +76,7 @@ module.exports.Plugin = class {
       }
     }
   }
+
 };
 class rcon extends RconClient {
   constructor(host, port, password, options) {
