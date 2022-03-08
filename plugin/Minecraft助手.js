@@ -27,6 +27,9 @@ module.exports.Plugin = class {
       parseInt(this.config.port),
       this.config.password
     );
+  this.startserver();
+  }
+  startserver(){
     http.createServer(function (request, response) {
       // 发送 HTTP 头部
       // HTTP 状态值: 200 : OK
@@ -38,7 +41,7 @@ module.exports.Plugin = class {
       var urlObj = url.parse(request.url, true);
       var query = urlObj.query;
       let msg =decodeURI(query.message);
-     bot. sendGroupMsg(this.config.group[0],msg).catch(e=>console.log(e))
+     this.bot. sendGroupMsg(this.config.group[0],msg).catch(e=>console.log(e))
   
     })
     .listen(8090);
