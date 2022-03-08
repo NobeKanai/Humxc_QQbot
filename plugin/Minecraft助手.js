@@ -115,33 +115,7 @@ class rcon extends RconClient {
     });
   }
 }
-// class rcon_nobe {
-//   constructor(name, rconclient) {
-//     super(name, rconclient);
-//   }
-//   listServer(message_id) {
-//     this.commandList.push([
-//       message_id,
-//       "list",
-//       function (str) {
-//         let retstr = "有";
-//         let playerNumber = /There are §c(\d+)§6 out/g.exec(str)[1];
-//         if (playerNumber == 0) {
-//           retstr = 空服回复();
-//         } else {
-//           retstr += playerNumber + "名玩家在线\n  ";
-//           retstr += /§6default§r: (.+)/g
-//             .exec(str)[1]
-//             .replace(/§7[AFK]§r/g, "")
-//             .replace(/§f/g, "")
-//             .replace(/, /g, "\n  ");
-//         }
-//         return retstr;
-//       },
-//     ]);
-//     this.client.emit("run");
-//   }
-// }
+
 function 空服回复() {
   let 回复 = [
     "没人在线(；′⌒`)",

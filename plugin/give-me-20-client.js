@@ -133,6 +133,7 @@ module.exports.Plugin = class {
       this.bot.sendPrivateMsg(this.bot.uin, img).catch((err) => {
         badNumber++;
         this.bot.logger.warn("一张图片发送失败:" + imgNameList[i], err);
+        continue;
       });
       //等待接收到消息
       let pushMsg = await this.waitMessage(
