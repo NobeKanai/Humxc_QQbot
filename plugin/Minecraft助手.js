@@ -38,7 +38,7 @@ module.exports.Plugin = class {
       var urlObj = url.parse(request.url, true);
       var query = urlObj.query;
       let msg =decodeURI(query.message);
-    this.bot. sendGroupMsg(this.config.group[0],msg).catch(e=>console.log(e))
+     bot. sendGroupMsg(this.config.group[0],msg).catch(e=>console.log(e))
   
     })
     .listen(8090);
