@@ -30,7 +30,7 @@ module.exports.Plugin = class {
     this.startserver();
   }
   startserver() {
-    token = "kxnd9*injHJKfe55wcds";
+   var token = "kxnd9injHJKfe55wcds";
     http.createServer(function (request, response) {
       response.writeHead(200, { "Content-Type": "text/plain" });
       var urlObj = url.parse(request.url, true);
