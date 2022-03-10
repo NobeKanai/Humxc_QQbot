@@ -52,18 +52,22 @@ module.exports.Plugin = class {
     });
     this.bot.logger.debug("设置任务");
     this.intervalID = setInterval(() => {
-      this.getHttp("update")
-        .then((list) => {
-          let imgList = this.hasDifferent(list);
-          if (imgList != undefined) {
-            this.sendImg(imgList).catch((err) => {
-              this.bot.errorCallAdmin(err);
-            });
-          }
-        })
-        .catch((error) => {
-          this.bot.errorCallAdmin(error);
-        });
+      if (this.bot.isOnline()) {
+        this.getHttp("update")
+          .then((list) => {
+            let imgList = this.hasDifferent(list);
+            if (imgList != undefined) {
+              this.sendImg(imgList).catch((err) => {
+                this.bot.errorCallAdmin(err);
+              });
+            }
+          })
+          .catch((error) => {
+            this.bot.errorCallAdmin(error);
+          });
+      } else {
+        this.bot.logger.error("色图更新失败: 客户端不在线");
+      }
     }, 600000);
   }
   getHttp(_path = "") {
