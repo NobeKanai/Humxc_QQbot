@@ -30,7 +30,7 @@ module.exports.Plugin = class {
     this.startserver();
   }
   startserver() {
-   var token = "kxnd9injHJKfe55wcds";
+    var token = "kxnd9injHJKfe55wcds";
     http.createServer(function (request, response) {
       response.writeHead(200, { "Content-Type": "text/plain" });
       var urlObj = url.parse(request.url, true);
@@ -90,13 +90,13 @@ class rcon extends RconClient {
       this.autoCloseID = undefined;
     }
     this.autoCloseID = setTimeout(() => {
-      this.ok = false;
       this.disconnect();
     }, 120000);
   }
 
   //登录/连接
   login() {
+    this.autoClose();
     return new Promise((resolve, reject) => {
       if (!this.hasAuthed) {
         this.once("auth", () => {
