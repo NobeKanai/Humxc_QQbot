@@ -32,6 +32,7 @@ module.exports.Plugin = class {
     this.inited = false;
     this.userMoney = 0;
     this.balance = 0;
+    this.count = 1;
     this.intervalID = 0;
     this.name = "Fuck掌上智慧校园";
     this.bot = bot;
@@ -143,27 +144,38 @@ module.exports.Plugin = class {
     });
 
     if (json.code == "1") {
-      this.userMoney += json.rows[0].usermoney;
+      this.userMoney = json.rows[0].usermoney;
       this.balance = json.rows[0].balance;
       switch (json.rows[0].userflag) {
         case "2":
+          this.count = 1;
           throw new Error("你的账户余额已不足");
 
         case "3":
+          this.count = 1;
           throw new Error("5分钟内未使用热水");
 
         case "4":
+          this.count = 1;
           throw new Error("单次最多使用30分钟");
 
         case "5":
+          this.count = 1;
           throw new Error("用户已点击结算");
 
         case "6":
+          this.count = 1;
           throw new Error("单次使用超过最大金额限制");
         default:
-          if (this.userMoney > 5) {
+          if (this.userMoney > this.count * 5) {
             this.bot
-              .sendPrivateMsg(this.config.QQ, "本次用水已经超过5元!")
+              .sendPrivateMsg(
+                this.config.QQ,
+                `本次用水已经超过${5 * this.count}元!`
+              )
+              .then(() => {
+                this.count++;
+              })
               .catch((err) => {
                 this.bot.logger.error(err);
               });
@@ -292,6 +304,7 @@ module.exports.Plugin = class {
         break;
     }
 
+    this.count = 1;
     return resp;
   }
 };
