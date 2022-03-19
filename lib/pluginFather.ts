@@ -1,15 +1,14 @@
 import path from "path";
 import fs from "fs";
+import { BotPlugin } from "./plugin";
+import { BotConfig } from "./core/client";
 //获取配置对象
-export function getConfig(plugin: any, defaultConfig: any) {
-  if (plugin.name == undefined || plugin.name == "") {
-    throw new Error("创建配置文件失败 - 没有插件名称");
-  }
+export function getConfig(plugin: BotPlugin, defaultConfig: any) {
   let configDir = path.join(
     require?.main?.path || process.cwd(),
     "data",
-    plugin.bot.uin + "",
-    plugin.name
+    plugin.bot.uin.toString(),
+    plugin.pluginConfig.PluginName
   );
   let configPath = path.join(configDir, "config.json");
   if (fs.existsSync(configPath)) {
@@ -26,12 +25,12 @@ export function getConfig(plugin: any, defaultConfig: any) {
   }
 }
 //保存配置对象到文件
-export function saveConfig(plugin: any) {
+export function saveConfig(plugin: BotPlugin) {
   let configDir = path.join(
     require?.main?.path || process.cwd(),
     "data",
-    plugin.bot.uin + "",
-    plugin.name
+    plugin.bot.uin.toString(),
+    plugin.pluginConfig.PluginName
   );
   try {
     makeJson(configDir, "config.json", plugin.config);
@@ -40,15 +39,12 @@ export function saveConfig(plugin: any) {
   }
 }
 //获取数据对象
-export function getData(plugin: any, defaultData: any) {
-  if (plugin.name == undefined || plugin.name == "") {
-    throw new Error("创建数据文件失败 - 没有插件名称");
-  }
+export function getData(plugin: BotPlugin, defaultData: any) {
   let dataDir = path.join(
     require?.main?.path || process.cwd(),
     "data",
-    plugin.bot.uin + "",
-    plugin.name
+    plugin.bot.uin.toString(),
+    plugin.pluginConfig.PluginName
   );
   let dataPath = path.join(dataDir, "data.json");
   if (fs.existsSync(dataPath)) {
@@ -65,12 +61,12 @@ export function getData(plugin: any, defaultData: any) {
   }
 }
 //保存数据对象到文件
-export function saveData(plugin: any) {
+export function saveData(plugin: BotPlugin) {
   let dataDir = path.join(
     require?.main?.path || process.cwd(),
     "data",
-    plugin.bot.uin + "",
-    plugin.name
+    plugin.bot.uin.toString(),
+    plugin.pluginConfig.PluginName
   );
   try {
     makeJson(dataDir, "data.json", plugin.data);
@@ -79,12 +75,12 @@ export function saveData(plugin: any) {
   }
 }
 //获取插件数据目录
-export function getDir(plugin: any) {
+export function getDir(plugin: BotPlugin) {
   return path.join(
     require?.main?.path || process.cwd(),
     "data",
-    plugin.bot.uin + "",
-    plugin.name
+    plugin.bot.uin.toString(),
+    plugin.pluginConfig.PluginName
   );
 }
 

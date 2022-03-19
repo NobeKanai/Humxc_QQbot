@@ -1,8 +1,9 @@
 import fs from "fs";
 import path = require("path");
 import { BotClient } from "./client";
+import { BotPlugin, BotPluginConfig } from "../plugin";
 var pluginPath = path.join(process.cwd(), "plugin");
-export function loadPlugin(client: BotClient) {
+export function loadPlugin(client: BotClient): any {
   let Plugins: any = {
     global: {},
     group: {},
@@ -24,98 +25,85 @@ export function loadPlugin(client: BotClient) {
         return path.join(pluginPath, fileName);
       })
       .filter(isJsFile);
-    loadJsFile(list);
+    loadJsFile(list).forEach((plugin) => parsePlugin(plugin));
   } else {
     //加载指定列表的文件
     let list: Array<string> = [];
     client.pluginList.forEach((fileName) => {
       list.push(path.join(pluginPath, fileName));
     });
-    loadJsFile(list);
+    loadJsFile(list).forEach((plugin) => parsePlugin(plugin));
   }
-  function loadJsFile(list: Array<string>) {
+
+  function loadJsFile(list: Array<string>): Array<any> {
+    let plugins: Array<any> = [];
     for (let i = 0; i < list.length; i++) {
       const file = list[i];
 
-      client.logger.info("正在加载插件[" + path.basename(file) + "]");
+      client.logger.debug("正在导入插件[" + path.basename(file) + "]");
       let p: any;
       try {
         p = require(file);
+        plugins.push(p);
       } catch (error) {
-        client.logger.warn(
-          "加载[" + path.basename(file) + "]时出错，已跳过该插件"
+        client.logger.error(
+          "导入[" + path.basename(file) + "]时出错，已跳过该插件"
         );
-        client.errorCallAdmin(error);
+        client.logger.error(error);
         continue;
-      }
-
-      if (
-        !(
-          p.PluginConfig == undefined ||
-          p.Plugin == undefined ||
-          p.PluginConfig.PluginName == undefined ||
-          p.PluginConfig.PluginName == ""
-        )
-      ) {
-        client.logger.debug(`----------`);
-        for (const key in p.PluginConfig) {
-          if (Object.prototype.hasOwnProperty.call(p.PluginConfig, key)) {
-            client.logger.debug(`${key}: ${p.PluginConfig[key]}`);
-          }
-        }
-      } else {
-        client.logger.warn(`插件缺少关键配置，已取消加载`);
-        continue;
-      }
-
-      //根据SessionAeea分类
-      switch (p.PluginConfig.SessionArea) {
-        case "GLOBAL":
-          Plugins.global[p.PluginConfig.PluginName] = p.Plugin;
-
-          break;
-        case "GROUP":
-          Plugins.group[p.PluginConfig.PluginName] = p.Plugin;
-
-          break;
-        case "PRIVATE":
-          Plugins.private[p.PluginConfig.PluginName] = p.Plugin;
-
-          break;
-        default:
-          client.logger.warn(`插件没有设置或者设置了不支持的SessionArea`);
-          continue;
-      }
-      //描述插件位置的路径
-      let plugin_path: string = `${p.PluginConfig.SessionArea.toLowerCase()}.${
-        p.PluginConfig.PluginName
-      }`;
-      //注册事件
-      if (!(p.PluginConfig.Event == undefined || p.PluginConfig.Event == "")) {
-        let events: Array<string> = p.PluginConfig.Event;
-        for (let i = 0; i < events.length; i++) {
-          client.registeEvent(events[i], plugin_path);
-          client.logger.debug(
-            `${p.PluginConfig.PluginName}已监听事件:${events[i]}`
-          );
-        }
-      }
-
-      //注册关键词
-      if (
-        !(p.PluginConfig.Keyword == undefined || p.PluginConfig.Keyword == "")
-      ) {
-        let keywords: Array<string> = p.PluginConfig.Keyword;
-        for (let i = 0; i < keywords.length; i++) {
-          client.keywords.set(keywords[i], plugin_path);
-        }
       }
     }
-
-    client.logger.debug(`----------`);
+    return plugins;
   }
-
+  client.logger.info(`----------`);
   client.logger.info("插件加载完毕!");
   return Plugins;
+  //解析插件
+  function parsePlugin(plugin: any) {
+    let p: BotPlugin = plugin.Plugin;
+    let c: BotPluginConfig = new plugin.PluginConfig();
+    client.logger.debug(`----------`);
+    client.logger.debug(`PluginName: ${c.PluginName}`);
+    client.logger.debug(`PluginVersion: ${c.PluginVersion}`);
+    client.logger.debug(`BotVersion: ${c.BotVersion}`);
+    client.logger.debug(`LoadArea: ${c.LoadArea}`);
+    client.logger.debug(`Event: ${c.Event}`);
+    client.logger.debug(`Keyword: ${c.Keyword}`);
+    client.logger.debug(`Info: ${c.Info}`);
+    //根据LoadAeea分类
+    switch (c.LoadArea) {
+      case "GLOBAL":
+        Plugins.global[c.PluginName] = p;
+
+        break;
+      case "GROUP":
+        Plugins.group[c.PluginName] = p;
+
+        break;
+      case "PRIVATE":
+        Plugins.private[c.PluginName] = p;
+
+        break;
+      default:
+        client.logger.error(`插件没有设置或者设置了不支持的LoadArea`);
+        return;
+    }
+    //描述插件位置的路径
+    let plugin_path: string = `${c.LoadArea.toLowerCase()}.${c.PluginName}`;
+    //注册事件
+    if (!(c.Event == undefined || c.Event == [])) {
+      let events: Array<string> = c.Event;
+      for (let i = 0; i < events.length; i++) {
+        client.registeEvent(events[i], plugin_path);
+        client.logger.debug(`${c.PluginName}已监听事件:${events[i]}`);
+      }
+    }
+    //注册关键词
+    if (!(c.Keyword == undefined || c.Keyword == [])) {
+      let keywords: Array<string> = c.Keyword;
+      for (let i = 0; i < keywords.length; i++) {
+        client.keywords.set(keywords[i], plugin_path);
+      }
+    }
+  }
 }
-export function parsePlugin() {}

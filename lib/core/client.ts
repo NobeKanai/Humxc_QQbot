@@ -1,6 +1,15 @@
-import { createClient, Client, MessageEvent, Config } from "oicq";
+import {
+  createClient,
+  Client,
+  MessageEvent,
+  Config,
+  Sendable,
+  Quotable,
+  MessageRet,
+} from "oicq";
 import { loadPlugin } from "./pluginLoader";
 import { Session } from "./session";
+import { Logger } from "log4js";
 import Log4js from "log4js";
 export interface BotConfig extends Config {
   //机器人的QQ密码
@@ -10,9 +19,9 @@ export interface BotConfig extends Config {
   //插件列表
   plugin_list: Array<string> | undefined;
   //是否将错误消息发送给管理员
-  error_call_admin: string | undefined;
+  error_call_admin: boolean | undefined;
   //是否保存日志到文件
-  save_log_file: string | undefined;
+  save_log_file: boolean | undefined;
 }
 
 export class BotClient extends Client {
@@ -23,7 +32,7 @@ export class BotClient extends Client {
   /** 插件列表 */
   public pluginList: string[] | undefined;
   /** 发送错误给管理员 */
-  public error_call_admin: string | undefined = "false";
+  public error_call_admin: boolean | undefined = false;
 
   /** 加载的插件 */
   private Plugins: any = {
@@ -41,7 +50,7 @@ export class BotClient extends Client {
   keywords: Map<string, string> = new Map();
   constructor(uin: number, conf?: BotConfig) {
     super(uin, conf);
-    if (conf?.save_log_file != undefined && conf?.save_log_file == "true") {
+    if (conf?.save_log_file != undefined && conf?.save_log_file == true) {
       Log4js.configure({
         appenders: {
           production: {
@@ -57,7 +66,10 @@ export class BotClient extends Client {
         },
       });
     }
-
+    //修改日志使能发送消息
+    if (this.error_call_admin == true) {
+      console.log(this.logger.error);
+    }
     this.admin = conf?.admin;
     this.password = conf?.password;
     this.pluginList = conf?.plugin_list;
@@ -77,28 +89,6 @@ export class BotClient extends Client {
     );
     this.KeywordListenr();
   }
-  errorCallAdmin(error: any) {
-    this.logger.error(error);
-    if (this.error_call_admin == "true") {
-      if (error.name == "Error") {
-        if (this.isOnline() && this.admin != undefined) {
-          for (let i = 0; i < this.admin.length; i++) {
-            this.sendPrivateMsg(this.admin[i], error.message).catch((err) => {
-              this.logger.error(err);
-            });
-          }
-        }
-      } else {
-        if (this.isOnline() && this.admin != undefined) {
-          for (let i = 0; i < this.admin.length; i++) {
-            this.sendPrivateMsg(this.admin[i], error).catch((err) => {
-              this.logger.error(err);
-            });
-          }
-        }
-      }
-    }
-  }
   async shutDown() {
     this.logger.warn("正在关闭...");
     if (this.isOnline()) {
@@ -116,7 +106,7 @@ export class BotClient extends Client {
     if (this.sessions[sessionArea].has(sessionID)) {
       return this.sessions[sessionArea].get(sessionID);
     } else {
-      this.errorCallAdmin(`没有找到会话`);
+      this.logger.error(`没有找到会话`);
     }
   }
   registeEvent(event: string, path: string) {
@@ -155,10 +145,10 @@ export class BotClient extends Client {
         }
         break;
       default:
-        this.errorCallAdmin(`触发事件时出现了意想不到的错误`);
-        this.errorCallAdmin(event);
-        this.errorCallAdmin(_path);
-        this.errorCallAdmin(data);
+        this.logger.error(`触发事件时出现了意想不到的错误`);
+        this.logger.error(event);
+        this.logger.error(_path);
+        this.logger.error(data);
         break;
     }
 
@@ -198,10 +188,10 @@ export class BotClient extends Client {
               }
               break;
             default:
-              this.errorCallAdmin(`触发关键词时出现了意想不到的错误`);
-              this.errorCallAdmin(key);
-              this.errorCallAdmin(this.keywords.get(key));
-              this.errorCallAdmin(data);
+              this.logger.error(`触发关键词时出现了意想不到的错误`);
+              this.logger.error(key);
+              this.logger.error(this.keywords.get(key));
+              this.logger.error(data);
               break;
           }
           this.getSession(path[0], sessionID).keyword(key, data, path[1]);
@@ -215,7 +205,7 @@ export class BotClient extends Client {
   registeKeyword(Keyword: string, path: string) {
     this.keywords.set(Keyword, path);
   }
-  //** 机器人登录 */
+  /** 机器人登录 */
   botLogin() {
     //密码登录
     if (this.password != "" || this.password != undefined) {
@@ -229,6 +219,30 @@ export class BotClient extends Client {
         });
       }).login();
     }
+  }
+  /** 获取机器人的管理员列表 */
+  getAdmins(): Array<number> {
+    if (this.admin == undefined) return [];
+    else return this.admin;
+  }
+  /** 发送消息给所有管理员 */
+  sendAdminMsg(message: Sendable, source?: Quotable): void {
+    this.admin?.forEach((e) => {
+      this.sendPrivateMsg(e, message, source).catch((err) =>
+        this.logger.error(err)
+      );
+    });
+  }
+  async sendSelfMsg(message: Sendable, source?: Quotable) {
+    let msg: MessageRet = await this.sendPrivateMsg(
+      this.uin,
+      message,
+      source
+    ).catch((err) => {
+      this.logger.error(err);
+      throw err;
+    });
+    return msg.message_id;
   }
 }
 /** 创建一个客户端 (=new Client) */

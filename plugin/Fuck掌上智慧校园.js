@@ -37,6 +37,7 @@ module.exports.Plugin = class {
     this.name = "Fuck掌上智慧校园";
     this.bot = bot;
     this.config = getConfig(this, defaultConfig);
+    this.用量提醒 = false;
   }
 
   event(eventName) {
@@ -178,7 +179,9 @@ module.exports.Plugin = class {
               })
               .catch((err) => {
                 this.bot.logger.error(err);
+                this.用量提醒 = false;
               });
+            this.用量提醒 = true;
           }
           break;
       }
