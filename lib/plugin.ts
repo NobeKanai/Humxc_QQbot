@@ -1,6 +1,6 @@
 import { BotClient } from "./core/client";
 import { Logger } from "oicq";
-import Log4js from "Log4js";
+import log4js from "log4js";
 export type LoadArea = "GLOBAL" | "GROUP" | "PRIVATE";
 /** 插件配置接口,作为插件应实现此接口 */
 export interface BotPluginConfig {
@@ -36,14 +36,14 @@ export class BotPlugin {
     this.bot = bot;
     this.pluginConfig = pluginConfig;
     if (this.bot.error_call_admin == true) {
-      var _log = Log4js.getLogger(
+      var _log = log4js.getLogger(
         `[${this.bot.apk.display}:${this.bot.uin}] [${this.pluginConfig.PluginName}]`
       );
       _log.level = this.bot.config.log_level;
       this.logger = _log;
       this.logger = new BotLogger(this.bot, this.pluginConfig.PluginName, _log);
     } else {
-      var _log = Log4js.getLogger(
+      var _log = log4js.getLogger(
         `[${this.bot.apk.display}:${this.bot.uin}] [${this.pluginConfig.PluginName}]`
       );
       _log.level = this.bot.config.log_level;
