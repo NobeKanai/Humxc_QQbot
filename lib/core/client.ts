@@ -9,8 +9,7 @@ import {
 } from "oicq";
 import { loadPlugin } from "./pluginLoader";
 import { Session } from "./session";
-import { Logger } from "log4js";
-import Log4js from "log4js";
+import log4js from "log4js";
 export interface BotConfig extends Config {
   //机器人的QQ密码
   password: string;
@@ -50,15 +49,15 @@ export class BotClient extends Client {
   keywords: Map<string, string> = new Map();
   constructor(uin: number, conf?: BotConfig) {
     super(uin, conf);
-    if (conf?.save_log_file != undefined && conf?.save_log_file == true) {
-      Log4js.configure({
+    if (conf?.save_log_file == true) {
+      log4js.configure({
         appenders: {
           production: {
             type: "dateFile",
             filename: "log/bot.log",
             alwaysIncludePattern: true,
             keepFileExt: true,
-            daysToKeep: 30,
+            numBackups: 30,
           },
         },
         categories: {
