@@ -58,8 +58,8 @@ export class Plugin extends BotPlugin {
           try {
             let msg = await this.rcon.sendCmd("list");
             await data.reply(parseList(msg));
-          } catch (error: any) {
-            data.reply(error.message).catch((e: any) => this.logger.error(e));
+          } catch (error) {
+            data.reply(error).catch((e: any) => this.logger.error(e));
           }
           break;
 
@@ -70,8 +70,8 @@ export class Plugin extends BotPlugin {
           )}`;
           try {
             await this.rcon.sendCmd("say " + msg);
-          } catch (error: any) {
-            this.logger.error(error.toString());
+          } catch (error) {
+            this.logger.error(error);
           }
         }
       }
