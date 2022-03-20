@@ -1,6 +1,8 @@
-const NodeRSA = require("node-rsa");
-const http = require("http");
-const { getConfig, saveConfig } = require("../lib/pluginFather");
+import NodeRSA from "node-rsa";
+import http from "http";
+import { getConfig, saveConfig } from "../lib/pluginFather";
+import { BotPlugin, BotPluginConfig, LoadArea } from "../lib/plugin";
+import { BotClient } from "../lib/core/client";
 var defaultConfig = {
   QQ: "用户的qq",
   PhoneNumber: "电话号码(必填)",
@@ -9,7 +11,7 @@ var defaultConfig = {
   Token: "",
   Studid: "",
   Cardid: "身份证号，不用填，程序会自动获取",
-  Waterid: 0000,
+  Waterid: 0,
   PublicKey: "掌上智慧校园的加密公钥，需要逆向APP查看源码获得",
   APP请求地址前缀: "需要逆向APP查看源码获得",
   水表关阀接口: "需要逆向APP查看源码获得",
@@ -18,36 +20,35 @@ var defaultConfig = {
   登录接口: "需要逆向APP查看源码获得",
 };
 
-module.exports.PluginConfig = {
-  PluginName: "Fuck掌上智慧校园",
-  BotVersion: "0.0.1",
-  PluginVersion: "1.0.0",
-  SessionArea: "GLOBAL",
-  Info: "用来控制学校的水阀",
-  Event: ["system.online"],
-  Keyword: ["^开水", "^关水"],
-};
-module.exports.Plugin = class {
-  constructor(bot) {
-    this.inited = false;
-    this.userMoney = 0;
-    this.balance = 0;
-    this.count = 1;
-    this.intervalID = 0;
-    this.name = "Fuck掌上智慧校园";
-    this.bot = bot;
+export class PluginConfig implements BotPluginConfig {
+  LoadArea: LoadArea = "GLOBAL";
+  PluginName: string = "Fuck掌上智慧校园";
+  BotVersion: string = "0.0.1";
+  PluginVersion: string = "1.0.0";
+  Info: string = "用来控制学校的水阀";
+  Event: string[] = ["system.online"];
+  Keyword: string[] = ["^开水", "^关水"];
+}
+export class Plugin extends BotPlugin {
+  private inited: boolean = false;
+  private userMoney: number = 0;
+  private balance: number = 0;
+  private count: number = 1;
+  private intervalTimeout: NodeJS.Timer | undefined;
+  private 用量提醒: boolean = false;
+  constructor(botClient: BotClient) {
+    super(botClient, new PluginConfig());
     this.config = getConfig(this, defaultConfig);
-    this.用量提醒 = false;
   }
 
-  event(eventName) {
+  event(eventName: string) {
     switch (eventName) {
       case "system.online":
         this.init();
         break;
     }
   }
-  keyword(keyword, data) {
+  keyword(keyword: string, data: any) {
     if (data.sender.user_id == this.config.QQ) {
       switch (keyword) {
         case "^开水":
@@ -55,11 +56,11 @@ module.exports.Plugin = class {
             .then((resp) => {
               if (resp != undefined || resp != "")
                 this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
-                  this.bot.logger.error(err);
+                  this.logger.error(err);
                 });
             })
-            .catch((err) => {
-              this.bot.logger.warn(this.name + ":" + err);
+            .catch((err: any) => {
+              this.logger.warn(err);
             });
 
           break;
@@ -69,20 +70,21 @@ module.exports.Plugin = class {
             .then((resp) => {
               if (resp != undefined || resp != "")
                 this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
-                  this.bot.logger.error(err);
+                  this.logger.error(err);
                 });
             })
-            .catch((err) => {
-              this.bot.logger.warn(this.name + ":" + err);
+            .catch((err: any) => {
+              this.logger.error(err);
             });
 
           break;
       }
     }
   }
-  特殊原因关水(msg, flag) {
+  特殊原因关水(msg: string, flag?: boolean) {
     if (flag == true) {
-      clearInterval(this.intervalID);
+      if (this.intervalTimeout != undefined)
+        clearInterval(this.intervalTimeout);
     }
     this.bot
       .sendPrivateMsg(
@@ -90,7 +92,7 @@ module.exports.Plugin = class {
         `${msg}\n本次消费澡币:${this.userMoney}\n澡币余额:${this.balance}`
       )
       .catch((err) => {
-        this.bot.logger.error(err);
+        this.logger.error(err);
       });
   }
   async init() {
@@ -100,11 +102,11 @@ module.exports.Plugin = class {
       this.config.Cardid == ""
     ) {
       await this.login().catch((err) => {
-        this.bot.logger.info(this.name + ":初始化登录失败");
-        this.bot.logger.error(err);
+        this.logger.info("初始化登录失败");
+        this.logger.error(err);
       });
     }
-    this.bot.logger.info(this.name + ":初始化成功");
+    this.logger.info("初始化成功");
     this.inited = true;
   }
   async login() {
@@ -113,11 +115,11 @@ module.exports.Plugin = class {
       this.config.PublicKey
     );
     let data = `param=${param}&userinfo=${this.config.PhoneNumber}&password=${this.config.Password}`;
-    let json = await sendPose(
+    let json: any = await sendPose(
       this.config.APP请求地址前缀,
       this.config.登录接口,
       data
-    ).catch((err) => {
+    ).catch((err: any) => {
       throw err;
     });
     this.config.Token = json.rows[0].token;
@@ -127,7 +129,7 @@ module.exports.Plugin = class {
   }
   async 查询用量() {
     if (!this.inited) {
-      this.bot.logger.warn(this.name + ":初始化未完成，未查询用量");
+      this.logger.warn("初始化未完成，未查询用量");
     }
     let param = 加密和编码(
       `{"Studid":"${
@@ -136,12 +138,12 @@ module.exports.Plugin = class {
       this.config.PublicKey
     );
     let data = `param=${param}"&cardid=${this.config.Cardid}&token=${this.config.Token}&waterid=${this.config.Waterid}`;
-    let json = await sendPose(
+    let json: any = await sendPose(
       this.config.APP请求地址前缀,
       this.config.水表用量接口,
       data
-    ).catch((err) => {
-      throw err;
+    ).catch((err: any) => {
+      this.logger.error("查询请求失败: ", err);
     });
 
     if (json.code == "1") {
@@ -178,7 +180,7 @@ module.exports.Plugin = class {
                 this.count++;
               })
               .catch((err) => {
-                this.bot.logger.error(err);
+                this.logger.error(err);
                 this.用量提醒 = false;
               });
             this.用量提醒 = true;
@@ -186,24 +188,14 @@ module.exports.Plugin = class {
           break;
       }
     } else {
-      this.bot.logger.warn(this.name + ":查询失败:\n", json);
+      this.logger.warn("查询失败:\n", json);
     }
   }
-  async 开水() {
+  async 开水(): Promise<string> {
     this.userMoney = 0;
     let resp = "未知回复";
     if (!this.inited) {
-      this.bot.logger.info(this.name + ":初始化未完成，5秒后重试");
-      setTimeout(() => {
-        this.开水()
-          .then((resp) => {
-            return resp;
-          })
-          .catch((err) => {
-            throw err;
-          });
-      }, 5000);
-      return;
+      return "初始化未完成，5秒后重试";
     }
     let param = 加密和编码(
       `{"Studid":"${
@@ -212,11 +204,11 @@ module.exports.Plugin = class {
       this.config.PublicKey
     );
     let data = `param=${param}"&cardid=${this.config.Cardid}&token=${this.config.Token}&RoomNum=${this.config.RoomNum}`;
-    let json = await sendPose(
+    let json: any = await sendPose(
       this.config.APP请求地址前缀,
       this.config.水表开阀接口,
       data
-    ).catch((err) => {
+    ).catch((err: any) => {
       throw err;
     });
     switch (json.code) {
@@ -227,8 +219,8 @@ module.exports.Plugin = class {
         }
         if (json.rows[0].info == "OPENOK") {
           resp = "水阀:" + json.rows[0].dormitory + " 被成功开启";
-          this.bot.logger.info(this.name + ":开启水阀");
-          this.intervalID = setInterval(() => {
+          this.logger.info("开启水阀");
+          this.intervalTimeout = setInterval(() => {
             this.查询用量().catch((err) => {
               this.特殊原因关水(err.message, true);
             });
@@ -249,10 +241,10 @@ module.exports.Plugin = class {
 
     return resp;
   }
-  async 关水() {
+  async 关水(): Promise<string> {
     let resp = "未知回复";
     if (!this.inited) {
-      this.bot.logger.info(this.name + ":初始化未完成，5秒后重试");
+      this.logger.info("初始化未完成，5秒后重试");
       setTimeout(() => {
         this.关水()
           .then((resp) => {
@@ -263,7 +255,7 @@ module.exports.Plugin = class {
           });
       }, 5000);
     }
-    clearInterval(this.intervalID);
+    if (this.intervalTimeout != undefined) clearInterval(this.intervalTimeout);
     await this.查询用量().catch((err) => {
       this.特殊原因关水(err.message);
       throw err;
@@ -280,7 +272,7 @@ module.exports.Plugin = class {
       this.config.APP请求地址前缀,
       this.config.水表关阀接口,
       data
-    ).catch((err) => {
+    ).catch((err: any) => {
       throw err;
     });
 
@@ -292,7 +284,7 @@ module.exports.Plugin = class {
             this.userMoney +
             "\n剩余澡币:" +
             this.balance;
-          this.bot.logger.info(this.name + ":关闭水阀");
+          this.logger.info("关闭水阀");
         }
         break;
       case "12342":
@@ -310,7 +302,7 @@ module.exports.Plugin = class {
     this.count = 1;
     return resp;
   }
-};
+}
 
 function getOnlyID() {
   //随机字符串：时间戳 + 取3次随机数（11111, 9999999）拼接
@@ -325,19 +317,19 @@ function getCodeingTime() {
   //时间戳substring(0, 10)
   return new Date().getTime().toString().substring(0, 10);
 }
-function GetRandomNum(Min, Max) {
+function GetRandomNum(Min: number, Max: number) {
   var Range = Max - Min;
   var Rand = Math.random();
   return Min + Math.round(Rand * Range);
 }
 
-function 加密和编码(data, publicKey) {
+function 加密和编码(data: string, publicKey: string): string {
   const a_public_key = new NodeRSA(publicKey);
   a_public_key.setOptions({ encryptionScheme: "pkcs1" });
   return encodeURIComponent(a_public_key.encrypt(data, "base64"));
 }
 
-function sendPose(hostname, path, data) {
+function sendPose(hostname: string, path: string, data: string): any {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: hostname,
