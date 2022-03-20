@@ -72,7 +72,8 @@ export class Plugin extends BotPlugin {
       let r_url = new URL(_path, this.config.url);
       let reqList = http.request(r_url, (res: IncomingMessage) => {
         let data: Object;
-        if (res.statusCode != 200) reject(res.statusCode);
+        if (res.statusCode != 200)
+          reject(new Error("获取更新失败: " + res.statusCode));
         res.on("data", (d: string) => {
           //判断格式决定是否解析
           if (
