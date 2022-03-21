@@ -27,7 +27,7 @@ var defaultConfig = {
 };
 export class PluginConfig implements BotPluginConfig {
     LoadArea: LoadArea = "GLOBAL";
-    Keyword?: string[] | undefined;
+    Keyword?: string[] | undefined = ["^更新色图$"];
     PluginName: string = "give-me-20-Client";
     BotVersion: string = "0.0.1";
     PluginVersion: string = "1.0.0";
@@ -35,6 +35,7 @@ export class PluginConfig implements BotPluginConfig {
     Event: Array<string> = ["system.online"];
 }
 export class Plugin extends BotPlugin {
+    private canUpdate: boolean = true;
     private intervalTimeout: NodeJS.Timeout | undefined;
     constructor(bot: BotClient) {
         super(bot, new PluginConfig());
@@ -50,7 +51,44 @@ export class Plugin extends BotPlugin {
                 break;
         }
     }
+    keyword(keyword: string, data: any) {
+        let sendTo = this.config.sendTo;
+        for (let i = 0; i < sendTo.length; i++) {
+            const element = sendTo[i];
+            if (element.QQ == data.group_id) break;
+            if ((i = sendTo.length - 1)) return;
+        }
 
+        switch (keyword) {
+            case "^更新色图$":
+                if (this.canUpdate) {
+                    this.canUpdate = false;
+                    this.getUpdate()
+                        .then((list) => {
+                            let imgList = this.getNewItem(list);
+                            data.reply("更新了 " + imgList.length + " 张色图").catch((e: any) =>
+                                this.logger.error(e)
+                            );
+                            this.sendImg(imgList).catch((err) => {
+                                this.logger.error(err);
+                            });
+                        })
+                        .catch((error) => {
+                            this.logger.error(error);
+                        });
+
+                    setTimeout(() => {
+                        this.canUpdate = true;
+                    }, 60000);
+                } else {
+                    data.reply("又更新啊，歇一会好不好").catch((e: any) => this.logger.error(e));
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
     start() {
         this.logger.debug("设置任务");
         if (this.intervalTimeout != undefined) {
@@ -143,6 +181,7 @@ export class Plugin extends BotPlugin {
                 imgNameList.length
             } 张色图接收失败`
         );
+        await sleep(10000);
         let msgs: PrivateMessage[] | GroupMessage[] = await this.bot
             .pickFriend(this.bot.uin)
             .getChatHistory(undefined, sendSuccessImgMsgNum);
@@ -246,4 +285,11 @@ export class Plugin extends BotPlugin {
             this.logger.debug("已添加数据:" + imgName);
         }
     }
+}
+function sleep(time: number) {
+    return new Promise<void>((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, time);
+    });
 }

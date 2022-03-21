@@ -51,9 +51,9 @@ export class BotPlugin {
         }
     }
     /** 触发事件时会调用插件的event方法 */
-    event(eventName: string, ...args: any): any {}
+    event(eventName: string, data: any): any {}
     /** 触发关键词时会调用插件的keyword方法 */
-    keyword(keyword: string, ...args: any): any {}
+    keyword(keyword: string, data: any): any {}
 }
 class BotLogger {
     private logger!: Logger;
