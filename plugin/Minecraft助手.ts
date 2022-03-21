@@ -58,7 +58,7 @@ export class Plugin extends BotPlugin {
         }
         if (this.rconAutoClose == undefined)
             this.rconAutoClose = setTimeout(() => {
-                this.rcon.end();
+                this.rcon.end().catch((e) => this.logger.error(e));
             }, 120000);
         else {
             clearTimeout(this.rconAutoClose);
