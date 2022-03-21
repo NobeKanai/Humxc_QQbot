@@ -53,42 +53,43 @@ export class Plugin extends BotPlugin {
         });
     }
     async keyword(keyword: string, data: any) {
-        if (new Set(this.config.group).has(data.group_id)) {
-            if (this.rconAutoClose == undefined)
-                this.rconAutoClose = setTimeout(() => {
-                    this.rcon.end();
-                }, 120000);
-            else {
-                clearTimeout(this.rconAutoClose);
-                this.rconAutoClose = undefined;
-            }
-            try {
-                await this.rcon.connect();
-            } catch (error) {}
+        if (!new Set(this.config.group).has(data.group_id)) {
+            this.logger.info(`群号 ${data.group_id} 没有权限使用该关键词`);
+        }
+        if (this.rconAutoClose == undefined)
+            this.rconAutoClose = setTimeout(() => {
+                this.rcon.end();
+            }, 120000);
+        else {
+            clearTimeout(this.rconAutoClose);
+            this.rconAutoClose = undefined;
+        }
+        try {
+            await this.rcon.connect();
+        } catch (error) {}
 
-            switch (keyword) {
-                case "^查服":
-                    try {
-                        let msg;
-                        msg = await this.rcon.send("list").catch((err) => {
-                            msg = err.message;
-                        });
-                        if (msg != undefined) await data.reply(parseList(msg));
-                    } catch (error) {
-                        data.reply(error).catch((e: any) => this.logger.error(e));
-                    }
-                    break;
+        switch (keyword) {
+            case "^查服":
+                try {
+                    let msg;
+                    msg = await this.rcon.send("list").catch((err) => {
+                        msg = err.message;
+                    });
+                    if (msg != undefined) await data.reply(parseList(msg));
+                } catch (error) {
+                    data.reply(error).catch((e: any) => this.logger.error(e));
+                }
+                break;
 
-                case "^mc ": {
-                    let msg = `§b<${data.sender.card}>§f ${data.raw_message.substr(
-                        3,
-                        data.raw_message.length + 1
-                    )}`;
-                    try {
-                        await this.rcon.send("say " + msg);
-                    } catch (error) {
-                        data.reply(error).catch((e: any) => this.logger.error(e));
-                    }
+            case "^mc ": {
+                let msg = `§b<${data.sender.card}>§f ${data.raw_message.substr(
+                    3,
+                    data.raw_message.length + 1
+                )}`;
+                try {
+                    await this.rcon.send("say " + msg);
+                } catch (error) {
+                    data.reply(error).catch((e: any) => this.logger.error(e));
                 }
             }
         }

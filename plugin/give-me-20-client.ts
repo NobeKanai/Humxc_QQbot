@@ -35,6 +35,7 @@ export class PluginConfig implements BotPluginConfig {
     Event: Array<string> = ["system.online"];
 }
 export class Plugin extends BotPlugin {
+    private inTheUpdate: boolean = false;
     private canUpdate: boolean = true;
     private intervalTimeout: NodeJS.Timeout | undefined;
     constructor(bot: BotClient) {
@@ -51,35 +52,35 @@ export class Plugin extends BotPlugin {
                 break;
         }
     }
-    keyword(keyword: string, data: any) {
+    async keyword(keyword: string, data: any) {
         let sendTo = this.config.sendTo;
         for (let i = 0; i < sendTo.length; i++) {
             const element = sendTo[i];
             if (element.QQ == data.group_id) break;
-            if ((i = sendTo.length - 1)) return;
+            if (i == sendTo.length - 1) {
+                this.logger.info(`群号 ${data.group_id} 没有权限使用该关键词`);
+                return;
+            }
         }
 
         switch (keyword) {
             case "^更新色图$":
                 if (this.canUpdate) {
                     this.canUpdate = false;
-                    this.getUpdate()
-                        .then((list) => {
-                            let imgList = this.getNewItem(list);
-                            data.reply("更新了 " + imgList.length + " 张色图").catch((e: any) =>
-                                this.logger.error(e)
-                            );
-                            this.sendImg(imgList).catch((err) => {
-                                this.logger.error(err);
-                            });
-                        })
-                        .catch((error) => {
-                            this.logger.error(error);
-                        });
-
+                    if (this.intervalTimeout != undefined) this.intervalTimeout.refresh();
+                    else data.reply("插件未完成初始化").catch((e: any) => this.logger.error(e));
                     setTimeout(() => {
                         this.canUpdate = true;
                     }, 60000);
+                    let updateNum = await this.startUpdate();
+                    if (updateNum == -1)
+                        data.reply("色图正在更新，已取消本次委托").catch((e: any) =>
+                            this.logger.error(e)
+                        );
+                    else
+                        data.reply(`更新了 ${updateNum} 张色图`).catch((e: any) =>
+                            this.logger.error(e)
+                        );
                 } else {
                     data.reply("又更新啊，歇一会好不好").catch((e: any) => this.logger.error(e));
                 }
@@ -91,22 +92,31 @@ export class Plugin extends BotPlugin {
     }
     start() {
         this.logger.debug("设置任务");
-        if (this.intervalTimeout != undefined) {
-            clearInterval(this.intervalTimeout);
-            this.intervalTimeout = undefined;
+        if (this.intervalTimeout == undefined) {
+            this.intervalTimeout = setInterval(() => {
+                this.startUpdate();
+            }, 600000);
+        } else {
+            this.intervalTimeout.refresh();
         }
-        this.intervalTimeout = setInterval(() => {
-            this.getUpdate()
-                .then((list) => {
-                    let imgList = this.getNewItem(list);
-                    this.sendImg(imgList).catch((err) => {
-                        this.logger.error(err);
-                    });
-                })
-                .catch((error) => {
-                    this.logger.error(error);
-                });
-        }, 600000);
+    }
+    async startUpdate(): Promise<number> {
+        if (this.inTheUpdate) {
+            this.logger.warn("色图正在更新，已取消本次委托");
+            return -1;
+        }
+        this.inTheUpdate = true;
+        let updateNum: number = 0;
+        try {
+            let list = await this.getUpdate();
+            let imgList = this.getNewItem(list);
+            updateNum = imgList.length;
+            this.sendImg(imgList);
+        } catch (error) {
+            this.logger.error(error);
+        }
+
+        return updateNum;
     }
     getUpdate(): Promise<Object | any> {
         return new Promise((resolve, reject) => {
@@ -275,6 +285,7 @@ export class Plugin extends BotPlugin {
                     }
                 }
         }
+        this.inTheUpdate = false;
         saveData(this);
     }
     //标记图片为已发送
