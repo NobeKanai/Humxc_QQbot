@@ -174,7 +174,10 @@ export class Plugin extends BotPlugin {
     }
     async sendImg(imgNameList: Array<string>) {
         let lastMessage_id = "";
-        if (imgNameList.length == 0) return;
+        if (imgNameList.length == 0) {
+            this.inTheUpdate = false;
+            return;
+        }
         //发送给机器人成功的图片的数量
         let sendSuccessImgMsgNum = 0;
         for (let i = 0; i < imgNameList.length; i++) {
@@ -251,6 +254,7 @@ export class Plugin extends BotPlugin {
                 allImgMsg = await this.bot.makeForwardMsg(msgs);
             } catch (error) {
                 this.logger.error("转发消息制作失败: " + error);
+                this.inTheUpdate = false;
                 return;
             }
             //发送转发消息给用户
