@@ -43,7 +43,7 @@ export function loadPlugin(client: BotClient): any {
         for (let i = 0; i < list.length; i++) {
             const file = list[i];
 
-            client.logger.debug("正在导入插件[" + path.basename(file) + "]");
+            client.logger.info("正在导入插件[" + path.basename(file) + "]");
             let p: any;
             try {
                 p = require(file);

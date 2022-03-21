@@ -1,13 +1,13 @@
 {
-  "devDependencies": {
-    "@types/node": "^17.0.8",
-    "@types/node-rsa": "^1.1.1",
-    "ts-node": "^10.4.0",
-    "typescript": "^4.5.4"
-  },
-  "dependencies": {
-    "node-rsa": "^1.1.1",
-    "oicq": "^2.1.9",
-    "rcon": "^1.1.0"
-  }
+    "devDependencies": {
+        "@types/node": "^17.0.8",
+        "@types/node-rsa": "^1.1.1",
+        "ts-node": "^10.4.0",
+        "typescript": "^4.5.4"
+    },
+    "dependencies": {
+        "node-rsa": "^1.1.1",
+        "oicq": "^2.1.9",
+        "rcon-client": "^4.2.3"
+    }
 }
