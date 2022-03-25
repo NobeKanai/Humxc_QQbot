@@ -78,7 +78,7 @@ export class Plugin extends BotPlugin {
                     else data.reply("插件未完成初始化").catch((e: any) => this.logger.error(e));
                     setTimeout(() => {
                         this.canUpdate = true;
-                    }, 60000);
+                    }, 10000);
                     let updateNum = await this.startUpdate();
                     if (updateNum == -1)
                         data.reply("色图正在更新，已取消本次委托").catch((e: any) =>
@@ -121,6 +121,7 @@ export class Plugin extends BotPlugin {
             this.sendImg(imgList);
         } catch (error) {
             this.logger.error(error);
+            this.inTheUpdate = false;
         }
 
         return updateNum;
