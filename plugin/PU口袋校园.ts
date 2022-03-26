@@ -32,11 +32,15 @@ export class Plugin extends BotPlugin {
             case "system.online":
                 this.logger.info("设置任务");
                 if (this.intervalTimeOut != undefined) this.intervalTimeOut.refresh();
-                else
+                else {
+                    this.updateAcitvity().then(() => {
+                        this.setRemind(this.data.reminds);
+                    });
                     this.intervalTimeOut = setInterval(async () => {
                         await this.updateAcitvity();
                         this.setRemind(this.data.reminds);
                     }, 108000);
+                }
                 break;
             default:
                 break;
@@ -196,7 +200,7 @@ export class Plugin extends BotPlugin {
     }
     /** 获取活动的详细信息 */
     async getActivity(simpleActive: SimpleActivity): Promise<Activity> {
-        this.logger.info(`正在获取活动对象: id=${simpleActive.id} name=${simpleActive.title}`);
+        this.logger.debug(`正在获取活动对象: id=${simpleActive.id} name=${simpleActive.title}`);
 
         var path = `/index.php?app=api&mod=Event&act=queryActivityDetailById`;
         var id = simpleActive.id;
@@ -236,10 +240,10 @@ export class Plugin extends BotPlugin {
     }
     /** 过滤活动 */
     filter(activitys: Activity[], filter_string: string): Activity[] {
+        var filter: string[] = filter_string.split(" ");
+        filter.unshift("and");
         var dateTime = new Date();
-        var dateFomarted = `${dateTime.getFullYear()}-${
-            dateTime.getMonth() + 1
-        }-${dateTime.getDate()} ${dateTime.getHours()}:${dateTime.getMinutes()}`;
+        var dateFomarted = fomartTime(dateTime);
         this.logger.debug(`======开始过滤 当前时间: ${dateFomarted}======`);
 
         var activitys_filter: Activity[] = [];
@@ -251,11 +255,11 @@ export class Plugin extends BotPlugin {
             if (activity.regEndTime < dateTime.getTime()) {
                 flag = false;
                 this.logger.debug(`因为报名已截止, 舍弃该活动`);
+                continue;
             }
-            let filter: string[] = filter_string.split(" ");
-            filter.unshift("and");
 
             for (let j = 0; j < filter.length; j = j + 4) {
+                if (filter.length < 3) break;
                 const b = filter[j];
                 const s1 = filter[j + 1];
                 const c = filter[j + 2];
@@ -288,7 +292,7 @@ export class Plugin extends BotPlugin {
 
                                 break;
                             default:
-                                this.logger.warn("表达式错误");
+                                this.logger.warn("在 has/without 处有表达式错误: " + c);
                                 break;
                         }
                         break;
@@ -318,12 +322,12 @@ export class Plugin extends BotPlugin {
 
                                 break;
                             default:
-                                this.logger.warn("表达式错误");
+                                this.logger.warn("在 has/without 处有表达式错误: " + c);
                                 break;
                         }
                         break;
                     default:
-                        this.logger.warn("表达式错误");
+                        this.logger.warn("在 and/or 处有表达式错误: " + b);
                         break;
                 }
             }
