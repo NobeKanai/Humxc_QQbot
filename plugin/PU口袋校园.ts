@@ -464,5 +464,8 @@ function fomartTime(date: Date): string {
     let d = date.getDate();
     let h = date.getHours();
     let m = date.getMinutes();
+    //修复时区对时间显示的影响
+    var timezone = -date.getTimezoneOffset();
+    if (timezone != 480) h += timezone / 60;
     return `${mo}/${d} ${h < 10 ? "0" + h : h}:${m < 10 ? "0" + m : m}`;
 }
