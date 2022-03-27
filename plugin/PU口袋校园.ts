@@ -266,6 +266,7 @@ export class Plugin extends BotPlugin {
                 const value: any = getFiled(activity, s1);
                 switch (b) {
                     case "and":
+                        if (!flag) break;
                         switch (c) {
                             case "has":
                                 flag =
