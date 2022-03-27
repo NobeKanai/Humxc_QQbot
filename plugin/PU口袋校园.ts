@@ -88,28 +88,27 @@ export class Plugin extends BotPlugin {
             let signOutTime_f = fomartTime(signOutTime);
             //添加获取到活动的提醒
             let message_get_activity =
-                "有活动可以报名\n" +
-                `活动名称: ${activity.title}\n` +
-                `开始报名: ${regStartTime_f}\n` +
-                `报名截止: ${regEndTime_f}\n` +
-                `活动开始: ${startTime_f}\n` +
-                `活动结束: ${endTime_f}`;
+                `有活动可以报名 - ${activity.credit}学分\n` +
+                `${activity.title}\n` +
+                ` - 开始报名: ${regStartTime_f}\n` +
+                ` - 报名截止: ${regEndTime_f}\n` +
+                ` - 活动开始: ${startTime_f}\n` +
+                ` - 活动结束: ${endTime_f}`;
             this.data.reminds.push({ time: 0, message: message_get_activity });
             //添加报名提醒
             let message_reg =
                 `有活动现在开始报名\n` +
-                `活动名称${activity.title}\n` +
-                `报名截止: ${regEndTime_f}`;
+                `${activity.title}\n` +
+                ` - 可参与人数: ${activity.limitNum}\n` +
+                ` - 报名截止: ${regEndTime_f}`;
             this.data.reminds.push({ time: regStartTime.getTime(), message: message_reg });
             //添加签到提醒
             let message_sign_in =
-                `有活动现在开始签到\n` +
-                `活动名称${activity.title}\n` +
-                `签退时间: ${signOutTime_f}`;
+                `有活动现在开始签到\n` + `${activity.title}\n` + ` - 签退时间: ${signOutTime_f}`;
             this.data.reminds.push({ time: signInTime.getTime(), message: message_sign_in });
 
             //添加签退提醒
-            let message_sign_out = `有活动现在开始签退\n` + `活动名称${activity.title}`;
+            let message_sign_out = `有活动现在开始签退\n` + `${activity.title}`;
             this.data.reminds.push({ time: signOutTime.getTime(), message: message_sign_out });
         }
         this.data.reminds.sort((a: Remind, b: Remind) => {

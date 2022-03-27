@@ -113,17 +113,17 @@ export class Plugin extends BotPlugin {
             return -1;
         }
         this.inTheUpdate = true;
-        let updateNum: number = 0;
-        try {
-            let list = await this.getUpdate();
-            let imgList = this.getNewItem(list);
-            updateNum = imgList.length;
-            this.sendImg(imgList);
-        } catch (error) {
-            this.logger.error(error);
+        var updateNum: number = 0;
+        var list = await this.getUpdate().catch((err) => {
+            this.logger.warn(err);
             this.inTheUpdate = false;
-        }
-
+        });
+        var imgList = this.getNewItem(list);
+        updateNum = imgList.length;
+        this.sendImg(imgList).catch((err) => {
+            this.logger.error(err);
+            this.inTheUpdate = false;
+        });
         return updateNum;
     }
     getUpdate(): Promise<Object | any> {
