@@ -103,7 +103,7 @@ export function loadPlugin(client: BotClient): any {
         if (!(c.Keyword == undefined || c.Keyword == [])) {
             let keywords: Array<string> = c.Keyword;
             for (let i = 0; i < keywords.length; i++) {
-                client.keywords.set(keywords[i], plugin_path);
+                client.registeKeyword(keywords[i], plugin_path);
             }
         }
     }
