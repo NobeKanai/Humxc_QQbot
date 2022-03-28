@@ -27,7 +27,7 @@ var defaultConfig = {
 };
 export class PluginConfig implements BotPluginConfig {
     LoadArea: LoadArea = "GLOBAL";
-    Keyword?: string[] | undefined = ["^更新色图$"];
+    Keyword?: string[] | undefined = ["^更新色图$", "^来点色图$"];
     PluginName: string = "give-me-20-Client";
     BotVersion: string = "0.0.1";
     PluginVersion: string = "1.0.0";
@@ -93,6 +93,19 @@ export class Plugin extends BotPlugin {
                 }
                 break;
 
+            case "^来点色图$":
+                this.rendomImg()
+                    .then((s: string) => {
+                        let imgUrl = this.config.url + "/" + encodeURI(s);
+                        data.reply(segment.image(imgUrl, true, 30)).catch((err: any) =>
+                            this.logger.error(err)
+                        );
+                    })
+                    .catch((err) => {
+                        this.logger.warn(err);
+                        data.reply(err.message);
+                    });
+                break;
             default:
                 break;
         }
@@ -155,6 +168,22 @@ export class Plugin extends BotPlugin {
                 });
                 res.on("end", () => {
                     resolve(data);
+                });
+            });
+            reqList.on("error", (error: Error) => {
+                reject(error);
+            });
+            reqList.end();
+        });
+    }
+    rendomImg(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            let _path = "rendom";
+            let r_url = new URL(_path, this.config.url);
+            let reqList = http.request(r_url, (res: IncomingMessage) => {
+                if (res.statusCode != 200) reject(new Error("获取随机色图失败: " + res.statusCode));
+                res.on("data", (d: number[]) => {
+                    resolve(d.toString());
                 });
             });
             reqList.on("error", (error: Error) => {
