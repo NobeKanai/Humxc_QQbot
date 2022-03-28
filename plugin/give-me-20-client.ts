@@ -54,7 +54,9 @@ export class Plugin extends BotPlugin {
     }
     async keyword(keyword: string, data: any) {
         let sendTo = this.config.sendTo;
+
         for (let i = 0; i < sendTo.length; i++) {
+            if (sendTo[i].QQ == data.group_id) break;
             if (i == sendTo.length - 1) {
                 this.logger.info(`群号 ${data.group_id} 没有权限使用该关键词`);
                 return;
