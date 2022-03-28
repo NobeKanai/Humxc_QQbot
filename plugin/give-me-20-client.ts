@@ -100,6 +100,7 @@ export class Plugin extends BotPlugin {
     start() {
         this.logger.debug("设置任务");
         if (this.intervalTimeout == undefined) {
+            this.startUpdate();
             this.intervalTimeout = setInterval(() => {
                 this.startUpdate();
             }, 600000);
@@ -114,16 +115,22 @@ export class Plugin extends BotPlugin {
         }
         this.inTheUpdate = true;
         var updateNum: number = 0;
-        var list = await this.getUpdate().catch((err) => {
-            this.logger.warn(err);
+        var list = [];
+        try {
+            list = await this.getUpdate();
+        } catch (error) {
+            this.logger.warn(error);
             this.inTheUpdate = false;
-        });
-        var imgList = this.getNewItem(list);
-        updateNum = imgList.length;
-        this.sendImg(imgList).catch((err) => {
-            this.logger.error(err);
-            this.inTheUpdate = false;
-        });
+        }
+        if (list.length > 0) {
+            var imgList = this.getNewItem(list);
+            updateNum = imgList.length;
+            this.sendImg(imgList).catch((err) => {
+                this.logger.error(err);
+                this.inTheUpdate = false;
+            });
+        } else this.inTheUpdate = false;
+
         return updateNum;
     }
     getUpdate(): Promise<Object | any> {
