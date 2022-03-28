@@ -178,7 +178,7 @@ export class Plugin extends BotPlugin {
     }
     rendomImg(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            let _path = "rendom";
+            let _path = "random";
             let r_url = new URL(_path, this.config.url);
             let reqList = http.request(r_url, (res: IncomingMessage) => {
                 if (res.statusCode != 200) reject(new Error("获取随机色图失败: " + res.statusCode));
