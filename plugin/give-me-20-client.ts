@@ -55,15 +55,6 @@ export class Plugin extends BotPlugin {
     async keyword(keyword: string, data: any) {
         let sendTo = this.config.sendTo;
         for (let i = 0; i < sendTo.length; i++) {
-            const element = sendTo[i];
-            if (element.QQ == data.group_id) {
-                if (data.sender.role == "owner" || data.sender.role == "admin") {
-                    break;
-                } else {
-                    data.reply("只有管理员才可以色色").catch((e: any) => this.logger.error(e));
-                    return;
-                }
-            }
             if (i == sendTo.length - 1) {
                 this.logger.info(`群号 ${data.group_id} 没有权限使用该关键词`);
                 return;
