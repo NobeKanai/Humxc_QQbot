@@ -203,7 +203,6 @@ export class Plugin extends BotPlugin {
         return imgList;
     }
     async sendImg(imgNameList: Array<string>) {
-        let lastMessage_id = "";
         if (imgNameList.length == 0) {
             this.inTheUpdate = false;
             return;
@@ -216,7 +215,7 @@ export class Plugin extends BotPlugin {
             //不采取直接单独发，所有消息全部转发
             //全部发送给自己
             try {
-                lastMessage_id = await this.bot.sendSelfMsg(img);
+                await this.bot.sendSelfMsg(img);
             } catch (error) {
                 this.logger.error("一张图片接收失败:" + imgNameList[i], error);
                 continue;
@@ -231,10 +230,9 @@ export class Plugin extends BotPlugin {
                 imgNameList.length
             } 张色图接收失败`
         );
-        await sleep(10000);
         let msgs: PrivateMessage[] | GroupMessage[] = await this.bot
             .pickFriend(this.bot.uin)
-            .getChatHistory(undefined, sendSuccessImgMsgNum);
+            .getChatHistory(new Date().getTime(), sendSuccessImgMsgNum);
         //给消息加上昵称
         msgs.forEach((m) => {
             m.sender.nickname = this.bot.nickname;
@@ -258,9 +256,9 @@ export class Plugin extends BotPlugin {
                             this.logger.debug(
                                 `开始将图片发送到群聊: ${user.QQ} [${i + 1}/${imgNameList.length}]`
                             );
-                            await this.bot.sendGroupMsg(user.QQ, e).catch((err) => {
-                                this.logger.error("一张图片发送到群聊失败:", err);
-                            });
+                            await this.bot
+                                .sendGroupMsg(user.QQ, e)
+                                .catch((err) => this.logger.error("一张图片发送到群聊失败:", err));
                         }
                     } else this.logger.error("一张图片发送到群聊失败: msg==undefined");
                 } else {
@@ -270,9 +268,9 @@ export class Plugin extends BotPlugin {
                             this.logger.debug(
                                 `开始将图片发送到私聊: ${user.QQ} [${i + 1}/${imgNameList.length}]`
                             );
-                            await this.bot.sendPrivateMsg(user.QQ, e).catch((err) => {
-                                this.logger.error("一张图片发送到私聊失败:", err);
-                            });
+                            await this.bot
+                                .sendPrivateMsg(user.QQ, e)
+                                .catch((err) => this.logger.error("一张图片发送到私聊失败:", err));
                         }
                     } else this.logger.error("一张图片发送到私聊失败: msg==undefined");
                 }
@@ -293,9 +291,9 @@ export class Plugin extends BotPlugin {
                     const user = this.config.sendTo[i];
                     if (user.IsGroup) {
                         this.logger.debug(`开始将图片集合发送到群聊: ${user.QQ}`);
-                        await this.bot.sendGroupMsg(user.QQ, allImgMsg).catch((err) => {
-                            this.logger.error("转发图片集合到群聊失败:", err);
-                        });
+                        await this.bot
+                            .sendGroupMsg(user.QQ, allImgMsg)
+                            .catch((err) => this.logger.error("转发图片集合到群聊失败:", err));
                         if (imgNameList.length - sendSuccessImgMsgNum > 0)
                             this.bot
                                 .sendGroupMsg(
@@ -304,14 +302,12 @@ export class Plugin extends BotPlugin {
                                         imgNameList.length - sendSuccessImgMsgNum
                                     } 张接收失败`
                                 )
-                                .catch((err) => {
-                                    this.logger.error(err);
-                                });
+                                .catch((err) => this.logger.error(err));
                     } else {
                         this.logger.debug(`开始将图片集合发送到私聊: ${user.QQ} `);
-                        await this.bot.sendPrivateMsg(user.QQ, allImgMsg).catch((err) => {
-                            this.logger.error("转发图片集合到私聊失败:", err);
-                        });
+                        await this.bot
+                            .sendPrivateMsg(user.QQ, allImgMsg)
+                            .catch((err) => this.logger.error("转发图片集合到私聊失败:", err));
                         if (imgNameList.length - sendSuccessImgMsgNum > 0)
                             this.bot
                                 .sendPrivateMsg(
@@ -320,9 +316,7 @@ export class Plugin extends BotPlugin {
                                         imgNameList.length - sendSuccessImgMsgNum
                                     } 张接收失败`
                                 )
-                                .catch((err) => {
-                                    this.logger.error(err);
-                                });
+                                .catch((err) => this.logger.error(err));
                     }
                 }
         }
