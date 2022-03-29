@@ -239,8 +239,10 @@ export class Plugin extends BotPlugin {
     }
     /** 过滤活动 */
     filter(activitys: Activity[], filter_string: string): Activity[] {
-        var filter: string[] = filter_string.split(" ");
+        var filter: string[] = [];
+        filter = filter_string.split(" ");
         filter.unshift("and");
+
         var dateTime = new Date();
         var dateFomarted = fomartTime(dateTime);
         this.logger.debug(`======开始过滤 当前时间: ${dateFomarted}======`);
@@ -257,7 +259,9 @@ export class Plugin extends BotPlugin {
                 continue;
             }
 
+            let quitFor = false;
             for (let j = 0; j < filter.length; j = j + 4) {
+                if (quitFor) break;
                 if (filter.length < 3) break;
                 const b = filter[j];
                 const s1 = filter[j + 1];
@@ -266,7 +270,10 @@ export class Plugin extends BotPlugin {
                 const value: any = getFiled(activity, s1);
                 switch (b) {
                     case "and":
-                        if (!flag) break;
+                        if (!flag) {
+                            quitFor = true;
+                            break;
+                        }
                         switch (c) {
                             case "has":
                                 flag =
