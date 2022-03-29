@@ -33,24 +33,33 @@ export class Plugin extends BotPlugin {
                 if (message.message[1].text != " 给我点赞") return;
                 let qq = message.sender.user_id;
                 if (!this.isFriend(qq)) {
-                    message.reply("先加个好友吧ヾ(≧▽≦*)o", true);
+                    message
+                        .reply("先加个好友吧ヾ(≧▽≦*)o", true)
+                        .catch((err: any) => this.logger.error(err));
                     return;
                 }
                 if (this.addUserItem(qq)) {
-                    message.reply("好！每天给你点赞！", true);
+                    message
+                        .reply("好！每天给你点赞！", true)
+                        .catch((err: any) => this.logger.error(err));
                     this.bot
                         .pickFriend(qq)
                         .thumbUp(20)
                         .then((e: boolean) => {
                             this.logger.info(`给好友 ${qq} 点赞 - ` + (e ? "成功" : "失败"));
-                        });
-                } else message.reply("你已经在点赞列表了🌹", true);
+                        })
+                        .catch((err: any) => this.logger.error(err));
+                } else
+                    message
+                        .reply("你已经在点赞列表了🌹", true)
+                        .catch((err: any) => this.logger.error(err));
                 this.bot
                     .pickFriend(qq)
                     .thumbUp(20)
                     .then((e: boolean) => {
                         this.logger.info(`给好友 ${qq} 点赞 - ` + (e ? "成功" : "失败"));
-                    });
+                    })
+                    .catch((err: any) => this.logger.error(err));
                 break;
             case "system.online":
             case "newDay":
@@ -61,7 +70,8 @@ export class Plugin extends BotPlugin {
                             .thumbUp(20)
                             .then((e: boolean) => {
                                 this.logger.info(`给好友 ${qq} 点赞 - ` + (e ? "成功" : "失败"));
-                            });
+                            })
+                            .catch((err: any) => this.logger.error(err));
                     });
                 }, 20000);
                 break;
