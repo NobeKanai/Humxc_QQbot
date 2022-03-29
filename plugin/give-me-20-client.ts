@@ -71,7 +71,7 @@ export class Plugin extends BotPlugin {
                     else data.reply("插件未完成初始化").catch((e: any) => this.logger.error(e));
                     setTimeout(() => {
                         this.canUpdate = true;
-                    }, 10000);
+                    }, 60000);
                     let updateNum = await this.startUpdate();
                     if (updateNum == -1)
                         data.reply("色图正在更新，已取消本次委托").catch((e: any) =>
@@ -87,17 +87,21 @@ export class Plugin extends BotPlugin {
                 break;
 
             case "^来点色图$":
-                this.rendomImg()
-                    .then((s: string) => {
-                        let imgUrl = this.config.url + "/" + encodeURI(s);
-                        data.reply(segment.image(imgUrl, true, 30)).catch((err: any) =>
-                            this.logger.error(err)
-                        );
-                    })
-                    .catch((err) => {
-                        this.logger.warn(err);
-                        data.reply(err.message);
-                    });
+                if (!this.inTheUpdate) {
+                    this.rendomImg()
+                        .then((s: string) => {
+                            let imgUrl = this.config.url + "/" + encodeURI(s);
+                            data.reply(segment.image(imgUrl, true, 30)).catch((err: any) =>
+                                this.logger.error(err)
+                            );
+                        })
+                        .catch((err) => {
+                            this.logger.warn(err);
+                            data.reply(err.message);
+                        });
+                } else {
+                    data.reply("正在更新色图...").catch((err: any) => this.logger.error(err));
+                }
                 break;
             default:
                 break;
