@@ -76,6 +76,7 @@ export class Plugin extends BotPlugin {
 
         for (let i = 0; i < activitys.length; i++) {
             const activity = activitys[i];
+            let nowDate = new Date();
             let regStartTime = new Date(activity.regStartTime);
             let regEndTime = new Date(activity.regEndTime);
             let startTime = new Date(activity.startTime);
@@ -103,15 +104,19 @@ export class Plugin extends BotPlugin {
                 `${activity.title}\n` +
                 ` - 可参与人数: ${activity.limitNum == -1 ? "不限" : activity.limitNum}\n` +
                 ` - 报名截止: ${regEndTime_f}`;
-            this.data.reminds.push({ time: regStartTime.getTime(), message: message_reg });
+            if (regStartTime.getTime() > nowDate.getTime()) {
+                this.data.reminds.push({ time: regStartTime.getTime(), message: message_reg });
+            }
             //添加签到提醒
             let message_sign_in =
                 `有活动现在开始签到\n` + `${activity.title}\n` + ` - 签退时间: ${signOutTime_f}`;
-            this.data.reminds.push({ time: signInTime.getTime(), message: message_sign_in });
+            if (signInTime.getTime() < nowDate.getTime()) {
+                this.data.reminds.push({ time: 0, message: message_sign_in });
+            } else this.data.reminds.push({ time: signInTime.getTime(), message: message_sign_in });
 
             //添加签退提醒
             let message_sign_out = `有活动现在开始签退\n` + `${activity.title}`;
-            if (signInTime.getTime() < new Date().getTime()) {
+            if (signOutTime.getTime() < nowDate.getTime()) {
                 this.data.reminds.push({ time: 0, message: message_sign_out });
             } else
                 this.data.reminds.push({ time: signOutTime.getTime(), message: message_sign_out });
