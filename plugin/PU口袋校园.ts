@@ -37,8 +37,10 @@ export class Plugin extends BotPlugin {
                         this.setRemind(this.data.reminds);
                     });
                     this.intervalTimeOut = setInterval(async () => {
-                        await this.updateAcitvity();
-                        this.setRemind(this.data.reminds);
+                        if (this.bot.isOnline()) {
+                            await this.updateAcitvity();
+                            this.setRemind(this.data.reminds);
+                        } else this.logger.debug("任务取消，客户端不在线");
                     }, 108000);
                 }
                 break;
@@ -99,7 +101,7 @@ export class Plugin extends BotPlugin {
             let message_reg =
                 `有活动现在开始报名\n` +
                 `${activity.title}\n` +
-                ` - 可参与人数: ${activity.limitNum}\n` +
+                ` - 可参与人数: ${activity.limitNum == -1 ? "不限" : activity.limitNum}\n` +
                 ` - 报名截止: ${regEndTime_f}`;
             this.data.reminds.push({ time: regStartTime.getTime(), message: message_reg });
             //添加签到提醒
@@ -109,7 +111,10 @@ export class Plugin extends BotPlugin {
 
             //添加签退提醒
             let message_sign_out = `有活动现在开始签退\n` + `${activity.title}`;
-            this.data.reminds.push({ time: signOutTime.getTime(), message: message_sign_out });
+            if (signInTime.getTime() < new Date().getTime()) {
+                this.data.reminds.push({ time: 0, message: message_sign_out });
+            } else
+                this.data.reminds.push({ time: signOutTime.getTime(), message: message_sign_out });
         }
         this.data.reminds.sort((a: Remind, b: Remind) => {
             return a.time - b.time;

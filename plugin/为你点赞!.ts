@@ -63,17 +63,20 @@ export class Plugin extends BotPlugin {
                 break;
             case "system.online":
             case "newDay":
-                setTimeout(() => {
-                    this.config.users.forEach((qq: number) => {
-                        this.bot
-                            .pickFriend(qq)
-                            .thumbUp(20)
-                            .then((e: boolean) => {
-                                this.logger.info(`给好友 ${qq} 点赞 - ` + (e ? "成功" : "失败"));
-                            })
-                            .catch((err: any) => this.logger.error(err));
-                    });
-                }, 20000);
+                if (this.bot.isOnline())
+                    setTimeout(() => {
+                        this.config.users.forEach((qq: number) => {
+                            this.bot
+                                .pickFriend(qq)
+                                .thumbUp(20)
+                                .then((e: boolean) => {
+                                    this.logger.info(
+                                        `给好友 ${qq} 点赞 - ` + (e ? "成功" : "失败")
+                                    );
+                                })
+                                .catch((err: any) => this.logger.error(err));
+                        });
+                    }, 20000);
                 break;
             default:
                 break;
