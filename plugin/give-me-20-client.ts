@@ -220,6 +220,8 @@ export class Plugin extends BotPlugin {
             //全部发送给自己
             try {
                 await this.bot.sendSelfMsg(img);
+                //暂时缓解503错误
+                sleep(500);
             } catch (error) {
                 this.logger.error("一张图片接收失败:" + imgNameList[i], error);
                 continue;
