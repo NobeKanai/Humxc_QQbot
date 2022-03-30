@@ -236,7 +236,6 @@ export class Plugin extends BotPlugin {
                 imgNameList.length
             } 张色图接收失败`
         );
-        sleep(1000);
         let msgs: PrivateMessage[] | GroupMessage[] = await this.bot
             .pickFriend(this.bot.uin)
             .getChatHistory(new Date().getTime(), sendSuccessImgMsgNum);
