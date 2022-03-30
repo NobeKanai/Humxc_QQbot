@@ -90,6 +90,8 @@ export class Plugin extends BotPlugin {
                 if (!this.inTheUpdate) {
                     this.rendomImg()
                         .then((s: string) => {
+                            //暂时缓解503错误
+                            sleep(1000);
                             let imgUrl = this.config.url + "/" + encodeURI(s);
                             data.reply(segment.image(imgUrl, true, 30)).catch((err: any) =>
                                 this.logger.error(err)
@@ -128,6 +130,8 @@ export class Plugin extends BotPlugin {
         var list = [];
         try {
             list = await this.getUpdate();
+            //暂时缓解503错误
+            sleep(1000);
         } catch (error) {
             this.logger.warn(error);
             this.inTheUpdate = false;
@@ -221,7 +225,7 @@ export class Plugin extends BotPlugin {
             try {
                 await this.bot.sendSelfMsg(img);
                 //暂时缓解503错误
-                sleep(500);
+                sleep(1000);
             } catch (error) {
                 this.logger.error("一张图片接收失败:" + imgNameList[i], error);
                 continue;
