@@ -2,14 +2,13 @@ import http from "https";
 import { getConfig, getData, saveData } from "../lib/pluginFather";
 import path from "path";
 import {
-    Forwardable,
+    DiscussMessageEvent,
     GroupMessage,
-    Message,
+    GroupMessageEvent,
     MessageElem,
-    MessageRet,
     PrivateMessage,
+    PrivateMessageEvent,
     segment,
-    Sendable,
     XmlElem,
 } from "oicq";
 import { BotPlugin, BotPluginConfig, LoadArea } from "../lib/plugin";
@@ -26,13 +25,10 @@ var defaultConfig = {
     ],
 };
 export class PluginConfig implements BotPluginConfig {
-    LoadArea: LoadArea = "GLOBAL";
-    Keyword?: string[] | undefined = ["^更新色图$", "^来点色图$"];
     PluginName: string = "give-me-20-Client";
     BotVersion: string = "0.0.1";
     PluginVersion: string = "1.0.0";
     Info: string = "抓取give-me-20接口的图片";
-    Event: Array<string> = ["system.online"];
 }
 export class Plugin extends BotPlugin {
     private inTheUpdate: boolean = false;
@@ -42,15 +38,9 @@ export class Plugin extends BotPlugin {
         super(bot, new PluginConfig());
         this.config = getConfig(this, defaultConfig);
         this.data = getData(this, []);
-    }
-    event(eventName: string, data: any) {
-        switch (eventName) {
-            case "system.online":
-                this.start();
-                break;
-            default:
-                break;
-        }
+        this.bot.on("system.online", () => this.start());
+        this.bot.regKeyword("^更新色图$", (msg) => this.keyword("^更新色图$", msg), "group");
+        this.bot.regKeyword("^来点色图$", (msg) => this.keyword("^来点色图$", msg), "group");
     }
     async keyword(keyword: string, data: any) {
         let sendTo = this.config.sendTo;

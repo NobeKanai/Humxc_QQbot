@@ -3,12 +3,10 @@ import { BotClient } from "../lib/core/client";
 import { BotPlugin, LoadArea, BotPluginConfig } from "../lib/plugin";
 import { getConfig, getData, saveConfig, saveData } from "../lib/pluginFather";
 export class PluginConfig implements BotPluginConfig {
-    LoadArea: LoadArea = "GLOBAL";
     PluginName: string = "PUHelper";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
     Info: string = "获取PU口袋校园的活动, 并提醒";
-    Event?: string[] | undefined = ["system.online"];
 }
 export class Plugin extends BotPlugin {
     private hostName!: string;
@@ -25,28 +23,21 @@ export class Plugin extends BotPlugin {
         this.oauth_token = this.config.oauth_token;
         this.oauth_token_secret = this.config.oauth_token_secret;
         this.filter_string = this.config.filter_string;
-    }
-
-    event(eventName: string, data: any) {
-        switch (eventName) {
-            case "system.online":
-                this.logger.info("设置任务");
-                if (this.intervalTimeOut != undefined) this.intervalTimeOut.refresh();
-                else {
-                    this.updateAcitvity().then(() => {
+        this.bot.on("system.online", () => {
+            this.logger.info("设置任务");
+            if (this.intervalTimeOut != undefined) this.intervalTimeOut.refresh();
+            else {
+                this.updateAcitvity().then(() => {
+                    this.setRemind(this.data.reminds);
+                });
+                this.intervalTimeOut = setInterval(async () => {
+                    if (this.bot.isOnline()) {
+                        await this.updateAcitvity();
                         this.setRemind(this.data.reminds);
-                    });
-                    this.intervalTimeOut = setInterval(async () => {
-                        if (this.bot.isOnline()) {
-                            await this.updateAcitvity();
-                            this.setRemind(this.data.reminds);
-                        } else this.logger.debug("任务取消，客户端不在线");
-                    }, 108000);
-                }
-                break;
-            default:
-                break;
-        }
+                    } else this.logger.debug("任务取消，客户端不在线");
+                }, 108000);
+            }
+        });
     }
     /** 更新活动 */
     async updateAcitvity() {

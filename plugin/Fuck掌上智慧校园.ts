@@ -27,13 +27,10 @@ interface Response {
     rows: Array<any>;
 }
 export class PluginConfig implements BotPluginConfig {
-    LoadArea: LoadArea = "GLOBAL";
     PluginName: string = "Fuck掌上智慧校园";
     BotVersion: string = "0.0.1";
     PluginVersion: string = "1.0.0";
     Info: string = "用来控制学校的水阀";
-    Event: string[] = ["system.online"];
-    Keyword: string[] = ["^开水", "^关水", "^查电费"];
 }
 export class Plugin extends BotPlugin {
     private inited: boolean = false;
@@ -45,56 +42,55 @@ export class Plugin extends BotPlugin {
     constructor(botClient: BotClient) {
         super(botClient, new PluginConfig());
         this.config = getConfig(this, defaultConfig);
-    }
-
-    event(eventName: string) {
-        switch (eventName) {
-            case "system.online":
-                this.init();
-                break;
-        }
-    }
-    keyword(keyword: string, data: any) {
-        if (data.sender.user_id == this.config.QQ) {
-            switch (keyword) {
-                case "^开水":
-                    this.开水()
-                        .then((resp) => {
-                            if (resp != undefined || resp != "")
-                                this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
-                                    this.logger.error(err);
-                                });
-                        })
-                        .catch((err: any) => {
-                            this.logger.warn(err);
-                        });
-
-                    break;
-
-                case "^关水":
-                    this.关水()
-                        .then((resp) => {
-                            if (resp != undefined || resp != "")
-                                this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
-                                    this.logger.error(err);
-                                });
-                        })
-                        .catch((err: any) => {
-                            this.logger.error(err);
-                        });
-
-                    break;
-                case "^查电费":
-                    this.查电费().then((resp) => {
-                        this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
-                            this.logger.error(err);
-                        });
+        this.bot.on("system.online", () => this.init());
+        this.bot.regKeyword(
+            "^开水$",
+            (msg) => {
+                if (msg.sender.user_id != this.config.QQ) return;
+                this.开水()
+                    .then((resp) => {
+                        if (resp != undefined || resp != "")
+                            this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
+                                this.logger.error(err);
+                            });
+                    })
+                    .catch((err: any) => {
+                        this.logger.warn(err);
                     });
-
-                    break;
-            }
-        }
+            },
+            "private"
+        );
+        this.bot.regKeyword(
+            "^关水$",
+            (msg) => {
+                if (msg.sender.user_id != this.config.QQ) return;
+                this.关水()
+                    .then((resp) => {
+                        if (resp != undefined || resp != "")
+                            this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
+                                this.logger.error(err);
+                            });
+                    })
+                    .catch((err: any) => {
+                        this.logger.error(err);
+                    });
+            },
+            "private"
+        );
+        this.bot.regKeyword(
+            "^查电费$",
+            (msg) => {
+                if (msg.sender.user_id != this.config.QQ) return;
+                this.查电费().then((resp) => {
+                    this.bot.sendPrivateMsg(this.config.QQ, resp).catch((err) => {
+                        this.logger.error(err);
+                    });
+                });
+            },
+            "private"
+        );
     }
+
     特殊原因关水(msg: string, flag?: boolean) {
         this.用量提醒 = false;
         if (flag == true) {

@@ -12,8 +12,6 @@ var defaultConfig = {
     group: ["绑定的群组（数组）"],
 };
 export class PluginConfig implements BotPluginConfig {
-    LoadArea: LoadArea = "GLOBAL";
-    Event?: string[] | undefined;
     PluginName = "Minecraft助手";
     BotVersion = "0.0.1";
     PluginVersion = "1.0.0";
@@ -33,6 +31,8 @@ export class Plugin extends BotPlugin {
         };
         this.rcon = new Rcon(this.rconOption);
         this.startserver();
+        this.bot.regKeyword("^查服", (msg) => this.keyword("^查服", msg));
+        this.bot.regKeyword("^mc", (msg) => this.keyword("^mc", msg));
     }
     startserver() {
         var token = "kxnd9injHJKfe55wcds";

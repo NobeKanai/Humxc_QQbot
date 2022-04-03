@@ -1,3 +1,6 @@
+/**
+ * 机器人插件的基本实现，机器人插件应继承此类
+ */
 import { BotClient } from "./core/client";
 import { Logger } from "oicq";
 import log4js from "log4js";
@@ -10,24 +13,17 @@ export interface BotPluginConfig {
     PluginVersion: string;
     /** 机器人版本 */
     BotVersion: string;
-    /** 插件加载时的数据隔离 */
-    LoadArea: LoadArea;
     /** 描述消息 */
     Info: string;
-    /** 注册的事件 */
-    Event?: string[];
-    /** 注册的关键词 */
-    Keyword?: string[];
 }
 class PluginConfig implements BotPluginConfig {
-    LoadArea: LoadArea = "GLOBAL";
     PluginName: string = "Plugin";
     BotVersion: string = "0.0.0";
     PluginVersion: string = "0.0.0";
     Info: string = "未配置的插件";
 }
 export class BotPlugin {
-    public logger!: Logger | BotLogger;
+    public logger!: Logger | PluginLogger;
     public pluginConfig: BotPluginConfig = new PluginConfig();
     public bot!: BotClient;
     public data: any = {};
@@ -35,13 +31,13 @@ export class BotPlugin {
     constructor(bot: BotClient, pluginConfig: PluginConfig) {
         this.bot = bot;
         this.pluginConfig = pluginConfig;
-        if (this.bot.error_call_admin == true) {
+        if (this.bot.errorCallAdmin == true) {
             var _log = log4js.getLogger(
                 `[${this.bot.apk.display}:${this.bot.uin}] [${this.pluginConfig.PluginName}]`
             );
             _log.level = this.bot.config.log_level;
             this.logger = _log;
-            this.logger = new BotLogger(this.bot, this.pluginConfig.PluginName, _log);
+            this.logger = new PluginLogger(this.bot, this.pluginConfig.PluginName, _log);
         } else {
             var _log = log4js.getLogger(
                 `[${this.bot.apk.display}:${this.bot.uin}] [${this.pluginConfig.PluginName}]`
@@ -50,12 +46,8 @@ export class BotPlugin {
             this.logger = _log;
         }
     }
-    /** 触发事件时会调用插件的event方法 */
-    event(eventName: string, data: any): any {}
-    /** 触发关键词时会调用插件的keyword方法 */
-    keyword(keyword: string, data: any): any {}
 }
-class BotLogger {
+class PluginLogger {
     private logger!: Logger;
     private bot!: BotClient;
     private pluginName!: string;
@@ -70,9 +62,9 @@ class BotLogger {
     error(err: any, ...args: any[]) {
         this.logger.error(err, ...args);
         let msg;
-        if (err.mesage == undefined) msg = err.toString();
+        if (err.message == undefined) msg = err.toString();
         else msg = err.message;
-        this.bot.sendAdminMsg("有插件出现错误\n" + this.pluginName + ":\n" + msg.toString());
+        this.bot.sendAdminMsg("有插件出现错误\n" + this.pluginName + ":\n" + msg);
     }
     fatal(msg: any, ...args: any[]) {
         this.logger.fatal(msg, ...args);
