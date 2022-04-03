@@ -30,9 +30,12 @@ export class Plugin extends BotPlugin {
             password: this.config.password,
         };
         this.rcon = new Rcon(this.rconOption);
-        this.startserver();
-        this.bot.regKeyword("^查服", (msg) => this.keyword("^查服", msg));
-        this.bot.regKeyword("^mc", (msg) => this.keyword("^mc", msg));
+        this.rcon.on("error", (err) => {
+            this.logger.error(err);
+        });
+        // this.startserver();
+        this.bot.regKeyword("^查服", (msg) => this.keyword("^查服", msg), "group");
+        this.bot.regKeyword("^mc", (msg) => this.keyword("^mc", msg), "group");
     }
     startserver() {
         var token = "kxnd9injHJKfe55wcds";
@@ -51,6 +54,7 @@ export class Plugin extends BotPlugin {
                 }
             } else this.logger.error("request.url == undefined");
         });
+        this.logger.info("服务器在");
     }
     async keyword(keyword: string, data: any) {
         if (!new Set(this.config.group).has(data.group_id)) {
@@ -61,8 +65,7 @@ export class Plugin extends BotPlugin {
                 this.rcon.end().catch((e) => this.logger.error(e));
             }, 120000);
         else {
-            clearTimeout(this.rconAutoClose);
-            this.rconAutoClose = undefined;
+            this.rconAutoClose.refresh();
         }
         try {
             await this.rcon.connect();
@@ -72,11 +75,15 @@ export class Plugin extends BotPlugin {
             case "^查服":
                 try {
                     let msg;
-                    msg = await this.rcon.send("list").catch((err) => {
-                        msg = err.message;
-                    });
+                    try {
+                        msg = await this.rcon.send("list");
+                    } catch (error) {
+                        let err = error as Error;
+                        if (err.message != undefined) msg = err.message;
+                    }
                     if (msg != undefined) await data.reply(parseList(msg));
                 } catch (error) {
+                    this.logger.error(error);
                     data.reply(error).catch((e: any) => this.logger.error(e));
                 }
                 break;
@@ -89,6 +96,7 @@ export class Plugin extends BotPlugin {
                 try {
                     await this.rcon.send("say " + msg);
                 } catch (error) {
+                    this.logger.error(error);
                     data.reply(error).catch((e: any) => this.logger.error(e));
                 }
             }
