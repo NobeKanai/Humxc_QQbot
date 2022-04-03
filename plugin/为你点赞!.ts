@@ -23,9 +23,9 @@ export class Plugin extends BotPlugin {
     constructor(botClient: BotClient) {
         super(botClient, new PluginConfig());
         this.config = getConfig(this, { users: [] });
-        this.bot.on("bot.atselfmsg", this.interact);
-        this.bot.on("system.online", this.like);
-        this.bot.regKeyword("给我点赞$", this.like, "group");
+        this.bot.on("bot.atselfmsg", (msg) => this.interact(msg));
+        this.bot.on("system.online", () => this.like());
+        this.bot.regKeyword("给我点赞$", () => this.like(), "group");
     }
     interact(message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent) {
         let qq = message.sender.user_id;

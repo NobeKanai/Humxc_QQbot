@@ -50,9 +50,8 @@ export class PluginManager {
                     let pluginConfig: BotPluginConfig = new plugin.PluginConfig();
                     this.client.logger.debug(`Name: ${pluginConfig.PluginName}`);
 
-                    this.client.logger.debug(
-                        `BotVersion: ${pluginConfig.BotVersion} v${pluginConfig.BotVersion}`
-                    );
+                    this.client.logger.debug(`PluginVersion: ${pluginConfig.PluginVersion}`);
+                    this.client.logger.debug(`BotVersion: ${pluginConfig.BotVersion}`);
                     this.client.logger.debug(`Info: ${pluginConfig.Info}`);
                     this.pluginEntity.set(pluginConfig.PluginName, pluginEntity);
                     this.client.logger.info("----------");
