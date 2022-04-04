@@ -25,9 +25,9 @@ export class Plugin extends BotPlugin {
         this.config = getConfig(this, { users: [] });
         this.bot.on("bot.atselfmsg", (msg) => this.interact(msg));
         this.bot.on("system.online", () => this.like());
-        this.bot.regKeyword("给我点赞$", () => this.like(), "group");
     }
     interact(message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent) {
+        if (/给我点赞$/.exec(message.raw_message) == null) return;
         let qq = message.sender.user_id;
         if (!this.isFriend(qq)) {
             message
