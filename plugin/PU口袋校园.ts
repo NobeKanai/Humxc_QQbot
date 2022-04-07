@@ -31,6 +31,7 @@ export class Plugin extends BotPlugin {
                     this.setRemind(this.data.reminds);
                 });
                 this.intervalTimeOut = setInterval(async () => {
+                    await sleep(Math.floor(Math.random() * 180000 + 1));
                     if (this.bot.isOnline()) {
                         await this.updateAcitvity();
                         this.setRemind(this.data.reminds);
@@ -442,16 +443,24 @@ function sendPose(host: string, path: string, data: string) {
                 "Accept-Encoding": "gzip",
             },
         };
-
+        var respData: string = "";
         const req = https.request(options, (res) => {
-            res.on("data", (d) => {
-                resolve(JSON.parse(d.toString()));
+            res.on("data", (d: Buffer) => {
+                respData += d.toString("utf-8");
             });
         });
         req.on("error", (error) => {
             reject(error);
         });
-
+        req.on("close", () => {
+            try {
+                let jsonData = JSON.parse(respData);
+                resolve(jsonData);
+            } catch (error) {
+                console.log(respData);
+                reject(error);
+            }
+        });
         req.write(data);
         req.end();
     });
@@ -476,4 +485,7 @@ function fomartTime(date: Date): string {
     var timezone = -date.getTimezoneOffset();
     if (timezone != 480) h += timezone / 60;
     return `${mo}/${d} ${h < 10 ? "0" + h : h}:${m < 10 ? "0" + m : m}`;
+}
+function sleep(timeout: number): Promise<void> {
+    return new Promise<void>((resolve) => setTimeout(resolve, timeout));
 }
