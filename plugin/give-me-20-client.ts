@@ -226,10 +226,10 @@ export class Plugin extends BotPlugin {
                 imgNameList.length
             } 张色图接收失败`
         );
-        await sleep(2000);
+        await sleep(3000);
         let msgs: PrivateMessage[] | GroupMessage[] = await this.bot
             .pickFriend(this.bot.uin)
-            .getChatHistory(new Date().getTime(), sendSuccessImgMsgNum);
+            .getChatHistory(undefined, sendSuccessImgMsgNum);
         //给消息加上昵称
         msgs.forEach((m) => {
             m.sender.nickname = this.bot.nickname;
@@ -240,12 +240,16 @@ export class Plugin extends BotPlugin {
             for (let j = 0; j < this.config.sendTo.length; j++) {
                 const user = this.config.sendTo[j];
                 let imgs: (string | MessageElem)[] = [];
-                msgs.forEach((e) => {
-                    e.message.forEach((ee) => {
-                        imgs.push(ee);
-                    });
-                });
-
+                // msgs.forEach((e) => {
+                //     e.message.forEach((ee) => {
+                //         imgs.push(ee);
+                //     });
+                // });
+                for (let i = 0; i < imgNameList.length; i++) {
+                    let imgUrl = this.config.url + "/" + encodeURI(imgNameList[i]);
+                    let img = segment.image(imgUrl, true, 30);
+                    imgs.push(img);
+                }
                 if (user.IsGroup) {
                     if (imgs != undefined) {
                         for (let i = 0; i < imgs.length; i++) {
