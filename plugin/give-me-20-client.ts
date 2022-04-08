@@ -40,7 +40,7 @@ export class Plugin extends BotPlugin {
         this.data = getData(this, []);
         this.bot.on("system.online", () => this.start());
         this.bot.regKeyword("^更新色图$", (msg) => this.keyword("^更新色图$", msg), "group");
-        this.bot.regKeyword("^来点色图$", (msg) => this.keyword("^来点色图$", msg), "group");
+        this.bot.regKeyword("^给我色图$", (msg) => this.keyword("^给我色图$", msg), "group");
     }
     async keyword(keyword: string, data: any) {
         let sendTo = this.config.sendTo;
