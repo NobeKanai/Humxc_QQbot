@@ -128,6 +128,8 @@ export class KeywordManager {
         }
         targetKeyword.get(keyword)?.push(listener);
     }
+
+    //无用的方法
     private emKeyword(
         keyword: string,
         message: PrivateMessage | GroupMessage | DiscussMessage,

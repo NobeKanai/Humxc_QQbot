@@ -1,7 +1,6 @@
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, LoadArea, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginConfig } from "../lib/plugin";
 export class PluginConfig implements BotPluginConfig {
-    LoadArea: LoadArea = "GLOBAL";
     PluginName: string = "TestPlugin";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";

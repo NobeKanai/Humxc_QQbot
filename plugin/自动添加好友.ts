@@ -1,6 +1,6 @@
 import { FriendRequestEvent } from "oicq";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, LoadArea, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginConfig } from "../lib/plugin";
 export class PluginConfig implements BotPluginConfig {
     PluginName: string = "AutoAddFriend";
     BotVersion: string = "0.1.1";

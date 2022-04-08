@@ -8,7 +8,7 @@ import {
     DiscussMessage,
 } from "oicq";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, LoadArea, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginConfig } from "../lib/plugin";
 import { getConfig, saveConfig } from "../lib/pluginFather";
 export class PluginConfig implements BotPluginConfig {
     PluginName: string = "为你点赞!";

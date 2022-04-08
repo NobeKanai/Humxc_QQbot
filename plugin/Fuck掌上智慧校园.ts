@@ -1,7 +1,7 @@
 import NodeRSA from "node-rsa";
 import http from "http";
 import { getConfig, saveConfig } from "../lib/pluginFather";
-import { BotPlugin, BotPluginConfig, LoadArea } from "../lib/plugin";
+import { BotPlugin, BotPluginConfig } from "../lib/plugin";
 import { BotClient } from "../lib/core/client";
 var defaultConfig = {
     QQ: "用户的qq",

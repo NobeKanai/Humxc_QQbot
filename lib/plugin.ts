@@ -4,7 +4,6 @@
 import { BotClient } from "./core/client";
 import { Logger } from "oicq";
 import log4js from "log4js";
-export type LoadArea = "GLOBAL" | "GROUP" | "PRIVATE";
 /** 插件配置接口,作为插件应实现此接口 */
 export interface BotPluginConfig {
     /** 插件名称 */

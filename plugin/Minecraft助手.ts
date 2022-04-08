@@ -1,5 +1,5 @@
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginConfig, LoadArea } from "../lib/plugin";
+import { BotPlugin, BotPluginConfig } from "../lib/plugin";
 import { Rcon, RconOptions } from "rcon-client";
 import http, { IncomingMessage, ServerResponse } from "http";
 import url from "url";

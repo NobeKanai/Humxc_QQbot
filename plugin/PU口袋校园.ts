@@ -1,7 +1,7 @@
 import https from "https";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, LoadArea, BotPluginConfig } from "../lib/plugin";
-import { getConfig, getData, saveConfig, saveData } from "../lib/pluginFather";
+import { BotPlugin, BotPluginConfig } from "../lib/plugin";
+import { getConfig, getData, saveData } from "../lib/pluginFather";
 export class PluginConfig implements BotPluginConfig {
     PluginName: string = "PUHelper";
     BotVersion: string = "0.1.1";

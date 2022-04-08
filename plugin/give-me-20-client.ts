@@ -11,7 +11,7 @@ import {
     segment,
     XmlElem,
 } from "oicq";
-import { BotPlugin, BotPluginConfig, LoadArea } from "../lib/plugin";
+import { BotPlugin, BotPluginConfig } from "../lib/plugin";
 import { BotClient } from "../lib/core/client";
 import { IncomingMessage } from "http";
 var defaultConfig = {
