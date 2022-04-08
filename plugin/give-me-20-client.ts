@@ -76,7 +76,7 @@ export class Plugin extends BotPlugin {
                 }
                 break;
 
-            case "^来点色图$":
+            case "^给我色图$":
                 if (!this.inTheUpdate) {
                     this.rendomImg()
                         .then((s: string) => {
