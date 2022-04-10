@@ -68,7 +68,8 @@ export class KeywordManager {
                         break;
                 }
                 for (const [key, value] of targetKeyword) {
-                    if (new RegExp(key).exec(message.raw_message) != null) {
+                    let regArray = new RegExp(key).exec(message.raw_message);
+                    if (regArray != null) {
                         value.forEach(
                             (
                                 listener: (
@@ -78,7 +79,7 @@ export class KeywordManager {
                                         | DiscussMessageEvent
                                 ) => void
                             ) => {
-                                Reflect.apply(listener, this, [message]);
+                                Reflect.apply(listener, this, [message, regArray]);
                             }
                         );
                     }
@@ -104,7 +105,10 @@ export class KeywordManager {
     }
     regKeyword(
         keyword: string,
-        listener: (message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent) => void,
+        listener: (
+            message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
+            regArray: RegExpExecArray | null
+        ) => void,
         area: "global" | "private" | "group" | "discuss" = "global"
     ) {
         let targetKeyword: Map<string, Function[]>;

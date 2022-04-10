@@ -100,7 +100,10 @@ export class BotClient extends Client {
     }
     regKeyword(
         keyword: string,
-        listener: (message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent) => void,
+        listener: (
+            message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
+            regArray: RegExpExecArray | null
+        ) => void,
         area: "global" | "private" | "group" | "discuss" = "global"
     ) {
         this.keywordManager.regKeyword(keyword, listener, area);
