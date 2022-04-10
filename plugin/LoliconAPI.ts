@@ -93,6 +93,28 @@ export class Plugin extends BotPlugin {
             });
             this.eventer.emit("start");
         });
+        this.bot.regKeyword("^lolicon可用性$", async (message) => {
+            try {
+                let resp: any = await howLolicon();
+                message
+                    .reply(
+                        `Lolicon API\n可用性: ${((1 - resp.value) * 100)
+                            .toString()
+                            .substring(0, 5)}%\n时间: ${fomartTime(
+                            new Date(Number.parseInt(resp.measure_time + "000"))
+                        )}`
+                    )
+                    .catch((err) => {
+                        this.logger.error(err);
+                    });
+            } catch (error) {
+                this.logger.warn(error);
+                let err: any = error;
+                message.reply(err.message + "错误(；′⌒`)").catch((err) => {
+                    this.logger.error(err);
+                });
+            }
+        });
         this.eventer.on("start", async () => {
             if (this.isGetingSetu) return;
             this.isGetingSetu = true;
@@ -103,8 +125,9 @@ export class Plugin extends BotPlugin {
                     try {
                         setus = await getSetu(setuReq.req);
                     } catch (error) {
-                        this.logger.error(error);
-                        setuReq.message.reply("出现了错误(；′⌒`)").catch((err) => {
+                        this.logger.warn(error);
+                        let err: any = error;
+                        setuReq.message.reply(err.message + "错误(；′⌒`)").catch((err) => {
                             this.logger.error(err);
                         });
                         continue;
@@ -145,7 +168,7 @@ export class Plugin extends BotPlugin {
 async function getSetu(reqData: ReqData): Promise<Setu[] | any> {
     let setus: Setu[];
     try {
-        let resp: any = await sendPose(`api.lolicon.app`, `/setu/v2`, JSON.stringify(reqData));
+        let resp: any = await doPose(`api.lolicon.app`, `/setu/v2`, JSON.stringify(reqData));
         if (resp.error === "") {
             setus = resp.data;
             return setus;
@@ -157,7 +180,7 @@ async function getSetu(reqData: ReqData): Promise<Setu[] | any> {
     }
 }
 /** 发送post请求 */
-function sendPose(host: string, path: string, data: string, timeout: number = 0): any {
+function doPose(host: string, path: string, data: string, timeout: number = 0): any {
     return new Promise((resolve, reject) => {
         let contentType: string | undefined;
         const options: https.RequestOptions = {
@@ -202,4 +225,59 @@ function sendPose(host: string, path: string, data: string, timeout: number = 0)
         req.write(data);
         req.end();
     });
+}
+
+/** 获取接口可用性 */
+function howLolicon(): any {
+    return new Promise((resolve, reject) => {
+        let contentType: string | undefined;
+        let nowDate = new Date();
+        let endTime = nowDate.getTime().toString().substring(0, 10);
+        let startTime = new Date(nowDate.getTime() - 3600000).getTime().toString().substring(0, 10);
+        const options: https.RequestOptions = {
+            host: `api.lolicon.app`,
+            path: `/librato-metrics-api/v1/sdk_charts/25965898/streams/69555512?start_time=${startTime}&end_time=${endTime}&resolution=1&sources%5B%5D=`,
+            method: "GET",
+            headers: {
+                authorization: `Basic YXBwMjE1Njk4NTE4QGhlcm9rdS5jb206ZTNmZTk4NDI3Njk5OGRlMWUzODhiMGVmODFjYmQ1YzkyY2ZlZTgyYTFmYjEzMDU2ODQxMDViN2Y0ZmE1ZWU5OQ==`,
+            },
+        };
+        var respData: string = "";
+        const req = https.request(options, (res) => {
+            if (res.statusCode != 200) {
+                reject(new Error(res.statusCode?.toString()));
+            }
+            contentType = res.headers["content-type"];
+            res.on("data", (d: Buffer) => {
+                respData += d.toString("utf-8");
+            });
+        });
+        req.once("error", (error) => {
+            reject(error);
+        });
+        req.once("close", () => {
+            if (contentType === "application/json") {
+                try {
+                    let jsonData = JSON.parse(respData).measurements[0].series;
+
+                    resolve(jsonData[jsonData.length - 1]);
+                } catch (error) {
+                    console.log(respData);
+                    reject(error);
+                }
+            } else {
+                reject(new Error("Resp is not json type"));
+            }
+        });
+        req.end();
+    });
+}
+/** 获取格式化的时间 */
+function fomartTime(date: Date): string {
+    let h = date.getHours();
+    let m = date.getMinutes();
+    //修复时区对时间显示的影响
+    var timezone = -date.getTimezoneOffset();
+    if (timezone != 480) h += timezone / 60;
+    return `${h < 10 ? "0" + h : h}:${m < 10 ? "0" + m : m}`;
 }
