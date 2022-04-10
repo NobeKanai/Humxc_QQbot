@@ -3,7 +3,14 @@
  * https://api.lolicon.app/#/setu
  */
 import https from "https";
-import { PrivateMessageEvent, GroupMessageEvent, DiscussMessageEvent, segment } from "oicq";
+import {
+    PrivateMessageEvent,
+    GroupMessageEvent,
+    DiscussMessageEvent,
+    segment,
+    MessageRet,
+    Quotable,
+} from "oicq";
 import { BotClient } from "../lib/core/client";
 import { BotPlugin, BotPluginConfig } from "../lib/plugin";
 import { getConfig } from "../lib/pluginFather";
@@ -15,7 +22,7 @@ class ReqData {
     uid: number[] = []; // 返回指定uid作者的作品，最多20个
     keyword: string = ""; // 返回从标题、作者、标签中按指定关键字模糊匹配的结果，大小写不敏感，性能和准度较差且功能单一，建议使用tag代替
     tag: string[] = []; // 返回匹配指定标签的作品，详见下文
-    size: string[] = ["original"]; // 返回指定图片规格的地址，详见下文
+    size: string[] = ["original", "regular"]; // 返回指定图片规格的地址，详见下文
     proxy: string = `i.pixiv.re`; // 设置图片地址所使用的在线反代服务，详见下文
     dateAfter?: number; // 返回在这个时间及以后上传的作品；时间戳，单位为毫秒
     dateBefore?: number; // 返回在这个时间及以前上传的作品；时间戳，单位为毫秒
@@ -60,6 +67,8 @@ export class PluginConfig implements BotPluginConfig {
 }
 export class Plugin extends BotPlugin {
     private eventer = new EventEmitter();
+    private sendedSetu: { messageRet: MessageRet; setu: Setu }[] = [];
+    private clearSendedSetu: NodeJS.Timeout | undefined;
     private setuReqList: {
         message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent;
         req: ReqData;
@@ -115,6 +124,19 @@ export class Plugin extends BotPlugin {
                 });
             }
         });
+        this.bot.regKeyword("获取信息$", (message) => {
+            if (message.source != undefined) {
+                let setu = this.getSendedSetu(message.source);
+                if (setu == null) {
+                    message.reply("没有找到", true);
+                } else {
+                    message.reply(
+                        `${setu.title}\n- 作者: ${setu.author}\n- uid: ${setu.uid}\n- pid: ${setu.pid}\n- tags: ${setu.tags}\n- url: ${setu.urls.original}`,
+                        true
+                    );
+                }
+            }
+        });
         this.eventer.on("start", async () => {
             if (this.isGetingSetu) return;
             this.isGetingSetu = true;
@@ -137,14 +159,23 @@ export class Plugin extends BotPlugin {
                             this.logger.error(err);
                         });
                     } else {
-                        setus.forEach(async (setu: Setu) => {
-                            if (setu.urls.original != undefined) {
-                                let img = segment.image(setu.urls.original);
-                                await setuReq?.message.reply(img).catch((err) => {
-                                    this.logger.error(err);
-                                });
+                        for (let i = 0; i < setus.length; i++) {
+                            const setu: Setu = setus[i];
+
+                            if (setu.urls.regular != undefined) {
+                                let img = segment.image(setu.urls.regular);
+                                setuReq?.message
+                                    .reply(img)
+                                    .catch((err) => {
+                                        this.logger.error(err);
+                                    })
+                                    .then((value: void | MessageRet) => {
+                                        if (value != null) {
+                                            this.addSendedSetu(value, setu);
+                                        }
+                                    });
                             }
-                        });
+                        }
                     }
                 }
                 if (this.setuReqList.length === 0) break;
@@ -159,6 +190,30 @@ export class Plugin extends BotPlugin {
             const user: { qq: number; isGroup: boolean; r18: boolean } = this.config.users[i];
             if (user.qq === uid && user.isGroup === isGroup) {
                 return user;
+            }
+        }
+        return null;
+    }
+    addSendedSetu(messageRet: MessageRet, setu: Setu) {
+        this.sendedSetu.push({ messageRet: messageRet, setu: setu });
+        if (this.clearSendedSetu === undefined) {
+            this.clearSendedSetu = setTimeout(() => {
+                this.sendedSetu = [];
+            }, 600000);
+        } else {
+            this.clearSendedSetu.refresh();
+        }
+    }
+    getSendedSetu(messsageSource: Quotable): Setu | null {
+        for (let i = 0; i < this.sendedSetu.length; i++) {
+            const sendedSetu: { messageRet: MessageRet; setu: Setu } = this.sendedSetu[i];
+            if (
+                messsageSource.rand == sendedSetu.messageRet.rand &&
+                messsageSource.seq == sendedSetu.messageRet.seq &&
+                Math.abs(messsageSource.time - sendedSetu.messageRet.time) < 10 &&
+                messsageSource.user_id == this.bot.uin
+            ) {
+                return sendedSetu.setu;
             }
         }
         return null;
