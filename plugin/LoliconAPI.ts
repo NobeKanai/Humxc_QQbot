@@ -131,7 +131,7 @@ export class Plugin extends BotPlugin {
                     message.reply("没有找到", true);
                 } else {
                     message.reply(
-                        `${setu.title}\n- 作者: ${setu.author}\n- uid: ${setu.uid}\n- pid: ${setu.pid}\n- tags: ${setu.tags}\n- url: ${setu.urls.original}`,
+                        `${setu.title}\n- 作者: ${setu.author}\n- uid: ${setu.uid}\n- 标签: ${setu.tags}\n- 链接: https://www.pixiv.net/artworks/${setu.pid}\n- 原图: ${setu.urls.original}`,
                         true
                     );
                 }
