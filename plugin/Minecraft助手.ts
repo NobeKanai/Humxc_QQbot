@@ -34,8 +34,8 @@ export class Plugin extends BotPlugin {
             this.logger.error(err);
         });
         // this.startserver();
-        this.bot.regKeyword("^查服", (msg) => this.keyword("^查服", msg), "group");
-        this.bot.regKeyword("^mc", (msg) => this.keyword("^mc", msg), "group");
+        this.bot.regKeyword("^查服$", (msg) => this.keyword("查服", msg), "group");
+        this.bot.regKeyword("^mc ", (msg) => this.keyword("mc", msg), "group");
     }
     startserver() {
         var token = "kxnd9injHJKfe55wcds";
@@ -72,7 +72,7 @@ export class Plugin extends BotPlugin {
         } catch (error) {}
 
         switch (keyword) {
-            case "^查服":
+            case "查服":
                 try {
                     let msg;
                     try {
@@ -88,7 +88,7 @@ export class Plugin extends BotPlugin {
                 }
                 break;
 
-            case "^mc ": {
+            case "mc": {
                 let msg = `§b<${data.sender.card}>§f ${data.raw_message.substr(
                     3,
                     data.raw_message.length + 1
