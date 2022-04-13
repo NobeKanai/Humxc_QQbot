@@ -98,17 +98,25 @@ export class Plugin extends BotPlugin {
                 ` - 报名截止: ${regEndTime_f}`;
             if (regStartTime.getTime() > nowDate.getTime()) {
                 this.data.reminds.push({ time: regStartTime.getTime(), message: message_reg });
+            } else if (regEndTime.getTime() > nowDate.getTime()) {
+                this.data.reminds.push({ time: 0, message: message_reg });
             }
             //添加签到提醒
             let message_sign_in =
                 `有活动现在开始签到\n` + `${activity.title}\n` + ` - 签退时间: ${signOutTime_f}`;
-            if (signInTime.getTime() < nowDate.getTime()) {
+            if (
+                signInTime.getTime() < nowDate.getTime() &&
+                signOutTime.getTime() > nowDate.getTime()
+            ) {
                 this.data.reminds.push({ time: 0, message: message_sign_in });
             } else this.data.reminds.push({ time: signInTime.getTime(), message: message_sign_in });
 
             //添加签退提醒
             let message_sign_out = `有活动现在开始签退\n` + `${activity.title}`;
-            if (signOutTime.getTime() < nowDate.getTime()) {
+            if (
+                signOutTime.getTime() < nowDate.getTime() &&
+                endTime.getTime() > nowDate.getTime()
+            ) {
                 this.data.reminds.push({ time: 0, message: message_sign_out });
             } else
                 this.data.reminds.push({ time: signOutTime.getTime(), message: message_sign_out });
@@ -258,6 +266,7 @@ export class Plugin extends BotPlugin {
             if (activity.regEndTime < dateTime.getTime()) {
                 flag = false;
                 this.logger.debug(`因为报名已截止, 舍弃该活动`);
+                this.logger.debug("----------");
                 continue;
             }
 
@@ -306,6 +315,9 @@ export class Plugin extends BotPlugin {
                         }
                         break;
                     case "or":
+                        if (flag) {
+                            break;
+                        }
                         switch (c) {
                             case "has":
                                 flag =
