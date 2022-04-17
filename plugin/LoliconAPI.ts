@@ -105,13 +105,16 @@ export class Plugin extends BotPlugin {
         this.bot.regKeyword("^lolicon可用性$", async (message) => {
             try {
                 let resp: any = await howLolicon();
+                let sum = 0;
+                for (let i = 0; i < resp.length; i++) {
+                    sum += resp[i].value;
+                }
+                sum /= 10;
                 message
                     .reply(
-                        `Lolicon API\n可用性: ${((1 - resp.value) * 100)
+                        `Lolicon API\n近10分钟可用性: ${((1 - sum) * 100)
                             .toString()
-                            .substring(0, 5)}%\n时间: ${fomartTime(
-                            new Date(Number.parseInt(resp.measure_time + "000"))
-                        )}`
+                            .substring(0, 5)}%`
                     )
                     .catch((err) => {
                         this.logger.error(err);
@@ -315,7 +318,7 @@ function howLolicon(): any {
                 try {
                     let jsonData = JSON.parse(respData).measurements[0].series;
 
-                    resolve(jsonData[jsonData.length - 1]);
+                    resolve(jsonData.slice(jsonData.length - 10, jsonData.length));
                 } catch (error) {
                     console.log(respData);
                     reject(error);
