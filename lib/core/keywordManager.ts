@@ -79,6 +79,9 @@ export class KeywordManager {
                                         | DiscussMessageEvent
                                 ) => void
                             ) => {
+                                client.logger.debug(
+                                    `${message.sender.user_id} 触发了关键词 ${key}`
+                                );
                                 Reflect.apply(listener, this, [message, regArray]);
                             }
                         );
@@ -95,6 +98,9 @@ export class KeywordManager {
                                         | DiscussMessageEvent
                                 ) => void
                             ) => {
+                                client.logger.debug(
+                                    `${message.sender.user_id} 触发了关键词 ${key}`
+                                );
                                 Reflect.apply(listener, this, [message]);
                             }
                         );
@@ -131,28 +137,5 @@ export class KeywordManager {
             targetKeyword.set(keyword, []);
         }
         targetKeyword.get(keyword)?.push(listener);
-    }
-
-    //无用的方法
-    private emKeyword(
-        keyword: string,
-        message: PrivateMessage | GroupMessage | DiscussMessage,
-        area: "global" | "private" | "group" | "discuss" = "global"
-    ) {
-        let targetKeyword: Map<string, Function[]>;
-        switch (message?.message_type) {
-            case "private":
-                targetKeyword = this.keywords.private;
-                break;
-            case "group":
-                targetKeyword = this.keywords.group;
-                break;
-            case "discuss":
-                targetKeyword = this.keywords.discuss;
-                break;
-            default:
-                targetKeyword = this.keywords.global;
-                break;
-        }
     }
 }
