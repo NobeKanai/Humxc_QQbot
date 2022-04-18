@@ -7,7 +7,7 @@
     },
     "dependencies": {
         "node-rsa": "^1.1.1",
-        "oicq": "^2.1.9",
+        "oicq": "^2.2.2",
         "rcon-client": "^4.2.3"
     }
 }
