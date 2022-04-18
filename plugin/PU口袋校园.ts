@@ -42,6 +42,7 @@ export class Plugin extends BotPlugin {
     }
     /** 更新活动 */
     async updateAcitvity() {
+        var geteedActivityNum = 0;
         var simpleActivitys: SimpleActivity[] = await this.getSimpleActivitys();
         var activitys: Activity[] = [];
 
@@ -51,6 +52,7 @@ export class Plugin extends BotPlugin {
             let activity: Activity;
             //标记已获取
             if (geted.has(simpleActivity.id)) {
+                geteedActivityNum++;
                 this.logger.debug(`该活动已被获取过: ${simpleActivity.title}`);
                 continue;
             }
@@ -63,6 +65,7 @@ export class Plugin extends BotPlugin {
             activitys.push(activity);
             this.data.geted.push(simpleActivity.id);
         }
+        this.logger.info(`其中有 ${geteedActivityNum} 条活动已经获取过`);
         if (activitys.length == 0) return;
         activitys = this.filter(activitys, this.filter_string);
 
@@ -361,7 +364,7 @@ export class Plugin extends BotPlugin {
             }
             this.logger.debug("----------");
         }
-        this.logger.debug(`舍弃了 ${activitys.length - activitys_filter.length} 条活动`);
+        this.logger.info(`舍弃了 ${activitys.length - activitys_filter.length} 条活动`);
 
         return activitys_filter;
     }
