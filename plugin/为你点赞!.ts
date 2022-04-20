@@ -68,7 +68,7 @@ export class Plugin extends BotPlugin {
                         this.logger.error(error);
                     }
                 }
-            }, 20000);
+            }, 600000);
     }
     addUserItem(qq: number): boolean {
         if (new Set(this.config.users).has(qq)) {

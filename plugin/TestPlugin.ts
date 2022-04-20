@@ -9,7 +9,9 @@ export class PluginConfig implements BotPluginConfig {
 export class Plugin extends BotPlugin {
     constructor(botClient: BotClient) {
         super(botClient, new PluginConfig());
-        this.bot.on("bot.atselfmsg", (data: any) => console.log("一条@消息"));
+        this.bot.on("bot.atselfmsg", (data: any) => {
+            this.logger.debug("一条@消息");
+        });
         this.bot.regKeyword(
             "test",
             (message) => {
