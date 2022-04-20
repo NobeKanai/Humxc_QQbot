@@ -62,7 +62,9 @@ export class Plugin extends BotPlugin {
                     setTimeout(() => {
                         this.canUpdate = true;
                     }, 1000);
-                    let updateNum = await this.startUpdate();
+                    let updateNum = await this.startUpdate().catch((err) => {
+                        this.logger.error(err);
+                    });
                     if (updateNum == -1)
                         data.reply("色图正在更新，已取消本次委托").catch((e: any) =>
                             this.logger.error(e)
@@ -100,9 +102,14 @@ export class Plugin extends BotPlugin {
     start() {
         this.logger.debug("设置任务");
         if (this.intervalTimeout == undefined) {
-            this.startUpdate();
+            //异常
+            this.startUpdate().catch((err) => {
+                this.logger.error(err);
+            });
             this.intervalTimeout = setInterval(() => {
-                this.startUpdate();
+                this.startUpdate().catch((err) => {
+                    this.logger.error(err);
+                });
             }, 600000);
         } else {
             this.intervalTimeout.refresh();
@@ -117,7 +124,9 @@ export class Plugin extends BotPlugin {
         var updateNum: number = 0;
         var list = [];
         try {
-            list = await this.getUpdate();
+            list = await this.getUpdate().catch((err) => {
+                this.logger.error(err);
+            });
         } catch (error) {
             this.logger.warn(error);
             this.inTheUpdate = false;
