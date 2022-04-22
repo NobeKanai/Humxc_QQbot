@@ -27,7 +27,8 @@ export class Plugin extends BotPlugin {
             if (this.bot.isAdmin(message.sender.user_id)) {
                 let msg = `插件信息: `;
                 for (const plugin of this.plugins.values()) {
-                    msg += "\n - " + plugin.pluginConfig.PluginName + ": " + plugin.config.Info;
+                    msg +=
+                        "\n - " + plugin.pluginConfig.PluginName + ": " + plugin.pluginConfig.Info;
                 }
                 message.reply(msg).catch((err) => {
                     this.logger.error(err);
