@@ -61,4 +61,7 @@ export class PluginManager {
             }
         }
     }
+    public getPlugin(): Map<string, BotPlugin> {
+        return this.pluginEntity;
+    }
 }

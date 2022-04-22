@@ -140,6 +140,11 @@ export class BotClient extends Client {
         if (this.admin == undefined) return [];
         else return this.admin;
     }
+
+    /** 判断是否管理员 */
+    isAdmin(qq: number) {
+        return new Set(this.admin).has(qq);
+    }
     /** 发送消息给所有管理员 */
     sendAdminMsg(message: Sendable, source?: Quotable): void {
         this.admin?.forEach((e) => {
