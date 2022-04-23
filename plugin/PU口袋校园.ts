@@ -38,7 +38,7 @@ export class Plugin extends BotPlugin {
                         await this.updateAcitvity();
                         this.setRemind(this.data.reminds);
                     } else this.logger.debug("任务取消，客户端不在线");
-                }, 108000);
+                }, 1800000);
             }
         });
     }
