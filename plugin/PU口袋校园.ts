@@ -14,7 +14,7 @@ export class Plugin extends BotPlugin {
     private oauth_token_secret!: string;
     private filter_string!: string;
     private remind_used: Remind[] = [];
-    private intervalTimeOut: NodeJS.Timeout | undefined;
+    private intervalTimeOut: NodeJS.Timeout | undefined = undefined;
     constructor(botClient: BotClient) {
         super(botClient, new PluginConfig());
         this.config = getConfig(this, defalutConfig);
@@ -25,8 +25,10 @@ export class Plugin extends BotPlugin {
         this.filter_string = this.config.filter_string;
         this.bot.on("system.online", () => {
             this.logger.info("设置任务");
-            if (this.intervalTimeOut != undefined) this.intervalTimeOut.refresh();
-            else {
+            if (this.intervalTimeOut != undefined) {
+                this.intervalTimeOut.refresh();
+                this.logger.error("Pu刷新了");
+            } else {
                 this.updateAcitvity().then(() => {
                     this.setRemind(this.data.reminds);
                 });
