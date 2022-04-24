@@ -11,10 +11,14 @@ import {
     GroupMessageEvent,
     DiscussMessageEvent,
     EventMap,
+    DiscussMessage,
+    GroupMessage,
+    PrivateMessage,
 } from "oicq";
 import { PluginManager } from "./pluginManager";
 import log4js from "log4js";
 import { KeywordManager } from "./keywordManager";
+import { BotEventMap } from "./event";
 interface BotConfig extends Config {
     //机器人的QQ密码
     password: string | undefined;
@@ -27,27 +31,6 @@ interface BotConfig extends Config {
     //是否保存日志到文件
     save_log_file: boolean | undefined;
 }
-export interface BotEventMap<T = any> extends EventMap {
-    /** at机器人的消息 */
-    "bot.atselfmsg": (
-        this: T,
-        event: GroupMessageEvent | PrivateMessageEvent | DiscussMessageEvent
-    ) => void;
-    "bot.newday": (this: T, event: null) => void;
-}
-/** 事件接口 */
-export interface BotClient extends Client {
-    on<T extends keyof BotEventMap>(event: T, listener: BotEventMap<this>[T]): this;
-    on<S extends string | symbol>(
-        event: S & Exclude<S, keyof BotEventMap>,
-        listener: (this: this, ...args: any[]) => void
-    ): this;
-    once<T extends keyof BotEventMap>(event: T, listener: BotEventMap<this>[T]): this;
-    once<S extends string | symbol>(
-        event: S & Exclude<S, keyof BotEventMap>,
-        listener: (this: this, ...args: any[]) => void
-    ): this;
-}
 
 export class BotClient extends Client {
     /** 账户密码 */
@@ -59,7 +42,7 @@ export class BotClient extends Client {
     /** 发送错误给管理员 */
     public errorCallAdmin: boolean = false;
     //关键词
-    private keywordManager: KeywordManager = new KeywordManager(this);
+    public keywordManager: KeywordManager = new KeywordManager(this);
     public pluginManager: PluginManager = new PluginManager(this);
     constructor(uin: number, conf?: BotConfig) {
         super(uin, conf);
@@ -144,6 +127,19 @@ export class BotClient extends Client {
     /** 判断是否管理员 */
     isAdmin(qq: number) {
         return new Set(this.admin).has(qq);
+    }
+    /** 判断消息是否at自己的消息 */
+    isAtSelf(message: PrivateMessage | GroupMessage | DiscussMessage): boolean {
+        if (message.message_type == "private") {
+            return false;
+        } else if (message.message[0].type == "at" && message.message[0].qq == this.uin) {
+            return true;
+        }
+        return false;
+    }
+    /** 判断是否为好友 */
+    isFriend(qq: number): boolean {
+        return this.fl.has(qq);
     }
     /** 发送消息给所有管理员 */
     sendAdminMsg(message: Sendable, source?: Quotable): void {
