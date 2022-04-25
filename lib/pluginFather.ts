@@ -10,7 +10,7 @@ export function getConfig(plugin: BotPlugin, defaultConfig: any) {
         require?.main?.path || process.cwd(),
         "data",
         plugin.bot.uin.toString(),
-        plugin.pluginConfig.PluginName
+        plugin.pluginProfile.PluginName
     );
     let configPath = path.join(configDir, "config.json");
     if (fs.existsSync(configPath)) {
@@ -32,7 +32,7 @@ export function saveConfig(plugin: BotPlugin) {
         require?.main?.path || process.cwd(),
         "data",
         plugin.bot.uin.toString(),
-        plugin.pluginConfig.PluginName
+        plugin.pluginProfile.PluginName
     );
     try {
         makeJson(configDir, "config.json", plugin.config);
@@ -46,7 +46,7 @@ export function getData(plugin: BotPlugin, defaultData: any) {
         require?.main?.path || process.cwd(),
         "data",
         plugin.bot.uin.toString(),
-        plugin.pluginConfig.PluginName
+        plugin.pluginProfile.PluginName
     );
     let dataPath = path.join(dataDir, "data.json");
     if (fs.existsSync(dataPath)) {
@@ -68,7 +68,7 @@ export function saveData(plugin: BotPlugin) {
         require?.main?.path || process.cwd(),
         "data",
         plugin.bot.uin.toString(),
-        plugin.pluginConfig.PluginName
+        plugin.pluginProfile.PluginName
     );
     try {
         makeJson(dataDir, "data.json", plugin.data);
@@ -82,7 +82,7 @@ export function getDir(plugin: BotPlugin) {
         require?.main?.path || process.cwd(),
         "data",
         plugin.bot.uin.toString(),
-        plugin.pluginConfig.PluginName
+        plugin.pluginProfile.PluginName
     );
 }
 

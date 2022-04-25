@@ -47,13 +47,13 @@ export class PluginManager {
             if (plugin != undefined) {
                 try {
                     let pluginEntity: BotPlugin = new plugin.Plugin(this.client);
-                    let pluginConfig: BotPluginProfile = new plugin.PluginProfile();
-                    this.client.logger.debug(`Name: ${pluginConfig.PluginName}`);
+                    let pluginProfile: BotPluginProfile = new plugin.PluginProfile();
+                    this.client.logger.debug(`Name: ${pluginProfile.PluginName}`);
 
-                    this.client.logger.debug(`PluginVersion: ${pluginConfig.PluginVersion}`);
-                    this.client.logger.debug(`BotVersion: ${pluginConfig.BotVersion}`);
-                    this.client.logger.debug(`Info: ${pluginConfig.Info}`);
-                    this.pluginEntity.set(pluginConfig.PluginName, pluginEntity);
+                    this.client.logger.debug(`PluginVersion: ${pluginProfile.PluginVersion}`);
+                    this.client.logger.debug(`BotVersion: ${pluginProfile.BotVersion}`);
+                    this.client.logger.debug(`Info: ${pluginProfile.Info}`);
+                    this.pluginEntity.set(pluginProfile.PluginName, pluginEntity);
                     this.client.logger.info("----------");
                 } catch (error) {
                     this.client.logger.error("实例化插件时出现错误，已跳过该插件: ", error);
