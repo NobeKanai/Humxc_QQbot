@@ -38,7 +38,9 @@ export class Plugin extends BotPlugin {
         super(bot, new PluginProfile());
         this.config = getConfig(this, defaultConfig);
         this.data = getData(this, []);
-        this.bot.on("system.online", () => this.start());
+        this.bot.on("system.online", () => {
+            this.start();
+        });
         this.bot.regKeyword("^更新色图$", (msg) => this.keyword("^更新色图$", msg), "group");
         this.bot.regKeyword("^给我色图$", (msg) => this.keyword("^给我色图$", msg), "group");
     }
@@ -102,10 +104,6 @@ export class Plugin extends BotPlugin {
     start() {
         this.logger.debug("设置任务");
         if (this.intervalTimeout == undefined) {
-            //异常
-            this.startUpdate().catch((err) => {
-                this.logger.error(err);
-            });
             this.intervalTimeout = setInterval(() => {
                 this.startUpdate().catch((err) => {
                     this.logger.error(err);
@@ -130,6 +128,7 @@ export class Plugin extends BotPlugin {
         } catch (error) {
             this.logger.warn(error);
             this.inTheUpdate = false;
+            return updateNum;
         }
         if (list.length > 0) {
             var imgList = this.getNewItem(list);
