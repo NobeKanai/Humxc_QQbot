@@ -4,7 +4,7 @@
 import fs from "fs";
 import { BotClient } from "./client";
 import path = require("path");
-import { BotPlugin, BotPluginConfig } from "../plugin";
+import { BotPlugin, BotPluginProfile } from "../plugin";
 // 存放插件的文件夹
 var pluginFolder = path.join(process.cwd(), "plugin");
 export class PluginManager {
@@ -47,7 +47,7 @@ export class PluginManager {
             if (plugin != undefined) {
                 try {
                     let pluginEntity: BotPlugin = new plugin.Plugin(this.client);
-                    let pluginConfig: BotPluginConfig = new plugin.PluginConfig();
+                    let pluginConfig: BotPluginProfile = new plugin.PluginProfile();
                     this.client.logger.debug(`Name: ${pluginConfig.PluginName}`);
 
                     this.client.logger.debug(`PluginVersion: ${pluginConfig.PluginVersion}`);

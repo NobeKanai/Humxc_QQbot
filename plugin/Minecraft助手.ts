@@ -1,5 +1,5 @@
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginProfile } from "../lib/plugin";
 import { Rcon, RconOptions } from "rcon-client";
 import http, { IncomingMessage, ServerResponse } from "http";
 import url from "url";
@@ -11,7 +11,7 @@ var defaultConfig = {
     password: "Rcon的密码",
     group: ["绑定的群组（数组）"],
 };
-export class PluginConfig implements BotPluginConfig {
+export class PluginProfile implements BotPluginProfile {
     PluginName = "Minecraft助手";
     BotVersion = "0.0.1";
     PluginVersion = "1.0.0";
@@ -23,7 +23,7 @@ export class Plugin extends BotPlugin {
     private rcon!: Rcon;
     private rconAutoClose: NodeJS.Timeout | undefined;
     constructor(botClient: BotClient) {
-        super(botClient, new PluginConfig());
+        super(botClient, new PluginProfile());
         this.config = getConfig(this, defaultConfig);
         this.rconOption = {
             host: this.config.host,

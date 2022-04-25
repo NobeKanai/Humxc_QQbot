@@ -5,7 +5,7 @@ import { BotClient } from "./core/client";
 import { Logger } from "oicq";
 import log4js from "log4js";
 /** 插件配置接口,作为插件应实现此接口 */
-export interface BotPluginConfig {
+export interface BotPluginProfile {
     /** 插件名称 */
     PluginName: string;
     /** 插件版本 */
@@ -15,7 +15,7 @@ export interface BotPluginConfig {
     /** 描述消息 */
     Info: string;
 }
-class PluginConfig implements BotPluginConfig {
+class PluginProfile implements BotPluginProfile {
     PluginName: string = "Plugin";
     BotVersion: string = "0.0.0";
     PluginVersion: string = "0.0.0";
@@ -23,23 +23,23 @@ class PluginConfig implements BotPluginConfig {
 }
 export class BotPlugin {
     public logger!: Logger | PluginLogger;
-    public pluginConfig: BotPluginConfig = new PluginConfig();
+    public pluginProfile: PluginProfile = new PluginProfile();
     public bot!: BotClient;
     public data: any = {};
     public config: any = {};
-    constructor(bot: BotClient, pluginConfig: PluginConfig) {
+    constructor(bot: BotClient, pluginProfile: PluginProfile) {
         this.bot = bot;
-        this.pluginConfig = pluginConfig;
+        this.pluginProfile = pluginProfile;
         if (this.bot.errorCallAdmin == true) {
             var _log = log4js.getLogger(
-                `[${this.bot.apk.display}:${this.bot.uin}] [${this.pluginConfig.PluginName}]`
+                `[${this.bot.apk.display}:${this.bot.uin}] [${this.pluginProfile.PluginName}]`
             );
             _log.level = this.bot.config.log_level;
             this.logger = _log;
-            this.logger = new PluginLogger(this.bot, this.pluginConfig.PluginName, _log);
+            this.logger = new PluginLogger(this.bot, this.pluginProfile.PluginName, _log);
         } else {
             var _log = log4js.getLogger(
-                `[${this.bot.apk.display}:${this.bot.uin}] [${this.pluginConfig.PluginName}]`
+                `[${this.bot.apk.display}:${this.bot.uin}] [${this.pluginProfile.PluginName}]`
             );
             _log.level = this.bot.config.log_level;
             this.logger = _log;

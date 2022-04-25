@@ -1,7 +1,7 @@
 import { FriendRequestEvent } from "oicq";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginConfig } from "../lib/plugin";
-export class PluginConfig implements BotPluginConfig {
+import { BotPlugin, BotPluginProfile } from "../lib/plugin";
+export class PluginProfile implements BotPluginProfile {
     PluginName: string = "PluginHelp";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
@@ -10,7 +10,7 @@ export class PluginConfig implements BotPluginConfig {
 export class Plugin extends BotPlugin {
     private plugins!: Map<string, BotPlugin>;
     constructor(botClient: BotClient) {
-        super(botClient, new PluginConfig());
+        super(botClient, new PluginProfile());
         this.plugins = this.bot.pluginManager.getPlugin();
         this.bot.regKeyword("^插件列表$", (message) => {
             if (this.bot.isAdmin(message.sender.user_id)) {

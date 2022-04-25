@@ -11,7 +11,7 @@ import {
     segment,
     XmlElem,
 } from "oicq";
-import { BotPlugin, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginProfile } from "../lib/plugin";
 import { BotClient } from "../lib/core/client";
 import { IncomingMessage } from "http";
 var defaultConfig = {
@@ -24,7 +24,7 @@ var defaultConfig = {
         },
     ],
 };
-export class PluginConfig implements BotPluginConfig {
+export class PluginProfile implements BotPluginProfile {
     PluginName: string = "give-me-20-Client";
     BotVersion: string = "0.0.1";
     PluginVersion: string = "1.0.0";
@@ -35,7 +35,7 @@ export class Plugin extends BotPlugin {
     private canUpdate: boolean = true;
     private intervalTimeout: NodeJS.Timeout | undefined;
     constructor(bot: BotClient) {
-        super(bot, new PluginConfig());
+        super(bot, new PluginProfile());
         this.config = getConfig(this, defaultConfig);
         this.data = getData(this, []);
         this.bot.on("system.online", () => this.start());

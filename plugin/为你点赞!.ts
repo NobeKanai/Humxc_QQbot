@@ -8,9 +8,9 @@ import {
     DiscussMessage,
 } from "oicq";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginProfile } from "../lib/plugin";
 import { getConfig, saveConfig } from "../lib/pluginFather";
-export class PluginConfig implements BotPluginConfig {
+export class PluginProfile implements BotPluginProfile {
     PluginName: string = "为你点赞!";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
@@ -21,7 +21,7 @@ type Config = {
 };
 export class Plugin extends BotPlugin {
     constructor(botClient: BotClient) {
-        super(botClient, new PluginConfig());
+        super(botClient, new PluginProfile());
         this.config = getConfig(this, { users: [] });
         this.bot.on("bot.atselfmsg", (msg) => this.interact(msg));
         this.bot.on("system.online", () => this.like());

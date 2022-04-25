@@ -1,6 +1,6 @@
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginConfig } from "../lib/plugin";
-export class PluginConfig implements BotPluginConfig {
+import { BotPlugin, BotPluginProfile } from "../lib/plugin";
+export class PluginProfile implements BotPluginProfile {
     PluginName: string = "TestPlugin";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
@@ -8,7 +8,7 @@ export class PluginConfig implements BotPluginConfig {
 }
 export class Plugin extends BotPlugin {
     constructor(botClient: BotClient) {
-        super(botClient, new PluginConfig());
+        super(botClient, new PluginProfile());
         this.bot.on("bot.atselfmsg", (data: any) => {
             this.logger.debug("一条@消息");
         });

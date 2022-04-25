@@ -12,7 +12,7 @@ import {
     Quotable,
 } from "oicq";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginProfile } from "../lib/plugin";
 import { getConfig } from "../lib/pluginFather";
 import { EventEmitter } from "events";
 
@@ -59,7 +59,7 @@ class DefaultConfig implements DefaultConfigItface {
     users: { qq: number; isGroup: boolean; r18: boolean }[] = [];
 }
 
-export class PluginConfig implements BotPluginConfig {
+export class PluginProfile implements BotPluginProfile {
     PluginName: string = "Lolicon.API";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
@@ -75,7 +75,7 @@ export class Plugin extends BotPlugin {
     }[] = [];
     private isGetingSetu: boolean = false;
     constructor(botClient: BotClient) {
-        super(botClient, new PluginConfig());
+        super(botClient, new PluginProfile());
         this.config = getConfig(this, new DefaultConfig());
         this.bot.regKeyword("^来点.*色图$", (message) => {
             let user: { qq: number; isGroup: boolean; r18: boolean } | null = null;

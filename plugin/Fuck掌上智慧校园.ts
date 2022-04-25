@@ -1,7 +1,7 @@
 import NodeRSA from "node-rsa";
 import http from "http";
 import { getConfig, saveConfig } from "../lib/pluginFather";
-import { BotPlugin, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginProfile } from "../lib/plugin";
 import { BotClient } from "../lib/core/client";
 var defaultConfig = {
     QQ: "用户的qq",
@@ -26,7 +26,7 @@ interface Response {
     total: number;
     rows: Array<any>;
 }
-export class PluginConfig implements BotPluginConfig {
+export class PluginProfile implements BotPluginProfile {
     PluginName: string = "Fuck掌上智慧校园";
     BotVersion: string = "0.0.1";
     PluginVersion: string = "1.0.0";
@@ -40,7 +40,7 @@ export class Plugin extends BotPlugin {
     private intervalTimeout: NodeJS.Timer | undefined;
     private 用量提醒: boolean = false;
     constructor(botClient: BotClient) {
-        super(botClient, new PluginConfig());
+        super(botClient, new PluginProfile());
         this.config = getConfig(this, defaultConfig);
         this.bot.on("system.online", () => this.init());
         this.bot.regKeyword(

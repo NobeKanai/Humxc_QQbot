@@ -1,8 +1,8 @@
 import https from "https";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginConfig } from "../lib/plugin";
+import { BotPlugin, BotPluginProfile } from "../lib/plugin";
 import { getConfig, getData, saveData } from "../lib/pluginFather";
-export class PluginConfig implements BotPluginConfig {
+export class PluginProfile implements BotPluginProfile {
     PluginName: string = "PUHelper";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
@@ -16,7 +16,7 @@ export class Plugin extends BotPlugin {
     private remind_used: Remind[] = [];
     private intervalTimeOut: NodeJS.Timeout | undefined = undefined;
     constructor(botClient: BotClient) {
-        super(botClient, new PluginConfig());
+        super(botClient, new PluginProfile());
         this.config = getConfig(this, defalutConfig);
         this.data = getData(this, defaultData);
         this.hostName = this.config.hostName;
