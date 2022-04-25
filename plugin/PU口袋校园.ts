@@ -27,15 +27,23 @@ export class Plugin extends BotPlugin {
             this.logger.info("设置任务");
             if (this.intervalTimeOut != undefined) {
                 this.intervalTimeOut.refresh();
-                this.logger.error("Pu刷新了");
             } else {
-                this.updateAcitvity().then(() => {
-                    this.setRemind(this.data.reminds);
-                });
+                this.updateAcitvity()
+                    .then(() => {
+                        this.setRemind(this.data.reminds);
+                    })
+                    .catch((err) => {
+                        this.logger.error(err);
+                    });
                 this.intervalTimeOut = setInterval(async () => {
                     await sleep(Math.floor(Math.random() * 180000 + 1));
                     if (this.bot.isOnline()) {
-                        await this.updateAcitvity();
+                        try {
+                            await this.updateAcitvity();
+                        } catch (error) {
+                            this.logger.error(error);
+                            return;
+                        }
                         this.setRemind(this.data.reminds);
                     } else this.logger.debug("任务取消，客户端不在线");
                 }, 1800000);
