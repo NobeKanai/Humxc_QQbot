@@ -4,80 +4,53 @@
 import path from "path";
 import fs from "fs";
 import { BotPlugin } from "./plugin";
-//获取配置对象
-export function getConfig(plugin: BotPlugin, defaultConfig: any) {
-    let configDir = path.join(
-        require?.main?.path || process.cwd(),
-        "data",
-        plugin.bot.uin.toString(),
-        plugin.pluginProfile.PluginName
-    );
-    let configPath = path.join(configDir, "config.json");
-    if (fs.existsSync(configPath)) {
-        return readJson(configPath);
-    } else {
-        //配置文件不存在，创建文件
-        try {
-            makeJson(configDir, "config.json", defaultConfig);
-        } catch (error) {
-            plugin.bot.logger.error(error);
-        }
 
-        return defaultConfig;
-    }
+/** 该错误通常不需要插件处理 */
+const ObjectNotExtendsTarget = (message: string): Error => {
+    return new Error("Object is not extends target: " + message);
+};
+/** 获取配置对象 */
+export function getConfig<T>(plugin: BotPlugin, defaultConfig: T): T {
+    return getJsonData<T>(plugin, "config", defaultConfig);
 }
-//保存配置对象到文件
-export function saveConfig(plugin: BotPlugin) {
-    let configDir = path.join(
-        require?.main?.path || process.cwd(),
-        "data",
-        plugin.bot.uin.toString(),
-        plugin.pluginProfile.PluginName
-    );
-    try {
-        makeJson(configDir, "config.json", plugin.config);
-    } catch (error) {
-        plugin.bot.logger.error(error);
-    }
+/** 保存配置对象到文件 */
+export function saveConfig(plugin: BotPlugin): void {
+    return saveJsonData(plugin, "config", plugin.config);
 }
-//获取数据对象
-export function getData(plugin: BotPlugin, defaultData: any) {
-    let dataDir = path.join(
-        require?.main?.path || process.cwd(),
-        "data",
-        plugin.bot.uin.toString(),
-        plugin.pluginProfile.PluginName
-    );
-    let dataPath = path.join(dataDir, "data.json");
+/** 获取外部Json文件 */
+export function getJsonData<T>(plugin: BotPlugin, fileName: string, defaultData: T): T {
+    let dataDir = getDir(plugin);
+    let dataPath = path.join(dataDir, fileName + ".json");
+    let data: any;
     if (fs.existsSync(dataPath)) {
-        return readJson(dataPath);
+        try {
+            data = JSON.parse(fs.readFileSync(dataPath).toString());
+        } catch (error) {
+            throw error;
+        }
     } else {
         //配置文件不存在，创建文件
         try {
-            makeJson(dataDir, "data.json", defaultData);
+            makeJson(dataDir, fileName + ".json", defaultData);
         } catch (error) {
             plugin.bot.logger.error(error);
         }
-
         return defaultData;
     }
+    verifyExtends(data, defaultData);
+    return data;
 }
 //保存数据对象到文件
-export function saveData(plugin: BotPlugin) {
-    let dataDir = path.join(
-        require?.main?.path || process.cwd(),
-        "data",
-        plugin.bot.uin.toString(),
-        plugin.pluginProfile.PluginName
-    );
+export function saveJsonData(plugin: BotPlugin, fileName: string, obj: any) {
+    let dataDir = getDir(plugin);
     try {
-        makeJson(dataDir, "data.json", plugin.data);
+        makeJson(dataDir, fileName + ".json", obj);
     } catch (error) {
         plugin.bot.logger.error(error);
     }
 }
 //获取插件数据目录
-export function getDir(plugin: BotPlugin) {
+export function getDir(plugin: BotPlugin): string {
     return path.join(
         require?.main?.path || process.cwd(),
         "data",
@@ -108,9 +81,25 @@ function mkDirsSync(dirName: string) {
         }
     }
 }
-function readJson(jsonPath: string) {
-    if (fs.existsSync(jsonPath)) {
-        return JSON.parse(fs.readFileSync(jsonPath).toString());
+
+/** 检测obj是否继承于target */
+function verifyExtends(sub: any, father: any): void {
+    if (typeof sub != "object") return;
+    for (const key in father) {
+        if (Object.prototype.hasOwnProperty.call(father, key)) {
+            if (Object.prototype.hasOwnProperty.call(sub, key)) {
+                let fa = get(father, key);
+                let su = get(sub, key);
+                if (fa !== su) {
+                    throw ObjectNotExtendsTarget(`Want: ${key}=${fa} but ${key}=${su}`);
+                }
+                verifyExtends(su, fa);
+            } else throw ObjectNotExtendsTarget(`The key '${key}' is not exist in '${sub}'`);
+        }
     }
-    return {};
+}
+
+/** 获取对象的值 */
+function get<T extends object, K extends keyof T>(o: T, name: K): T[K] {
+    return o[name];
 }

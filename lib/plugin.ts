@@ -21,6 +21,7 @@ class PluginProfile implements BotPluginProfile {
     PluginVersion: string = "0.0.0";
     Info: string = "未配置的插件";
 }
+
 export class BotPlugin {
     public logger!: Logger | PluginLogger;
     public pluginProfile: PluginProfile = new PluginProfile();
