@@ -19,7 +19,6 @@ import { PluginManager } from "./pluginManager";
 import log4js from "log4js";
 import { messageCenter } from "./messageCenter";
 import { KeywordManager } from "./keywordManager";
-import { BotEventMap } from "./event";
 import { CommandManager } from "./commandManager";
 interface BotConfig extends Config {
     //机器人的QQ密码
@@ -33,7 +32,23 @@ interface BotConfig extends Config {
     //是否保存日志到文件
     save_log_file: boolean | undefined;
 }
-
+/** 事件接口 */
+export interface BotEventMap<T = any> extends EventMap {
+    /** 新的一天! */
+    "bot.newday": (this: T, event: null) => void;
+}
+export interface BotClient extends Client {
+    on<T extends keyof BotEventMap>(event: T, listener: BotEventMap<this>[T]): this;
+    on<S extends string | symbol>(
+        event: S & Exclude<S, keyof BotEventMap>,
+        listener: (this: this, ...args: any[]) => void
+    ): this;
+    once<T extends keyof BotEventMap>(event: T, listener: BotEventMap<this>[T]): this;
+    once<S extends string | symbol>(
+        event: S & Exclude<S, keyof BotEventMap>,
+        listener: (this: this, ...args: any[]) => void
+    ): this;
+}
 export class BotClient extends Client {
     /** 账户密码 */
     private password: string | undefined;
@@ -77,7 +92,6 @@ export class BotClient extends Client {
                 });
         }
 
-        this.messageListenr();
         //一天更替事件
         let nowDate = new Date();
         let timeout =
@@ -88,18 +102,6 @@ export class BotClient extends Client {
         }, timeout);
         this.pluginManager.loadPlugin();
     }
-
-    messageListenr() {
-        this.on(
-            "message",
-            (message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent) => {
-                //at自己的消息
-                if (message.message[0].type === "at" && message.message[0].qq == this.uin)
-                    this.emit("bot.atselfmsg", message);
-            }
-        );
-    }
-
     /** 机器人登录 */
     botLogin() {
         //密码登录
