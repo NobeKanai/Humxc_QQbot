@@ -81,16 +81,6 @@ export class BotClient extends Client {
         }, timeout);
         this.pluginManager.loadPlugin();
     }
-    regKeyword(
-        keyword: string,
-        listener: (
-            message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
-            regArray: RegExpExecArray | null
-        ) => void,
-        area: "global" | "private" | "group" | "discuss" = "global"
-    ) {
-        this.keywordManager.regKeyword(keyword, listener, area);
-    }
 
     messageListenr() {
         this.on(
@@ -125,8 +115,8 @@ export class BotClient extends Client {
     }
 
     /** 判断是否管理员 */
-    isAdmin(qq: number) {
-        return new Set(this.admin).has(qq);
+    isAdmin(uid: number) {
+        return new Set(this.admin).has(uid);
     }
     /** 判断消息是否at自己的消息 */
     isAtSelf(message: PrivateMessage | GroupMessage | DiscussMessage): boolean {

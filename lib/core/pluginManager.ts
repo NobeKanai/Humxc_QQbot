@@ -42,7 +42,7 @@ export class PluginManager {
             try {
                 plugin = require(path.join(pluginFolder, pluginName));
             } catch (error) {
-                this.client.logger.error("导入插件时出现错误，已跳过该插件: ", error);
+                this.client.logger.error("导入插件时出现错误，已跳过该插件:", error);
             }
             if (plugin != undefined) {
                 try {
@@ -56,7 +56,7 @@ export class PluginManager {
                     this.pluginEntity.set(pluginProfile.PluginName, pluginEntity);
                     this.client.logger.info("----------");
                 } catch (error) {
-                    this.client.logger.error("实例化插件时出现错误，已跳过该插件: ", error);
+                    this.client.logger.error("实例化插件时出现错误，已跳过该插件\n", error);
                 }
             }
         }
