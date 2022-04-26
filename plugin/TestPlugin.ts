@@ -23,26 +23,20 @@ export class Plugin extends BotPlugin {
             uid: 2928607724,
             type: "Person",
         };
-        this.regKeyword("test", "group", "allow_all", (m) => {
-            console.log("allow_all 通过");
-        });
-        this.regKeyword("test", "global", "bot_admin", (m) => {
-            console.log("bot_admin 通过");
-        });
-        this.regKeyword("test", "global", "group_admin", (m) => {
-            console.log("group_admin 通过");
-        });
-        this.regKeyword("test", "global", "group_owner", (m) => {
-            console.log("group_owner 通过");
-        });
-        this.regKeyword("test", "global", "plugin_user", (m) => {
-            console.log("plugin_user 通过");
-        });
-        this.regKeyword("test", "global", "group_member", (m) => {
-            console.log("group_member 通过");
-        });
-        this.regKeyword("test", "global", "atme", (m) => {
-            console.log("atme 通过");
+        this.regCommand(
+            "/test",
+            "global",
+            "bot_admin",
+            (m) => {
+                console.log("触发命令");
+                return "返回值";
+            },
+            (v) => {
+                console.log("命令返回值" + v);
+            }
+        );
+        this.regKeyword("hi", "global", "allow_all", (m) => {
+            m.reply("Hi!");
         });
     }
 }

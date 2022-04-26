@@ -5,8 +5,9 @@ import { BotClient } from "./core/client";
 import { DiscussMessageEvent, GroupMessageEvent, Logger, PrivateMessageEvent } from "oicq";
 import log4js from "log4js";
 import { getJsonData, saveJsonData } from "./pluginFather";
-import { Area, Filter, Keyword, KeywordFilter, Listener } from "./core/keywordManager";
+import { MsgArea, RegFilter, MsgRegTrigger, RegListener } from "./core/messageCenter";
 import { Command, CommandCallback, CommandFunc } from "./core/commandManager";
+import { Keyword } from "./core/keywordManager";
 
 export class BotPluginError {
     private static MainName = "BotPluginError";
@@ -88,14 +89,23 @@ export class BotPlugin {
     }
 
     /** 注册关键词 */
-    public regKeyword(regStr: string, area: Area, filter: Filter, listener: Listener): void {
+    public regKeyword(
+        regStr: string,
+        area: MsgArea,
+        filter: RegFilter,
+        listener: RegListener,
+        name?: string,
+        help?: string
+    ): void {
         let keyword: Keyword = {
             plugin: this,
             regStr: regStr,
             listener: listener,
             filter: filter,
             area: area,
-            subtype: "keyword",
+            subType: "keyword",
+            name: name,
+            help: help,
         };
         this.client.keywordManager.regKeyword(keyword);
     }
@@ -103,8 +113,8 @@ export class BotPlugin {
     /** 注册命令 */
     public regCommand(
         command: string,
-        area: Area,
-        filter: Filter,
+        area: MsgArea,
+        filter: RegFilter,
         func: CommandFunc,
         callback: CommandCallback,
         separator: string = " "
@@ -214,35 +224,37 @@ export class BotPlugin {
     }
 
     /** 从KeywordManager获取 KeywordFilter */
-    public getKeywordFilter(filterName: KeywordFilter): void;
-    public getKeywordFilter(filterName: Filter) {
+    public getKeywordFilter(filterName: RegFilter): void;
+    public getKeywordFilter(filterName: RegFilter) {
         switch (filterName) {
             case "allow_all":
-                return this.client.keywordManager.getKeywordFilter("allow_all");
+                return this.client.messageCenter.getRegFilter("allow_all");
 
             case "bot_admin":
-                return this.client.keywordManager.getKeywordFilter("bot_admin")(this.client);
+                return this.client.messageCenter.getRegFilter("bot_admin")(this.client);
 
             case "plugin_user":
-                return this.client.keywordManager.getKeywordFilter("plugin_user")(this);
-                break;
+                return this.client.messageCenter.getRegFilter("plugin_user")(this);
 
             case "group_owner":
-                return this.client.keywordManager.getKeywordFilter("group_owner");
+                return this.client.messageCenter.getRegFilter("group_owner");
 
             case "group_admin":
-                return this.client.keywordManager.getKeywordFilter("group_admin");
+                return this.client.messageCenter.getRegFilter("group_admin");
 
             case "group_member":
-                return this.client.keywordManager.getKeywordFilter("group_member");
+                return this.client.messageCenter.getRegFilter("group_member");
 
             case "discuss_msg":
-                return this.client.keywordManager.getKeywordFilter("discuss_msg");
+                return this.client.messageCenter.getRegFilter("discuss_msg");
 
             case "atme":
-                return this.client.keywordManager.getKeywordFilter("atme");
+                return this.client.messageCenter.getRegFilter("atme");
 
             default:
+                this.client.logger.error(
+                    `不存在的触发器类型: '${filterName}', 请检查, 此次命令不会生效.`
+                );
                 return function () {
                     return false;
                 };

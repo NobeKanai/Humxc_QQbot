@@ -5,15 +5,19 @@
 import { DiscussMessageEvent, GroupMessageEvent, PrivateMessageEvent } from "oicq/lib/events";
 import { BotPlugin } from "../plugin";
 import { BotClient } from "./client";
-import { Area, Filter, Keyword, KeywordFilter, KeywordManager, Listener } from "./keywordManager";
+import { MsgArea, MsgRegTrigger, RegFilter, RegListener } from "./messageCenter";
 
 export type CommandFunc = (...args: any) => any;
 export type CommandCallback = (result: ReturnType<CommandFunc>, err: Error) => any;
 /** 命令类型 */
 export type Command = {
+    /** 别名 */
+    name?: string;
+    /** 帮助文本 */
+    help?: string;
     plugin: BotPlugin;
-    area: Area;
-    filter: Filter;
+    area: MsgArea;
+    filter: RegFilter;
     /**
      * 参数分割符
      * 在消息中使用此参数来分割为参数
@@ -35,6 +39,7 @@ export type Command = {
 };
 export class CommandManager {
     private client: BotClient;
+    public commands: Command[] = [];
 
     constructor(client: BotClient) {
         this.client = client;
@@ -43,7 +48,7 @@ export class CommandManager {
     /** 注册命令 */
     regCommand(command: Command) {
         let regStr = "^" + command.command + `($|${command.separator}+)`;
-        let listener: Listener = function (
+        let listener: RegListener = function (
             message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
             matchStr: string
         ) {
@@ -64,14 +69,15 @@ export class CommandManager {
                 command.callback.call(command.plugin, result, err);
             }
         };
-        let keyword: Keyword = {
+        let tr: MsgRegTrigger = {
             plugin: command.plugin,
             regStr: regStr,
             area: command.area,
             filter: command.filter,
             listener: listener,
-            subtype: "command",
+            subType: "command",
         };
-        this.client.keywordManager.regKeyword(keyword);
+        this.client.messageCenter.regMsgRegTrigger(tr);
+        this.commands.push(command);
     }
 }

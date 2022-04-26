@@ -17,6 +17,7 @@ import {
 } from "oicq";
 import { PluginManager } from "./pluginManager";
 import log4js from "log4js";
+import { messageCenter } from "./messageCenter";
 import { KeywordManager } from "./keywordManager";
 import { BotEventMap } from "./event";
 import { CommandManager } from "./commandManager";
@@ -42,6 +43,8 @@ export class BotClient extends Client {
     public pluginList: string[] = [];
     /** 发送错误给管理员 */
     public errorCallAdmin: boolean = false;
+    /** 消息中心 */
+    public messageCenter: messageCenter = new messageCenter(this);
     /** 关键词管理器 */
     public keywordManager: KeywordManager = new KeywordManager(this);
     /** 插件管理器 */
