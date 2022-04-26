@@ -22,12 +22,14 @@ export type RegListener = (
     matchStr: string
 ) => void;
 export type MsgArea = "global" | "private" | "group" | "discuss";
+
+/** 自定义过滤器 */
 export type RegFilterFunc = (
     message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
 ) => boolean;
 
-export type RegFilter =
-    | RegFilterFunc
+/** 预定义过滤器 */
+export type RegFilterDef =
     | "allow_all"
     | "bot_admin"
     | "plugin_user"
@@ -36,6 +38,7 @@ export type RegFilter =
     | "group_member"
     | "discuss_msg"
     | "atme";
+export type RegFilter = RegFilterFunc | RegFilterDef;
 /**
  * 关键词组件，提供对"关键词"功能的实现
  */
@@ -149,9 +152,9 @@ export class messageCenter {
             | "group_admin"
             | "group_member"
             | "discuss_msg"
-    ): RegFilter;
-    public getRegFilter(filterName: "bot_admin"): (client: BotClient) => RegFilter;
-    public getRegFilter(filterName: "plugin_user"): (plugin: BotPlugin) => RegFilter;
+    ): RegFilterFunc;
+    public getRegFilter(filterName: "bot_admin"): (client: BotClient) => RegFilterFunc;
+    public getRegFilter(filterName: "plugin_user"): (plugin: BotPlugin) => RegFilterFunc;
     public getRegFilter(filterName: any): any {
         switch (filterName) {
             case "allow_all":

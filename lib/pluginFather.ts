@@ -4,6 +4,7 @@
 import path from "path";
 import fs from "fs";
 import { BotPlugin } from "./plugin";
+import { BotClient } from "./core/client";
 
 export class PluginFatherError {
     private static MainName = "PluginFatherError";

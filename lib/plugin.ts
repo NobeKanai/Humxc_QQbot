@@ -5,7 +5,14 @@ import { BotClient } from "./core/client";
 import { DiscussMessageEvent, GroupMessageEvent, Logger, PrivateMessageEvent } from "oicq";
 import log4js from "log4js";
 import { getJsonData, saveJsonData } from "./pluginFather";
-import { MsgArea, RegFilter, MsgRegTrigger, RegListener } from "./core/messageCenter";
+import {
+    MsgArea,
+    RegFilter,
+    MsgRegTrigger,
+    RegListener,
+    RegFilterFunc,
+    RegFilterDef,
+} from "./core/messageCenter";
 import { Command, CommandFunc } from "./core/commandManager";
 import { Keyword } from "./core/keywordManager";
 
@@ -64,6 +71,7 @@ export class BotPlugin {
         pluginProfile: BotPluginProfile,
         defaultConfig: BotPluginConfig
     ) {
+        this.config = defaultConfig;
         this.defaultConfig = defaultConfig;
         this.client = client;
         this.pluginProfile = pluginProfile;
@@ -83,9 +91,10 @@ export class BotPlugin {
             this.logger = _log;
         }
 
-        //初始化config
-        this.config = getJsonData(this, "config", this.defaultConfig);
-        this.updateUserFromConfig();
+        /** 初始化config */
+        if (!this.updateConfigFromFile()) {
+            this.logger.error("在初始化 config 时出现异常");
+        }
     }
 
     /** 注册关键词 */
@@ -186,7 +195,7 @@ export class BotPlugin {
     }
 
     /** 将this.users保存到config, 保存插件的config到文件*/
-    public saveConfig(): void {
+    public saveConfig(): boolean {
         let userList: BotPluginUser[] = [];
         for (const user of this.users.group.values()) {
             userList.push(user);
@@ -195,7 +204,13 @@ export class BotPlugin {
             userList.push(user);
         }
         this.config.Users = userList;
-        saveJsonData(this, "config", this.config);
+        try {
+            saveJsonData(this, "config", this.config);
+        } catch (error) {
+            this.logger.error(error);
+            return false;
+        }
+        return true;
     }
 
     /** 从config中更新Users到this.users */
@@ -218,14 +233,19 @@ export class BotPlugin {
     }
 
     /** 从配置文件重新加载config */
-    public updateConfigFromFile(): void {
-        this.config = getJsonData(this, "config", this.defaultConfig);
+    public updateConfigFromFile(): boolean {
+        try {
+            this.config = getJsonData(this, "config", this.defaultConfig);
+        } catch (error) {
+            this.logger.error(error);
+        }
+
         this.updateUserFromConfig();
+        return true;
     }
 
     /** 从KeywordManager获取 KeywordFilter */
-    public getKeywordFilter(filterName: RegFilter): void;
-    public getKeywordFilter(filterName: RegFilter) {
+    public getKeywordFilter(filterName: RegFilterDef): RegFilterFunc {
         switch (filterName) {
             case "allow_all":
                 return this.client.messageCenter.getRegFilter("allow_all");
@@ -253,7 +273,7 @@ export class BotPlugin {
 
             default:
                 this.client.logger.error(
-                    `不存在的触发器类型: '${filterName}', 请检查, 此次命令不会生效.`
+                    `不存在的触发器类型: '${filterName}', 请检查, 此命令不会生效.`
                 );
                 return function () {
                     return false;
