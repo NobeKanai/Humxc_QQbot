@@ -14,7 +14,7 @@ import { BotClient } from "./client";
 
 export type Listener = (
     message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
-    regArray: RegExpExecArray | null
+    matchStr: string
 ) => void;
 export type Area = "global" | "private" | "group" | "discuss";
 export type KeywordFilter = (
@@ -39,6 +39,7 @@ export interface Keyword {
     area: Area;
     filter: Filter;
     listener: Listener;
+    subtype: "keyword" | "command";
 }
 
 export class KeywordManager {
@@ -68,25 +69,18 @@ export class KeywordManager {
 
             for (let i = 0; i < _keywords.length; i++) {
                 const keyword = _keywords[i];
-                let targetStr;
+                let matchStr;
                 for (let i = 0; i < message.message.length; i++) {
                     const msgel: MessageElem = message.message[i];
                     if (msgel.type == "text") {
-                        targetStr = msgel.text;
+                        matchStr = msgel.text;
                         break;
                     }
                 }
-                if (targetStr == null) continue;
-                let regArray = new RegExp(keyword.regStr).exec(targetStr);
+                if (matchStr == null) continue;
+                let regArray = new RegExp(keyword.regStr, "g").exec(matchStr);
                 if (regArray == null) continue;
-                if (typeof keyword.filter != "string") {
-                    if (keyword.filter(message)) {
-                        keyword.plugin.logger.debug(
-                            `uid[${message.sender.user_id}] 触发了关键词: ${path}.${keyword.regStr}`
-                        );
-                        keyword.listener.call(keyword.plugin, message, regArray);
-                    }
-                } else {
+                if (typeof keyword.filter == "string") {
                     switch (keyword.filter) {
                         case "allow_all":
                             keyword.filter = this.getKeywordFilter("allow_all");
@@ -120,17 +114,20 @@ export class KeywordManager {
                             keyword.filter = this.getKeywordFilter("atme");
                             break;
                         default:
+                            keyword.plugin.logger.error(
+                                `不存在的触发器类型: '${keyword.filter}', 请检查 ${keyword.subtype}: ${keyword.regStr}. 此 ${keyword.subtype} 已被拦截`
+                            );
                             keyword.filter = () => {
                                 return false;
                             };
                             break;
                     }
-                    if (keyword.filter(message)) {
-                        keyword.plugin.logger.info(
-                            `uid[${message.sender.user_id}] 触发了关键词: ${path}.${keyword.regStr}`
-                        );
-                        keyword.listener.call(this, message, regArray);
-                    }
+                }
+                if (keyword.filter(message)) {
+                    keyword.plugin.logger.debug(
+                        `uid[${message.sender.user_id}] 触发了 ${keyword.subtype} : ${path}.${keyword.regStr}`
+                    );
+                    keyword.listener.call(keyword.plugin, message, matchStr);
                 }
             }
         };

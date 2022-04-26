@@ -19,6 +19,7 @@ import { PluginManager } from "./pluginManager";
 import log4js from "log4js";
 import { KeywordManager } from "./keywordManager";
 import { BotEventMap } from "./event";
+import { CommandManager } from "./commandManager";
 interface BotConfig extends Config {
     //机器人的QQ密码
     password: string | undefined;
@@ -41,9 +42,12 @@ export class BotClient extends Client {
     public pluginList: string[] = [];
     /** 发送错误给管理员 */
     public errorCallAdmin: boolean = false;
-    //关键词
+    /** 关键词管理器 */
     public keywordManager: KeywordManager = new KeywordManager(this);
+    /** 插件管理器 */
     public pluginManager: PluginManager = new PluginManager(this);
+    /** 命令管理器 */
+    public commandManager: CommandManager = new CommandManager(this);
     constructor(uin: number, conf?: BotConfig) {
         super(uin, conf);
         if (conf?.save_log_file == true) {

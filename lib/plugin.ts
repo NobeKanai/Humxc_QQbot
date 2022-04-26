@@ -2,10 +2,11 @@
  * 机器人插件的基本实现，机器人插件应继承此类
  */
 import { BotClient } from "./core/client";
-import { Logger } from "oicq";
+import { DiscussMessageEvent, GroupMessageEvent, Logger, PrivateMessageEvent } from "oicq";
 import log4js from "log4js";
 import { getJsonData, saveJsonData } from "./pluginFather";
 import { Area, Filter, Keyword, KeywordFilter, Listener } from "./core/keywordManager";
+import { Command, CommandCallback, CommandFunc } from "./core/commandManager";
 
 export class BotPluginError {
     private static MainName = "BotPluginError";
@@ -94,9 +95,32 @@ export class BotPlugin {
             listener: listener,
             filter: filter,
             area: area,
+            subtype: "keyword",
         };
         this.client.keywordManager.regKeyword(keyword);
     }
+
+    /** 注册命令 */
+    public regCommand(
+        command: string,
+        area: Area,
+        filter: Filter,
+        func: CommandFunc,
+        callback: CommandCallback,
+        separator: string = " "
+    ): void {
+        let c: Command = {
+            plugin: this,
+            area: area,
+            filter: filter,
+            separator: separator,
+            command: command,
+            func: func,
+            callback: callback,
+        };
+        this.client.commandManager.regCommand(c);
+    }
+
     /** 是否有指定群组用户 */
     public hasGroupUser(uid: uid): boolean {
         return this.users.group.has(uid);
@@ -189,7 +213,7 @@ export class BotPlugin {
         this.updateUserFromConfig();
     }
 
-    /** 从KeywordManager获取 KeywordFilter*/
+    /** 从KeywordManager获取 KeywordFilter */
     public getKeywordFilter(filterName: KeywordFilter): void;
     public getKeywordFilter(filterName: Filter) {
         switch (filterName) {
