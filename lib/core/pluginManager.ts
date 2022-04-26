@@ -46,13 +46,12 @@ export class PluginManager {
             }
             if (plugin != undefined) {
                 try {
-                    let pluginEntity: BotPlugin = new plugin.Plugin(this.client);
                     let pluginProfile: BotPluginProfile = new plugin.PluginProfile();
                     this.client.logger.debug(`Name: ${pluginProfile.PluginName}`);
-
                     this.client.logger.debug(`PluginVersion: ${pluginProfile.PluginVersion}`);
                     this.client.logger.debug(`BotVersion: ${pluginProfile.BotVersion}`);
                     this.client.logger.debug(`Info: ${pluginProfile.Info}`);
+                    let pluginEntity: BotPlugin = new plugin.Plugin(this.client);
                     this.pluginEntity.set(pluginProfile.PluginName, pluginEntity);
                     this.client.logger.info("----------");
                 } catch (error) {

@@ -23,18 +23,9 @@ export class Plugin extends BotPlugin {
             uid: 2928607724,
             type: "Person",
         };
-        this.regCommand(
-            "/test",
-            "global",
-            "bot_admin",
-            (m) => {
-                console.log("触发命令");
-                return "返回值";
-            },
-            (v) => {
-                console.log("命令返回值" + v);
-            }
-        );
+        this.regCommand("/test", "global", "bot_admin", (m) => {
+            console.log("触发命令");
+        });
         this.regKeyword("hi", "global", "allow_all", (m) => {
             m.reply("Hi!");
         });
