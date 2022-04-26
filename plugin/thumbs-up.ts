@@ -60,6 +60,31 @@ export class Plugin extends BotPlugin {
                 return;
             }
         });
+        this.regKeyword("取消点赞", "global", "atme", (message) => {
+            let uid = message.sender.user_id;
+            let user: BotPluginUser = {
+                uid: uid,
+                type: "Person",
+            };
+            if (this.hasPersonUser(uid)) {
+                if (this.rmUser(user)) {
+                    try {
+                        this.saveConfig();
+                    } catch (error) {
+                        this.logger.error(error);
+                        message
+                            .reply("不好！保存配置时出现异常！", true)
+                            .catch((err: any) => this.logger.error(err));
+                        return;
+                    }
+                    message.reply("好, 那我走", true).catch((err: any) => this.logger.error(err));
+                }
+            } else {
+                message
+                    .reply("你本就不在点赞列表里", true)
+                    .catch((err: any) => this.logger.error(err));
+            }
+        });
     }
     private async startLike(timeout: number) {
         for (const user of this.users.person.values()) {

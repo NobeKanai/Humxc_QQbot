@@ -172,6 +172,28 @@ export class BotPlugin {
         }
     }
 
+    /** 删除插件用户 */
+    public rmUser<T extends BotPluginUser>(user: T): boolean {
+        switch (user.type) {
+            case "Group":
+                if (!this.users.group.has(user.uid)) {
+                    throw new BotPluginError.UserNotExist("uid=" + user.uid.toString());
+                } else {
+                    this.users.group.delete(user.uid);
+                    return true;
+                }
+            case "Person":
+                if (!this.users.person.has(user.uid)) {
+                    throw new BotPluginError.UserNotExist("uid=" + user.uid.toString());
+                } else {
+                    this.users.person.delete(user.uid);
+                    return true;
+                }
+            default:
+                throw new BotPluginError.UnknowPluginUserType(user.type);
+        }
+    }
+
     /** 更新修改用户 */
     public uppdateUser<T extends BotPluginUser>(user: T): boolean {
         switch (user.type) {

@@ -2,7 +2,7 @@ import { FriendRequestEvent } from "oicq";
 import { BotClient } from "../lib/core/client";
 import { BotPlugin, BotPluginProfile, BotPluginConfig, BotPluginUser } from "../lib/plugin";
 export class PluginProfile implements BotPluginProfile {
-    PluginName: string = "PluginHelp";
+    PluginName: string = "PluginManager";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
     Info: string = "查询插件";
