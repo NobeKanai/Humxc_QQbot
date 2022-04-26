@@ -6,7 +6,7 @@ import { DiscussMessageEvent, GroupMessageEvent, Logger, PrivateMessageEvent } f
 import log4js from "log4js";
 import { getJsonData, saveJsonData } from "./pluginFather";
 import { MsgArea, RegFilter, MsgRegTrigger, RegListener } from "./core/messageCenter";
-import { Command, CommandCallback, CommandFunc } from "./core/commandManager";
+import { Command, CommandFunc } from "./core/commandManager";
 import { Keyword } from "./core/keywordManager";
 
 export class BotPluginError {
@@ -116,8 +116,9 @@ export class BotPlugin {
         area: MsgArea,
         filter: RegFilter,
         func: CommandFunc,
-        callback: CommandCallback,
-        separator: string = " "
+        separator: string = " ",
+        name?: string,
+        help?: string
     ): void {
         let c: Command = {
             plugin: this,
@@ -126,7 +127,6 @@ export class BotPlugin {
             separator: separator,
             command: command,
             func: func,
-            callback: callback,
         };
         this.client.commandManager.regCommand(c);
     }

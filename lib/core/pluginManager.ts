@@ -9,7 +9,7 @@ import { BotPlugin, BotPluginProfile } from "../plugin";
 var pluginFolder = path.join(process.cwd(), "plugin");
 export class PluginManager {
     // 存放插件实体对象
-    private pluginEntity: Map<string, BotPlugin> = new Map();
+    public pluginEntity: Map<string, BotPlugin> = new Map();
     private client: BotClient;
     constructor(_client: BotClient) {
         this.client = _client;
@@ -60,8 +60,5 @@ export class PluginManager {
                 }
             }
         }
-    }
-    public getPlugin(): Map<string, BotPlugin> {
-        return this.pluginEntity;
     }
 }

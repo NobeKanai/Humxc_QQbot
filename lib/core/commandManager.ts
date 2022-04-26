@@ -7,8 +7,10 @@ import { BotPlugin } from "../plugin";
 import { BotClient } from "./client";
 import { MsgArea, MsgRegTrigger, RegFilter, RegListener } from "./messageCenter";
 
-export type CommandFunc = (...args: any) => any;
-export type CommandCallback = (result: ReturnType<CommandFunc>, err: Error) => any;
+export type CommandFunc = (
+    message: GroupMessageEvent | PrivateMessageEvent | DiscussMessageEvent,
+    ...args: any
+) => void;
 /** 命令类型 */
 export type Command = {
     /** 别名 */
@@ -32,10 +34,6 @@ export type Command = {
      * 触发命令后执行的函数
      */
     func: CommandFunc;
-    /**
-     * 命令运行完成后的回调函数,将传递func函数的返回值和func的错误(如果有)
-     */
-    callback: CommandCallback;
 };
 export class CommandManager {
     private client: BotClient;
@@ -47,6 +45,7 @@ export class CommandManager {
 
     /** 注册命令 */
     regCommand(command: Command) {
+        command.plugin.logger.info(`正在注册命令: ${command.command}`);
         let regStr = "^" + command.command + `($|${command.separator}+)`;
         let listener: RegListener = function (
             message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
@@ -57,16 +56,11 @@ export class CommandManager {
                 .replace(new RegExp(`${command.separator}+`, "g"), command.separator)
                 .split(command.separator);
             console.log(args);
-            let result: any;
             let err: any;
             try {
-                result = command.func.call(command.plugin, ...args);
+                command.func.call(command.plugin, message, ...args);
             } catch (error) {
-                err = error;
-            }
-
-            if (command.callback !== null && result !== null) {
-                command.callback.call(command.plugin, result, err);
+                command.plugin.logger.error(error);
             }
         };
         let tr: MsgRegTrigger = {
