@@ -138,6 +138,9 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 case "private":
                     user = this.getUser(message.sender.user_id, "Person");
                     break;
+
+                default:
+                    return;
             }
             let tag = message.raw_message.replace(/来点|色图/g, "").split(/,+| +|，+/g);
             let req = new ReqData();
@@ -247,6 +250,8 @@ export class Plugin extends BotPlugin<PluginConfig> {
                             case "private":
                                 _addUser(message.sender.user_id, "Person");
                                 break;
+                            default:
+                                return;
                         }
                         break;
                     case "关闭":
@@ -257,6 +262,8 @@ export class Plugin extends BotPlugin<PluginConfig> {
                             case "private":
                                 _rmUser(message.sender.user_id, "Person");
                                 break;
+                            default:
+                                return;
                         }
                         break;
 
@@ -272,6 +279,8 @@ export class Plugin extends BotPlugin<PluginConfig> {
                                     msg = "爬";
                                 } else _turnOnR18(message.sender.user_id, "Person");
                                 break;
+                            default:
+                                return;
                         }
                         break;
                     case "关闭R18":
@@ -286,6 +295,8 @@ export class Plugin extends BotPlugin<PluginConfig> {
                                     msg = "爬";
                                 } else _turnOffR18(message.sender.user_id, "Person");
                                 break;
+                            default:
+                                return;
                         }
                         break;
                     default:

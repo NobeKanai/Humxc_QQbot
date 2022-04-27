@@ -109,6 +109,8 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 case "private":
                     user = this.getUser(message.sender.user_id, "Person");
                     break;
+                default:
+                    return;
             }
             let msg = await this.send(user, "list");
             if (msg === "") return;
@@ -136,6 +138,8 @@ export class Plugin extends BotPlugin<PluginConfig> {
                         message.raw_message.length + 1
                     )}`;
                     break;
+                default:
+                    return;
             }
             let msg = await this.send(user, sendstr);
             if (msg === "") return;
