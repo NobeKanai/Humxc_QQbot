@@ -274,13 +274,7 @@ export class BotPlugin {
             userList.push(user);
         }
         this.config.Users = userList;
-        try {
-            saveJsonData(this, "config", this.config);
-        } catch (error) {
-            this.logger.error(error);
-            return false;
-        }
-        return true;
+        return this.saveJsonData("config", this.config);
     }
 
     /** 从config中更新Users到this.users */
@@ -314,6 +308,21 @@ export class BotPlugin {
         return true;
     }
 
+    /** 保存对象到 JSON 文件 */
+    saveJsonData(fileName: string, obj: any): boolean {
+        try {
+            saveJsonData(this, fileName, obj);
+        } catch (error) {
+            this.logger.error(error);
+            return false;
+        }
+        return true;
+    }
+
+    /** 从 JSON 文件获取对象 */
+    getJsonData<T>(fileName: string, defaultData: T): T {
+        return getJsonData(this, fileName, defaultData);
+    }
     /** 从KeywordManager获取 KeywordFilter */
     public getKeywordFilter(filterName: RegFilterDef): RegFilterFunc {
         switch (filterName) {
