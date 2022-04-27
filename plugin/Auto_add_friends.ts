@@ -17,8 +17,26 @@ export class Plugin extends BotPlugin<PluginConfig> {
         defaultConfig: PluginConfig
     ) {
         super(botClient, pluginProfile, defaultConfig);
-        this.client.on("request.friend.add", (event: FriendRequestEvent) => {
-            this.client.pickFriend(event.user_id).addFriendBack(event.seq);
+        this.client.on("request.friend.single", async (event: FriendRequestEvent) => {
+            this.addFriend(event);
+        });
+        this.client.on("request.friend.add", async (event: FriendRequestEvent) => {
+            this.addFriend(event);
         });
     }
+    async addFriend(event: FriendRequestEvent) {
+        await sleep(5000);
+        let result = false;
+        try {
+            result = await this.client.pickFriend(event.user_id).addFriendBack(event.seq);
+        } catch (error) {
+            this.logger.error(error);
+        }
+        this.logger.info(`自动添加 [${event.user_id}] 为好友: ${result ? "成功" : "失败"}`);
+    }
+}
+async function sleep(time: number): Promise<void> {
+    new Promise<void>((resolve, reject) => {
+        setTimeout(() => resolve(), time);
+    });
 }

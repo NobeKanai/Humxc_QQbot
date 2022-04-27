@@ -275,7 +275,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                                 } else _turnOnR18(message.group_id, "Group");
                                 break;
                             case "private":
-                                if (!this.hasUser(message.sender.user_id, "Group")) {
+                                if (!this.hasUser(message.sender.user_id, "Person")) {
                                     msg = "爬";
                                 } else _turnOnR18(message.sender.user_id, "Person");
                                 break;
@@ -291,7 +291,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                                 } else _turnOffR18(message.group_id, "Group");
                                 break;
                             case "private":
-                                if (!this.hasUser(message.sender.user_id, "Group")) {
+                                if (!this.hasUser(message.sender.user_id, "Person")) {
                                     msg = "爬";
                                 } else _turnOffR18(message.sender.user_id, "Person");
                                 break;
