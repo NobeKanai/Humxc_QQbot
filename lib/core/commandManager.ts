@@ -60,7 +60,7 @@ export class CommandManager {
 
     /** 注册命令 */
     regCommand(command: Command) {
-        command.plugin.logger.info(`正在注册命令: ${command.command}`);
+        command.plugin.logger.debug(`正在注册命令: ${command.command}`);
         let regStr = "^" + command.command + `($|${command.separator}+)`;
         let listener: RegListener = function (
             message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,

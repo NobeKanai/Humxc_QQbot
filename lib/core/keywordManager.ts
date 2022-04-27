@@ -19,7 +19,7 @@ export class KeywordManager {
         this.client = client;
     }
     public regKeyword(keyword: Keyword) {
-        keyword.plugin.logger.info(`正在注册关键词: ${keyword.regStr}`);
+        keyword.plugin.logger.debug(`正在注册关键词: ${keyword.regStr}`);
         this.client.messageCenter.regMsgRegTrigger(keyword);
         this.keywords.push(keyword);
     }
