@@ -26,13 +26,13 @@ export class PluginError extends Error {
     };
     static UserAlreadyExist = class extends Error {
         constructor(user: BotPluginUser) {
-            super(user.toString());
+            super(JSON.stringify(user));
             this.name = PluginError.MainName + ": " + "UserAlreadyExist";
         }
     };
     static UserNotExist = class extends Error {
-        constructor(user: BotPluginUser) {
-            super(user.toString());
+        constructor(uid: uid, type: PluginUserType) {
+            super(`${type} user: ${uid} `);
             this.name = PluginError.MainName + ": " + "UserNotExist";
         }
     };
@@ -107,9 +107,8 @@ export class BotPlugin {
         }
 
         /** 初始化config */
-        if (!this.updateConfigFromFile()) {
-            this.logger.error("在初始化 config 时出现异常");
-        }
+        this.config = getJsonData(this, "config", this.defaultConfig);
+        this.updateUserFromConfig();
     }
 
     /** 注册关键词 */
@@ -140,10 +139,9 @@ export class BotPlugin {
         area: MsgArea,
         filter: RegFilter,
         func: CommandFunc,
-        separator: string = " ",
-        name?: string,
         help?: string,
-        showHelp?: boolean
+        showHelp?: boolean,
+        separator: string = " "
     ): void {
         let c: Command = {
             plugin: this,
@@ -152,15 +150,16 @@ export class BotPlugin {
             separator: separator,
             command: command,
             func: func,
+            help: help,
             showHelp: false,
         };
-        if (c.showHelp === null && c.help !== null) {
+        if (showHelp == null && help != null) {
             c.showHelp = true;
         }
         this.client.commandManager.regCommand(c);
     }
 
-    /** 是否有指定群组用户 */
+    /** 用户是否存在 */
     public hasUser(uid: uid, type: PluginUserType): boolean {
         switch (type) {
             case "Group":
@@ -174,9 +173,29 @@ export class BotPlugin {
         }
     }
 
-    /** 是否有指定个人用户 */
-    public hasPersonUser(uid: uid): boolean {
-        return this.users.person.has(uid);
+    /** 获取用户 */
+    public getUser(uid: uid, type: PluginUserType): BotPluginUser {
+        let u: BotPluginUser | undefined;
+        switch (type) {
+            case "Group":
+                u = this.users.group.get(uid);
+                if (u !== undefined) {
+                    return u;
+                } else {
+                    throw new PluginError.UserNotExist(uid, type);
+                }
+
+            case "Person":
+                u = this.users.person.get(uid);
+                if (u !== undefined) {
+                    return u;
+                } else {
+                    throw new PluginError.UserNotExist(uid, type);
+                }
+
+            default:
+                throw new PluginError.UnknowPluginUserType(type);
+        }
     }
 
     /** 添加插件用户 */
@@ -202,24 +221,24 @@ export class BotPlugin {
     }
 
     /** 删除插件用户 */
-    public rmUser<T extends BotPluginUser>(user: T): boolean {
-        switch (user.type) {
+    public rmUser(uid: uid, type: PluginUserType): boolean {
+        switch (type) {
             case "Group":
-                if (!this.users.group.has(user.uid)) {
-                    throw new PluginError.UserNotExist(user);
+                if (!this.users.group.has(uid)) {
+                    throw new PluginError.UserNotExist(uid, type);
                 } else {
-                    this.users.group.delete(user.uid);
+                    this.users.group.delete(uid);
                     return true;
                 }
             case "Person":
-                if (!this.users.person.has(user.uid)) {
-                    throw new PluginError.UserNotExist(user);
+                if (!this.users.person.has(uid)) {
+                    throw new PluginError.UserNotExist(uid, type);
                 } else {
-                    this.users.person.delete(user.uid);
+                    this.users.person.delete(uid);
                     return true;
                 }
             default:
-                throw new PluginError.UnknowPluginUserType(user.type);
+                throw new PluginError.UnknowPluginUserType(type);
         }
     }
 
@@ -228,14 +247,14 @@ export class BotPlugin {
         switch (user.type) {
             case "Group":
                 if (!this.users.group.has(user.uid)) {
-                    throw new PluginError.UserNotExist(user);
+                    throw new PluginError.UserNotExist(user.uid, user.type);
                 } else {
                     this.users.group.set(user.uid, user);
                     return true;
                 }
             case "Person":
                 if (!this.users.person.has(user.uid)) {
-                    throw new PluginError.UserNotExist(user);
+                    throw new PluginError.UserNotExist(user.uid, user.type);
                 } else {
                     this.users.person.set(user.uid, user);
                     return true;

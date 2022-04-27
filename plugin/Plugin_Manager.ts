@@ -29,7 +29,7 @@ export class Plugin extends BotPlugin {
         this.regCommand("/插件信息", "global", "bot_admin", (message, pluginName: string) => {
             let p = this.client.pluginManager.pluginEntity.get(pluginName);
             if (p != null) {
-                message.reply(`${p.pluginProfile.PluginName}\n${p.pluginProfile.Info}`);
+                return `${p.pluginProfile.PluginName}\n${p.pluginProfile.Info}`;
             }
         });
     }

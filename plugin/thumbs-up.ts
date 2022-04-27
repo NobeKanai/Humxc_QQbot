@@ -24,7 +24,7 @@ export class Plugin extends BotPlugin {
         this.regKeyword("给我点赞", "global", "atme", (message) => {
             let uid = message.sender.user_id;
             if (this.client.isFriend(uid)) {
-                if (this.hasPersonUser(uid)) {
+                if (this.hasUser(uid, "Person")) {
                     message
                         .reply("你已经在点赞列表了🌹", true)
                         .catch((err: any) => this.logger.error(err));
@@ -62,12 +62,8 @@ export class Plugin extends BotPlugin {
         });
         this.regKeyword("取消点赞", "global", "atme", (message) => {
             let uid = message.sender.user_id;
-            let user: BotPluginUser = {
-                uid: uid,
-                type: "Person",
-            };
-            if (this.hasPersonUser(uid)) {
-                if (this.rmUser(user)) {
+            if (this.hasUser(uid, "Person")) {
+                if (this.rmUser(uid, "Person")) {
                     try {
                         this.saveConfig();
                     } catch (error) {

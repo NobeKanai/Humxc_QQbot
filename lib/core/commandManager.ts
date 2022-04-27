@@ -7,6 +7,7 @@ import { BotPlugin } from "../plugin";
 import { BotClient } from "./client";
 import { MsgArea, MsgRegTrigger, RegFilter, RegListener } from "./messageCenter";
 
+export class CommandHelp {}
 /**
  * Command 的错误, 此错误在 CommandFunc 中抛出时不会打印在日志上
  */
@@ -27,8 +28,6 @@ export type CommandFunc = (
 ) => any;
 /** 命令类型 */
 export type Command = {
-    /** 别名 */
-    name?: string;
     /** 帮助文本 */
     help?: string;
     /** 出现错误时显示帮助 */
@@ -71,7 +70,6 @@ export class CommandManager {
                 .replace(new RegExp(regStr + `|${command.separator}+$`, "g"), "")
                 .replace(new RegExp(`${command.separator}+`, "g"), command.separator)
                 .split(command.separator);
-            console.log(args);
             let repmsg: string | null = null;
             try {
                 repmsg = command.func.call(command.plugin, message, ...args);
@@ -81,7 +79,7 @@ export class CommandManager {
                     if (command.help === null) {
                         repmsg += `\n该命令没有可显示的帮助`;
                     } else {
-                        repmsg += command.help;
+                        repmsg += "\n" + command.help;
                     }
                 }
                 if (!(error instanceof CommandError)) {
@@ -89,8 +87,10 @@ export class CommandManager {
                 }
             }
 
-            if (repmsg !== null) {
-                message.reply(repmsg).catch((err) => command.plugin.logger.error(err));
+            if (repmsg != null) {
+                message.reply(repmsg).catch((err) => {
+                    command.plugin.logger.error(err);
+                });
             }
         };
         let tr: MsgRegTrigger = {

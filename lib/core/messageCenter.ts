@@ -191,9 +191,9 @@ export class messageCenter {
                     ) {
                         switch (message.message_type) {
                             case "group":
-                                return plugin.hasGroupUser(message.sender.user_id);
+                                return plugin.hasUser(message.group_id, "Group");
                             case "private":
-                                return plugin.hasPersonUser(message.sender.user_id);
+                                return plugin.hasUser(message.sender.user_id, "Person");
                             default:
                                 return false;
                         }

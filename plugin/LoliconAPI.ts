@@ -12,9 +12,15 @@ import {
     Quotable,
 } from "oicq";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginProfile } from "../lib/plugin";
-import { getConfig } from "../lib/pluginFather";
+import {
+    BotPlugin,
+    BotPluginConfig,
+    BotPluginProfile,
+    BotPluginUser,
+    PluginUserType,
+} from "../lib/plugin";
 import { EventEmitter } from "events";
+import { CommandError } from "../lib/core/commandManager";
 
 class ReqData {
     r18: number = 0; // 0为非 R18，1为 R18，2为混合（在库中的分类，不等同于作品本身的 R18 标识）
@@ -48,15 +54,11 @@ type Setu = {
         mini?: string;
     }; // 包含了所有指定size的图片地址
 };
-interface DefaultConfigItface {
-    users: {
-        qq: number;
-        isGroup: boolean;
-        r18: boolean;
-    }[];
+interface User extends BotPluginUser {
+    R18: boolean;
 }
-class DefaultConfig implements DefaultConfigItface {
-    users: { qq: number; isGroup: boolean; r18: boolean }[] = [];
+export class PluginConfig implements BotPluginConfig {
+    Users: User[] = [];
 }
 
 export class PluginProfile implements BotPluginProfile {
@@ -75,71 +77,7 @@ export class Plugin extends BotPlugin {
     }[] = [];
     private isGetingSetu: boolean = false;
     constructor(botClient: BotClient) {
-        super(botClient, new PluginProfile());
-        this.config = getConfig(this, new DefaultConfig());
-        this.bot.regKeyword("^来点.*色图$", (message) => {
-            let user: { qq: number; isGroup: boolean; r18: boolean } | null = null;
-            switch (message.message_type) {
-                case "group":
-                    user = this.getUser(message.group_id, true);
-                    break;
-
-                case "private":
-                    user = this.getUser(message.sender.user_id, false);
-                    break;
-                default:
-                    return;
-            }
-
-            if (user === null) return;
-            let tag = message.raw_message.replace(/来点|色图/g, "").split(/,+| +|，+/g);
-            let req = new ReqData();
-            req.tag = tag;
-            req.r18 = user?.r18 == true && user?.r18 != undefined ? 2 : 0;
-            this.setuReqList.push({
-                message: message,
-                req: req,
-            });
-            this.eventer.emit("start");
-        });
-        this.bot.regKeyword("^lolicon可用性$", async (message) => {
-            try {
-                let resp: any = await howLolicon();
-                let sum = 0;
-                for (let i = 0; i < resp.length; i++) {
-                    sum += resp[i].value;
-                }
-                sum /= 10;
-                message
-                    .reply(
-                        `Lolicon API\n近10分钟可用性: ${((1 - sum) * 100)
-                            .toString()
-                            .substring(0, 5)}%`
-                    )
-                    .catch((err) => {
-                        this.logger.error(err);
-                    });
-            } catch (error) {
-                this.logger.warn(error);
-                let err: any = error;
-                message.reply(err.message + "错误(；′⌒`)").catch((err) => {
-                    this.logger.error(err);
-                });
-            }
-        });
-        this.bot.regKeyword("获取信息$", (message) => {
-            if (message.source != undefined) {
-                let setu = this.getSendedSetu(message.source);
-                if (setu == null) {
-                    message.reply("没有找到", true);
-                } else {
-                    message.reply(
-                        `${setu.title}\n- 作者: ${setu.author}\n- uid: ${setu.uid}\n- 标签: ${setu.tags}\n- 链接: https://www.pixiv.net/artworks/${setu.pid}\n- 原图: ${setu.urls.original}`,
-                        true
-                    );
-                }
-            }
-        });
+        super(botClient, new PluginProfile(), new PluginConfig());
         this.eventer.on("start", async () => {
             if (this.isGetingSetu) return;
             this.isGetingSetu = true;
@@ -185,18 +123,176 @@ export class Plugin extends BotPlugin {
             }
             this.isGetingSetu = false;
         });
+
+        this.regKeyword("^来点.*色图$", "global", "plugin_user", (message) => {
+            let user: User | null = null;
+            switch (message.message_type) {
+                case "group":
+                    user = this.getUser(message.group_id, "Group") as User;
+                    break;
+
+                case "private":
+                    user = this.getUser(message.sender.user_id, "Person") as User;
+                    break;
+            }
+            let tag = message.raw_message.replace(/来点|色图/g, "").split(/,+| +|，+/g);
+            let req = new ReqData();
+            req.tag = tag;
+            req.r18 = user?.R18 == true && user?.R18 != undefined ? 2 : 0;
+            this.setuReqList.push({
+                message: message,
+                req: req,
+            });
+            this.eventer.emit("start");
+        });
+        this.regCommand("lolicon可用性", "global", "plugin_user", async (message) => {
+            let msg = "";
+            try {
+                let resp: any = await howLolicon();
+                let sum = 0;
+                for (let i = 0; i < resp.length; i++) {
+                    sum += resp[i].value;
+                }
+                sum /= 10;
+                msg = `Lolicon API\n近10分钟可用性: ${((1 - sum) * 100)
+                    .toString()
+                    .substring(0, 5)}%`;
+            } catch (error) {
+                this.logger.warn(error);
+                msg = "出现了错误(；′⌒`)";
+            }
+            return msg;
+        });
+        this.regKeyword("获取信息", "global", "plugin_user", (message) => {
+            let msg = "";
+            if (message.source != undefined) {
+                let setu = this.getSendedSetu(message.source);
+                if (setu == null) {
+                    msg = "没有找到";
+                } else {
+                    msg = `${setu.title}\n- 作者: ${setu.author}\n- uid: ${setu.uid}\n- 标签: ${setu.tags}\n- 链接: https://www.pixiv.net/artworks/${setu.pid}\n- 原图: ${setu.urls.original}`;
+                }
+                message.reply(msg, true).catch((err) => {
+                    this.logger.error(err);
+                });
+            }
+        });
+        this.regCommand(
+            "LoliconApi",
+            "global",
+            "bot_admin",
+            (message, arg: string) => {
+                let msg = "";
+                let user: User = {
+                    R18: false,
+                    uid: 0,
+                    type: "Person",
+                };
+                let _addUser = (uid: number, type: PluginUserType): void => {
+                    if (this.hasUser(uid, "Group")) {
+                        msg = "已开启, 可以色色!";
+                    } else {
+                        user.type = type;
+                        user.uid = uid;
+                        if (this.addUser(user) && this.saveConfig()) {
+                            msg = "已开启, 可以色色!";
+                        } else {
+                            msg = "开启失败, 不可以色色";
+                        }
+                    }
+                };
+                let _rmUser = (uid: number, type: PluginUserType): void => {
+                    if (!this.hasUser(uid, "Group")) {
+                        msg = "已关闭, 不可以色色!";
+                    } else {
+                        if (this.rmUser(uid, type) && this.saveConfig()) {
+                            msg = "已关闭, 不可以色色!";
+                        } else {
+                            msg = "关闭失败";
+                        }
+                    }
+                };
+                let _turnOnR18 = (uid: number, type: PluginUserType): void => {
+                    let u = <User>this.getUser(uid, type);
+                    if (!u.R18) {
+                        u.R18 = true;
+                    }
+                    if (this.saveConfig()) {
+                        msg = "(/▽＼)";
+                    } else {
+                        msg = "开启 R18 失败了";
+                    }
+                };
+                let _turnOffR18 = (uid: number, type: PluginUserType): void => {
+                    let u = <User>this.getUser(uid, type);
+                    if (u.R18) {
+                        u.R18 = false;
+                    }
+                    if (this.saveConfig()) {
+                        msg = "(≧∀≦)ゞ";
+                    } else {
+                        msg = "关闭 R18 失败了";
+                    }
+                };
+                switch (arg) {
+                    case "开启":
+                        switch (message.message_type) {
+                            case "group":
+                                _addUser(message.group_id, "Group");
+                                break;
+                            case "private":
+                                _addUser(message.sender.user_id, "Person");
+                                break;
+                        }
+                        break;
+                    case "关闭":
+                        switch (message.message_type) {
+                            case "group":
+                                _rmUser(message.group_id, "Group");
+                                break;
+                            case "private":
+                                _rmUser(message.sender.user_id, "Person");
+                                break;
+                        }
+                        break;
+
+                    case "开启R18":
+                        switch (message.message_type) {
+                            case "group":
+                                if (!this.hasUser(message.group_id, "Group")) {
+                                    msg = "爬";
+                                } else _turnOnR18(message.group_id, "Group");
+                                break;
+                            case "private":
+                                if (!this.hasUser(message.sender.user_id, "Group")) {
+                                    msg = "爬";
+                                } else _turnOnR18(message.sender.user_id, "Person");
+                                break;
+                        }
+                        break;
+                    case "关闭R18":
+                        switch (message.message_type) {
+                            case "group":
+                                if (!this.hasUser(message.group_id, "Group")) {
+                                    msg = "爬";
+                                } else _turnOffR18(message.group_id, "Group");
+                                break;
+                            case "private":
+                                if (!this.hasUser(message.sender.user_id, "Group")) {
+                                    msg = "爬";
+                                } else _turnOffR18(message.sender.user_id, "Person");
+                                break;
+                        }
+                        break;
+                    default:
+                        throw new CommandError("无效参数");
+                }
+                return msg;
+            },
+            "参数: 开启, 关闭, 开启R18, 关闭R18"
+        );
     }
 
-    /** 获取用户 */
-    getUser(uid: number, isGroup: boolean): { qq: number; isGroup: boolean; r18: boolean } | null {
-        for (let i = 0; i < this.config.users.length; i++) {
-            const user: { qq: number; isGroup: boolean; r18: boolean } = this.config.users[i];
-            if (user.qq === uid && user.isGroup === isGroup) {
-                return user;
-            }
-        }
-        return null;
-    }
     addSendedSetu(messageRet: MessageRet, setu: Setu) {
         this.sendedSetu.push({ messageRet: messageRet, setu: setu });
         if (this.clearSendedSetu === undefined) {
@@ -214,7 +310,7 @@ export class Plugin extends BotPlugin {
                 messsageSource.rand == sendedSetu.messageRet.rand &&
                 messsageSource.seq == sendedSetu.messageRet.seq &&
                 Math.abs(messsageSource.time - sendedSetu.messageRet.time) < 10 &&
-                messsageSource.user_id == this.bot.uin
+                messsageSource.user_id == this.client.uin
             ) {
                 return sendedSetu.setu;
             }

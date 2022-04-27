@@ -86,7 +86,7 @@ function verifyExtends(sub: any, father: any): void {
                 verifyExtends(s, f);
             } else
                 throw new PluginFatherError.ObjectNotExtendsTarget(
-                    `The key '${key}' is not exist in '${sub}'`
+                    `The key '${key}' is not exist in '${JSON.stringify(sub)}'`
                 );
         }
     }
