@@ -87,7 +87,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
             });
         });
         this.regKeyword(
-            "^GiveMe20 开启",
+            "^GiveMe20 开启$",
             "global",
             (message): boolean => {
                 return (
@@ -139,7 +139,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
             }
         );
         this.regKeyword(
-            "^GiveMe20 关闭",
+            "^GiveMe20 关闭$",
             "global",
             (message): boolean => {
                 return (

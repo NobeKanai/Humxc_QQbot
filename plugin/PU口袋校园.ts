@@ -63,7 +63,7 @@ export class Plugin extends BotPlugin<PUConfig> {
             }
         });
 
-        this.regKeyword("订阅pu", "group", "group_admin", (message) => {
+        this.regKeyword("^订阅pu", "group", "group_admin", (message) => {
             let msg = "";
             let uid = Number((message as GroupMessageEvent).group_id);
             if (this.hasUser(uid, "Group")) {
@@ -83,7 +83,7 @@ export class Plugin extends BotPlugin<PUConfig> {
                 this.logger.error(err);
             });
         });
-        this.regKeyword("退订pu", "group", "group_admin", (message) => {
+        this.regKeyword("^退订pu", "group", "group_admin", (message) => {
             let msg = "";
             let uid = Number((message as GroupMessageEvent).group_id);
             if (!this.hasUser(uid, "Group")) {
@@ -99,7 +99,7 @@ export class Plugin extends BotPlugin<PUConfig> {
                 this.logger.error(err);
             });
         });
-        this.regKeyword("订阅pu", "private", "friend", (message) => {
+        this.regKeyword("^订阅pu", "private", "friend", (message) => {
             let msg = "";
             let uid = Number((message as PrivateMessageEvent).sender.user_id);
             if (this.hasUser(uid, "Person")) {
@@ -119,7 +119,7 @@ export class Plugin extends BotPlugin<PUConfig> {
                 this.logger.error(err);
             });
         });
-        this.regKeyword("退订pu", "private", "friend", (message) => {
+        this.regKeyword("^退订pu", "private", "friend", (message) => {
             let msg = "";
             let uid = Number((message as PrivateMessageEvent).sender.user_id);
             if (!this.hasUser(uid, "Person")) {
