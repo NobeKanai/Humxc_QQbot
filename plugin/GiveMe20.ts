@@ -106,7 +106,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                                 uid: message.group_id,
                                 type: "Group",
                             };
-                            if (this.addUser(u) || this.saveConfig()) {
+                            if (this.addUser(u) && this.saveConfig()) {
                                 msg = "成功";
                             } else {
                                 msg = "失败";
@@ -122,7 +122,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                                 uid: message.sender.user_id,
                                 type: "Person",
                             };
-                            if (this.addUser(u) || this.saveConfig()) {
+                            if (this.addUser(u) && this.saveConfig()) {
                                 msg = "成功";
                             } else {
                                 msg = "失败";
@@ -154,7 +154,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                         if (!this.hasUser(message.group_id, "Group")) {
                             msg = "成功";
                         } else {
-                            if (this.rmUser(message.group_id, "Group") || this.saveConfig()) {
+                            if (this.rmUser(message.group_id, "Group") && this.saveConfig()) {
                                 msg = "成功";
                             } else {
                                 msg = "失败";
@@ -167,7 +167,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                             msg = "成功";
                         } else {
                             if (
-                                this.rmUser(message.sender.user_id, "Person") ||
+                                this.rmUser(message.sender.user_id, "Person") &&
                                 this.saveConfig()
                             ) {
                                 msg = "成功";
