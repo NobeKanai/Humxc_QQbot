@@ -7,16 +7,32 @@ import { BotPlugin } from "../plugin";
 import { BotClient } from "./client";
 import { MsgArea, MsgRegTrigger, RegFilter, RegListener } from "./messageCenter";
 
+/**
+ * Command 的错误, 此错误在 CommandFunc 中抛出时不会打印在日志上
+ */
+export class CommandError extends Error {
+    constructor(msg: string) {
+        super(msg);
+        this.name = "CommandErr";
+    }
+}
+
+/**
+ * 命令的运行主体, 返回值会直接回复给命令发送者
+ * 在此函数抛出的 CommandError 不会被打印到日志
+ */
 export type CommandFunc = (
     message: GroupMessageEvent | PrivateMessageEvent | DiscussMessageEvent,
     ...args: any
-) => void;
+) => any;
 /** 命令类型 */
 export type Command = {
     /** 别名 */
     name?: string;
     /** 帮助文本 */
     help?: string;
+    /** 出现错误时显示帮助 */
+    showHelp: boolean;
     plugin: BotPlugin;
     area: MsgArea;
     filter: RegFilter;
@@ -56,11 +72,25 @@ export class CommandManager {
                 .replace(new RegExp(`${command.separator}+`, "g"), command.separator)
                 .split(command.separator);
             console.log(args);
-            let err: any;
+            let repmsg: string | null = null;
             try {
-                command.func.call(command.plugin, message, ...args);
+                repmsg = command.func.call(command.plugin, message, ...args);
             } catch (error) {
-                command.plugin.logger.error(error);
+                repmsg = `执行命令时出现异常: \n` + (error as Error).message;
+                if (command.showHelp === true) {
+                    if (command.help === null) {
+                        repmsg += `\n该命令没有可显示的帮助`;
+                    } else {
+                        repmsg += command.help;
+                    }
+                }
+                if (!(error instanceof CommandError)) {
+                    command.plugin.logger.error(error);
+                }
+            }
+
+            if (repmsg !== null) {
+                message.reply(repmsg).catch((err) => command.plugin.logger.error(err));
             }
         };
         let tr: MsgRegTrigger = {

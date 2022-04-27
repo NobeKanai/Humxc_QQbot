@@ -127,7 +127,8 @@ export class BotPlugin {
         func: CommandFunc,
         separator: string = " ",
         name?: string,
-        help?: string
+        help?: string,
+        showHelp?: boolean
     ): void {
         let c: Command = {
             plugin: this,
@@ -136,7 +137,11 @@ export class BotPlugin {
             separator: separator,
             command: command,
             func: func,
+            showHelp: false,
         };
+        if (c.showHelp === null && c.help !== null) {
+            c.showHelp = true;
+        }
         this.client.commandManager.regCommand(c);
     }
 
