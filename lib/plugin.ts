@@ -15,7 +15,7 @@ import {
 } from "./core/messageCenter";
 import { Command, CommandFunc } from "./core/commandManager";
 import { Keyword } from "./core/keywordManager";
-
+type GetElementType<T extends any[]> = T extends (infer U)[] ? U : never;
 export class PluginError extends Error {
     private static MainName = "PluginError";
     static UnknowPluginUserType = class extends Error {
@@ -66,12 +66,13 @@ export interface BotPluginUser {
     uid: uid;
     type: PluginUserType;
 }
+
 /** config的接口 */
 export interface BotPluginConfig {
-    Users: BotPluginUser[];
+    Users: Array<BotPluginUser>;
 }
 type uid = number;
-export class BotPlugin {
+export class BotPlugin<T extends BotPluginConfig> {
     public users: { group: Map<uid, BotPluginUser>; person: Map<uid, BotPluginUser> } = {
         group: new Map<uid, BotPluginUser>(),
         person: new Map<uid, BotPluginUser>(),
@@ -79,13 +80,9 @@ export class BotPlugin {
     public logger: Logger | PluginLogger;
     public pluginProfile: PluginProfile;
     public client: BotClient;
-    public config: BotPluginConfig;
-    private defaultConfig: BotPluginConfig;
-    constructor(
-        client: BotClient,
-        pluginProfile: BotPluginProfile,
-        defaultConfig: BotPluginConfig
-    ) {
+    public config: T;
+    private defaultConfig: T;
+    constructor(client: BotClient, pluginProfile: BotPluginProfile, defaultConfig: T) {
         this.config = defaultConfig;
         this.defaultConfig = defaultConfig;
         this.client = client;
@@ -174,13 +171,13 @@ export class BotPlugin {
     }
 
     /** 获取用户 */
-    public getUser(uid: uid, type: PluginUserType): BotPluginUser {
+    public getUser<K extends GetElementType<T["Users"]>>(uid: uid, type: PluginUserType): K {
         let u: BotPluginUser | undefined;
         switch (type) {
             case "Group":
                 u = this.users.group.get(uid);
                 if (u !== undefined) {
-                    return u;
+                    return <K>(<unknown>u);
                 } else {
                     throw new PluginError.UserNotExist(uid, type);
                 }
@@ -188,7 +185,7 @@ export class BotPlugin {
             case "Person":
                 u = this.users.person.get(uid);
                 if (u !== undefined) {
-                    return u;
+                    return <K>(<unknown>u);
                 } else {
                     throw new PluginError.UserNotExist(uid, type);
                 }
@@ -199,7 +196,7 @@ export class BotPlugin {
     }
 
     /** 添加插件用户 */
-    public addUser<T extends BotPluginUser>(user: T): boolean {
+    public addUser<K extends GetElementType<T["Users"]>>(user: K): boolean {
         switch (user.type) {
             case "Group":
                 if (this.users.group.has(user.uid)) {
@@ -243,7 +240,7 @@ export class BotPlugin {
     }
 
     /** 更新修改用户 */
-    public uppdateUser<T extends BotPluginUser>(user: T): boolean {
+    public uppdateUser<K extends GetElementType<T["Users"]>>(user: K): boolean {
         switch (user.type) {
             case "Group":
                 if (!this.users.group.has(user.uid)) {
@@ -349,6 +346,9 @@ export class BotPlugin {
 
             case "atme":
                 return this.client.messageCenter.getRegFilter("atme");
+
+            case "friend":
+                return this.client.messageCenter.getRegFilter("friend")(this.client);
 
             default:
                 this.client.logger.error(

@@ -1,53 +1,139 @@
 import https from "https";
+import { GroupMessageEvent, PrivateMessageEvent } from "oicq";
 import { BotClient } from "../lib/core/client";
-import { BotPlugin, BotPluginProfile } from "../lib/plugin";
-import { getConfig, getData, saveData } from "../lib/pluginFather";
+import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
 export class PluginProfile implements BotPluginProfile {
     PluginName: string = "PUHelper";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
     Info: string = "获取PU口袋校园的活动, 并提醒";
 }
-export class Plugin extends BotPlugin {
-    private hostName!: string;
-    private oauth_token!: string;
-    private oauth_token_secret!: string;
-    private filter_string!: string;
+class PUData {
+    Geted: number[] = [];
+    Reminds: { time: number; message: string }[] = [];
+}
+interface PUConfig extends BotPluginConfig {
+    Filter_string: string;
+    Oauth_token_secret: string;
+    Oauth_token: string;
+}
+export class PluginConfig implements PUConfig {
+    Filter_string: string = "Typeing here";
+    Oauth_token_secret: string = "Typeing here";
+    Oauth_token: string = "Typeing here";
+    Users: BotPluginUser[] = [];
+}
+export class Plugin extends BotPlugin<PUConfig> {
+    private data: PUData;
+    private hostName: string = "pocketuni.net";
     private remind_used: Remind[] = [];
     private intervalTimeOut: NodeJS.Timeout | undefined = undefined;
-    constructor(botClient: BotClient) {
-        super(botClient, new PluginProfile());
-        this.config = getConfig(this, defalutConfig);
-        this.data = getData(this, defaultData);
-        this.hostName = this.config.hostName;
-        this.oauth_token = this.config.oauth_token;
-        this.oauth_token_secret = this.config.oauth_token_secret;
-        this.filter_string = this.config.filter_string;
-        this.bot.on("system.online", () => {
+
+    constructor(
+        botClient: BotClient,
+        pluginProfile: BotPluginProfile,
+        defaultConfig: PluginConfig
+    ) {
+        super(botClient, pluginProfile, defaultConfig);
+        this.data = this.getJsonData("data", new PUData());
+        this.client.on("system.online", () => {
             this.logger.info("设置任务");
             if (this.intervalTimeOut != undefined) {
                 this.intervalTimeOut.refresh();
             } else {
                 this.updateAcitvity()
                     .then(() => {
-                        this.setRemind(this.data.reminds);
+                        this.setRemind(this.data.Reminds);
                     })
                     .catch((err) => {
                         this.logger.error(err);
                     });
                 this.intervalTimeOut = setInterval(async () => {
                     await sleep(Math.floor(Math.random() * 180000 + 1));
-                    if (this.bot.isOnline()) {
+                    if (this.client.isOnline()) {
                         try {
                             await this.updateAcitvity();
                         } catch (error) {
                             this.logger.error(error);
                             return;
                         }
-                        this.setRemind(this.data.reminds);
+                        this.setRemind(this.data.Reminds);
                     } else this.logger.debug("任务取消，客户端不在线");
                 }, 1800000);
             }
+        });
+
+        this.regKeyword("订阅pu", "group", "group_admin", (message) => {
+            let msg = "";
+            let uid = Number((message as GroupMessageEvent).group_id);
+            if (this.hasUser(uid, "Group")) {
+                msg = "本群已订阅 PU 活动提醒";
+            } else {
+                let u: BotPluginUser = {
+                    uid: uid,
+                    type: "Group",
+                };
+                if (this.addUser(u) && this.saveConfig()) {
+                    msg = "本群已订阅 PU 活动提醒";
+                } else {
+                    msg = "订阅失败";
+                }
+            }
+            message.reply(msg).catch((err) => {
+                this.logger.error(err);
+            });
+        });
+        this.regKeyword("退订pu", "group", "group_admin", (message) => {
+            let msg = "";
+            let uid = Number((message as GroupMessageEvent).group_id);
+            if (!this.hasUser(uid, "Group")) {
+                msg = "本群已退订 PU 活动提醒";
+            } else {
+                if (this.rmUser(uid, "Group") && this.saveConfig()) {
+                    msg = "本群已退订 PU 活动提醒";
+                } else {
+                    msg = "退订失败";
+                }
+            }
+            message.reply(msg).catch((err) => {
+                this.logger.error(err);
+            });
+        });
+        this.regKeyword("订阅pu", "private", "friend", (message) => {
+            let msg = "";
+            let uid = Number((message as PrivateMessageEvent).sender.user_id);
+            if (this.hasUser(uid, "Person")) {
+                msg = "你已订阅 PU 活动提醒";
+            } else {
+                let u: BotPluginUser = {
+                    uid: uid,
+                    type: "Person",
+                };
+                if (this.addUser(u) && this.saveConfig()) {
+                    msg = "你已订阅 PU 活动提醒";
+                } else {
+                    msg = "订阅失败";
+                }
+            }
+            message.reply(msg).catch((err) => {
+                this.logger.error(err);
+            });
+        });
+        this.regKeyword("退订pu", "private", "friend", (message) => {
+            let msg = "";
+            let uid = Number((message as PrivateMessageEvent).sender.user_id);
+            if (!this.hasUser(uid, "Person")) {
+                msg = "你已退订 PU 活动提醒";
+            } else {
+                if (this.rmUser(uid, "Person") && this.saveConfig()) {
+                    msg = "你已退订 PU 活动提醒";
+                } else {
+                    msg = "退订失败";
+                }
+            }
+            message.reply(msg).catch((err) => {
+                this.logger.error(err);
+            });
         });
     }
     /** 更新活动 */
@@ -57,7 +143,7 @@ export class Plugin extends BotPlugin {
         var activitys: Activity[] = [];
 
         for (let i = 0; i < simpleActivitys.length; i++) {
-            let geted: Set<number> = new Set(this.data.geted);
+            let geted: Set<number> = new Set(this.data.Geted);
             const simpleActivity: SimpleActivity = simpleActivitys[i];
             let activity: Activity;
             //标记已获取
@@ -73,11 +159,11 @@ export class Plugin extends BotPlugin {
                 continue;
             }
             activitys.push(activity);
-            this.data.geted.push(simpleActivity.id);
+            this.data.Geted.push(simpleActivity.id);
         }
         this.logger.info(`其中有 ${geteedActivityNum} 条活动已经获取过`);
         if (activitys.length == 0) return;
-        activitys = this.filter(activitys, this.filter_string);
+        activitys = this.filter(activitys, this.config.Filter_string);
 
         for (let i = 0; i < activitys.length; i++) {
             const activity = activitys[i];
@@ -102,7 +188,7 @@ export class Plugin extends BotPlugin {
                 ` - 报名截止: ${regEndTime_f}\n` +
                 ` - 活动开始: ${startTime_f}\n` +
                 ` - 活动结束: ${endTime_f}`;
-            this.data.reminds.push({ time: 0, message: message_get_activity });
+            this.data.Reminds.push({ time: 0, message: message_get_activity });
             //添加报名提醒
             let message_reg =
                 `有活动现在开始报名\n` +
@@ -110,9 +196,9 @@ export class Plugin extends BotPlugin {
                 ` - 可参与人数: ${activity.limitNum == -1 ? "不限" : activity.limitNum}\n` +
                 ` - 报名截止: ${regEndTime_f}`;
             if (regStartTime.getTime() > nowDate.getTime()) {
-                this.data.reminds.push({ time: regStartTime.getTime(), message: message_reg });
+                this.data.Reminds.push({ time: regStartTime.getTime(), message: message_reg });
             } else if (regEndTime.getTime() > nowDate.getTime()) {
-                this.data.reminds.push({ time: 0, message: message_reg });
+                this.data.Reminds.push({ time: 0, message: message_reg });
             }
             //添加签到提醒
             let message_sign_in =
@@ -121,8 +207,8 @@ export class Plugin extends BotPlugin {
                 signInTime.getTime() < nowDate.getTime() &&
                 signOutTime.getTime() > nowDate.getTime()
             ) {
-                this.data.reminds.push({ time: 0, message: message_sign_in });
-            } else this.data.reminds.push({ time: signInTime.getTime(), message: message_sign_in });
+                this.data.Reminds.push({ time: 0, message: message_sign_in });
+            } else this.data.Reminds.push({ time: signInTime.getTime(), message: message_sign_in });
 
             //添加签退提醒
             let message_sign_out = `有活动现在开始签退\n` + `${activity.title}`;
@@ -130,14 +216,14 @@ export class Plugin extends BotPlugin {
                 signOutTime.getTime() < nowDate.getTime() &&
                 endTime.getTime() > nowDate.getTime()
             ) {
-                this.data.reminds.push({ time: 0, message: message_sign_out });
+                this.data.Reminds.push({ time: 0, message: message_sign_out });
             } else
-                this.data.reminds.push({ time: signOutTime.getTime(), message: message_sign_out });
+                this.data.Reminds.push({ time: signOutTime.getTime(), message: message_sign_out });
         }
-        this.data.reminds.sort((a: Remind, b: Remind) => {
+        this.data.Reminds.sort((a: Remind, b: Remind) => {
             return a.time - b.time;
         });
-        saveData(this);
+        this.saveJsonData("data", this.data);
     }
     setRemind(reminds: Remind[]) {
         var date = new Date();
@@ -163,23 +249,24 @@ export class Plugin extends BotPlugin {
             if (!flag) continue;
             var timeout = remind.time == 0 ? 0 : remind.time - date.getTime();
             setTimeout(() => {
-                this.config.users.forEach((user: { qq: number; isGroup: boolean }) => {
-                    this.logger.info(`正在发送通知到${user.isGroup ? "群聊" : "私聊"}: ${user.qq}`);
-                    if (user.isGroup)
-                        this.bot
-                            .sendGroupMsg(user.qq, remind.message)
-                            .catch((err) => this.logger.error(err));
-                    else
-                        this.bot
-                            .sendPrivateMsg(user.qq, remind.message)
-                            .catch((err) => this.logger.error(err));
-                });
-                this.logger.debug(remind.message);
+                for (const user of this.users.group.values()) {
+                    this.logger.info(`正在发送通知到群聊: ${user.uid}`);
+                    this.client
+                        .sendGroupMsg(user.uid, remind.message)
+                        .catch((err) => this.logger.error(err));
+                }
+                for (const user of this.users.person.values()) {
+                    this.logger.info(`正在发送通知到私聊: ${user.uid}`);
+                    this.client
+                        .sendGroupMsg(user.uid, remind.message)
+                        .catch((err) => this.logger.error(err));
+                }
+
                 if (!rmRemind(reminds, remind)) this.logger.error(new Error("移除remind出错"));
                 if (!rmRemind(this.remind_used, remind))
                     this.logger.error(new Error("移除remind出错"));
-                saveData(this);
-            }, timeout);
+                this.saveJsonData("data", this.data);
+            }, timeout + i * 10000);
             this.remind_used.push(remind);
         }
     }
@@ -198,7 +285,7 @@ export class Plugin extends BotPlugin {
             data = await sendPose(
                 this.hostName,
                 path,
-                `oauth_token=${this.oauth_token}&oauth_token_secret=${this.oauth_token_secret}&day=${date}`
+                `oauth_token=${this.config.Oauth_token}&oauth_token_secret=${this.config.Oauth_token_secret}&day=${date}`
             );
         } catch (error) {
             this.logger.error(error);
@@ -232,7 +319,7 @@ export class Plugin extends BotPlugin {
             data = await sendPose(
                 this.hostName,
                 path,
-                `oauth_token=${this.oauth_token}&oauth_token_secret=${this.oauth_token_secret}&actiId=${id}`
+                `oauth_token=${this.config.Oauth_token}&oauth_token_secret=${this.config.Oauth_token_secret}&actiId=${id}`
             );
         } catch (error) {
             throw error;
@@ -261,9 +348,9 @@ export class Plugin extends BotPlugin {
         return activity;
     }
     /** 过滤活动 */
-    filter(activitys: Activity[], filter_string: string): Activity[] {
+    filter(activitys: Activity[], Filter_string: string): Activity[] {
         var filter: string[] = [];
-        filter = filter_string.split(" ");
+        filter = Filter_string.split(" ");
         filter.unshift("and");
 
         var dateTime = new Date();
@@ -390,7 +477,7 @@ var defalutConfig: any = {
     //and/or就是与 或
     //属性值可以为“null”，表示字符串为undefined或数组为空数组
     //例如"allow_year has null and allow_school has null"表示allow_year和allow_school都为空
-    filter_string: "",
+    Filter_string: "",
     //需要发送提醒的用户, 以{qq:number,isGroup:boolean}数组的形式
     users: [],
 };

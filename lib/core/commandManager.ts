@@ -3,7 +3,7 @@
  */
 
 import { DiscussMessageEvent, GroupMessageEvent, PrivateMessageEvent } from "oicq/lib/events";
-import { BotPlugin } from "../plugin";
+import { BotPlugin, BotPluginConfig } from "../plugin";
 import { BotClient } from "./client";
 import { MsgArea, MsgRegTrigger, RegFilter, RegListener } from "./messageCenter";
 
@@ -32,7 +32,7 @@ export type Command = {
     help?: string;
     /** 出现错误时显示帮助 */
     showHelp: boolean;
-    plugin: BotPlugin;
+    plugin: BotPlugin<BotPluginConfig>;
     area: MsgArea;
     filter: RegFilter;
     /**

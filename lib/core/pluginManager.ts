@@ -4,12 +4,12 @@
 import fs from "fs";
 import { BotClient } from "./client";
 import path = require("path");
-import { BotPlugin, BotPluginProfile } from "../plugin";
+import { BotPlugin, BotPluginConfig, BotPluginProfile } from "../plugin";
 // 存放插件的文件夹
 var pluginFolder = path.join(process.cwd(), "plugin");
 export class PluginManager {
     // 存放插件实体对象
-    public pluginEntity: Map<string, BotPlugin> = new Map();
+    public pluginEntity: Map<string, BotPlugin<BotPluginConfig>> = new Map();
     private client: BotClient;
     constructor(_client: BotClient) {
         this.client = _client;
@@ -47,11 +47,16 @@ export class PluginManager {
             if (plugin != undefined) {
                 try {
                     let pluginProfile: BotPluginProfile = new plugin.PluginProfile();
+                    let pluginConfig: BotPluginConfig = new plugin.PluginConfig();
                     this.client.logger.debug(`Name: ${pluginProfile.PluginName}`);
                     this.client.logger.debug(`PluginVersion: ${pluginProfile.PluginVersion}`);
                     this.client.logger.debug(`BotVersion: ${pluginProfile.BotVersion}`);
                     this.client.logger.debug(`Info: ${pluginProfile.Info}`);
-                    let pluginEntity: BotPlugin = new plugin.Plugin(this.client);
+                    let pluginEntity: BotPlugin<BotPluginConfig> = new plugin.Plugin(
+                        this.client,
+                        pluginProfile,
+                        pluginConfig
+                    );
                     this.pluginEntity.set(pluginProfile.PluginName, pluginEntity);
                     this.client.logger.info("----------");
                 } catch (error) {

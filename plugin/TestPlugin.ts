@@ -11,13 +11,17 @@ export class PluginProfile implements BotPluginProfile {
 interface User extends BotPluginUser {
     R18: boolean;
 }
-class defaultConfig implements BotPluginConfig {
+export class PluginConfig implements BotPluginConfig {
     Users: User[] = [];
     name: string = "testplugin";
 }
-export class Plugin extends BotPlugin {
-    constructor(botClient: BotClient) {
-        super(botClient, new PluginProfile(), new defaultConfig());
+export class Plugin extends BotPlugin<PluginConfig> {
+    constructor(
+        botClient: BotClient,
+        pluginProfile: BotPluginProfile,
+        defaultConfig: PluginConfig
+    ) {
+        super(botClient, pluginProfile, defaultConfig);
         this.logger.info("dddd");
         let user: User = {
             R18: false,

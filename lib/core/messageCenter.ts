@@ -14,7 +14,7 @@ import {
     PrivateMessageEvent,
     User,
 } from "oicq";
-import { BotPlugin, BotPluginUser } from "../plugin";
+import { BotPlugin, BotPluginConfig, BotPluginUser } from "../plugin";
 import { BotClient } from "./client";
 
 export type RegListener = (
@@ -37,13 +37,14 @@ export type RegFilterDef =
     | "group_admin"
     | "group_member"
     | "discuss_msg"
-    | "atme";
+    | "atme"
+    | "friend";
 export type RegFilter = RegFilterFunc | RegFilterDef;
 /**
  * 关键词组件，提供对"关键词"功能的实现
  */
 export interface MsgRegTrigger {
-    plugin: BotPlugin;
+    plugin: BotPlugin<BotPluginConfig>;
     regStr: string;
     area: MsgArea;
     filter: RegFilter;
@@ -121,6 +122,9 @@ export class messageCenter {
                         case "atme":
                             tr.filter = this.getRegFilter("atme");
                             break;
+                        case "friend":
+                            tr.filter = this.getRegFilter("friend")(this.client);
+                            break;
 
                         default:
                             tr.plugin.logger.error(
@@ -153,8 +157,10 @@ export class messageCenter {
             | "group_member"
             | "discuss_msg"
     ): RegFilterFunc;
-    public getRegFilter(filterName: "bot_admin"): (client: BotClient) => RegFilterFunc;
-    public getRegFilter(filterName: "plugin_user"): (plugin: BotPlugin) => RegFilterFunc;
+    public getRegFilter(filterName: "bot_admin" | "friend"): (client: BotClient) => RegFilterFunc;
+    public getRegFilter(
+        filterName: "plugin_user"
+    ): (plugin: BotPlugin<BotPluginConfig>) => RegFilterFunc;
     public getRegFilter(filterName: any): any {
         switch (filterName) {
             case "allow_all":
@@ -185,7 +191,7 @@ export class messageCenter {
                 };
 
             case "plugin_user":
-                return (plugin: BotPlugin): RegFilter => {
+                return (plugin: BotPlugin<BotPluginConfig>): RegFilter => {
                     return function (
                         message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
                     ) {
@@ -240,6 +246,19 @@ export class messageCenter {
                     }
                     return false;
                 };
+
+            case "friend":
+                return function (client: BotClient): RegFilterFunc {
+                    return function (
+                        message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
+                    ) {
+                        if (client.isFriend(message.sender.user_id)) {
+                            return true;
+                        }
+                        return false;
+                    };
+                };
+
             default:
                 this.client.logger.error(
                     `不存在的触发器类型: '${filterName}', 请检查, 此次命令不会生效.`

@@ -67,7 +67,7 @@ export class PluginProfile implements BotPluginProfile {
     PluginVersion: string = "0.0.1";
     Info: string = "提供随机色图!";
 }
-export class Plugin extends BotPlugin {
+export class Plugin extends BotPlugin<PluginConfig> {
     private eventer = new EventEmitter();
     private sendedSetu: { messageRet: MessageRet; setu: Setu }[] = [];
     private clearSendedSetu: NodeJS.Timeout | undefined;
@@ -76,8 +76,12 @@ export class Plugin extends BotPlugin {
         req: ReqData;
     }[] = [];
     private isGetingSetu: boolean = false;
-    constructor(botClient: BotClient) {
-        super(botClient, new PluginProfile(), new PluginConfig());
+    constructor(
+        botClient: BotClient,
+        pluginProfile: BotPluginProfile,
+        defaultConfig: PluginConfig
+    ) {
+        super(botClient, pluginProfile, defaultConfig);
         this.eventer.on("start", async () => {
             if (this.isGetingSetu) return;
             this.isGetingSetu = true;
@@ -128,11 +132,11 @@ export class Plugin extends BotPlugin {
             let user: User | null = null;
             switch (message.message_type) {
                 case "group":
-                    user = this.getUser(message.group_id, "Group") as User;
+                    user = this.getUser(message.group_id, "Group");
                     break;
 
                 case "private":
-                    user = this.getUser(message.sender.user_id, "Person") as User;
+                    user = this.getUser(message.sender.user_id, "Person");
                     break;
             }
             let tag = message.raw_message.replace(/来点|色图/g, "").split(/,+| +|，+/g);
@@ -213,7 +217,7 @@ export class Plugin extends BotPlugin {
                     }
                 };
                 let _turnOnR18 = (uid: number, type: PluginUserType): void => {
-                    let u = <User>this.getUser(uid, type);
+                    let u = this.getUser(uid, type);
                     if (!u.R18) {
                         u.R18 = true;
                     }

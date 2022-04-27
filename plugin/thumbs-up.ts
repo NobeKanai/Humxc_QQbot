@@ -11,9 +11,13 @@ export class PluginProfile implements BotPluginProfile {
 export class PluginConfig implements BotPluginConfig {
     Users: BotPluginUser[] = [];
 }
-export class Plugin extends BotPlugin {
-    constructor(botClient: BotClient) {
-        super(botClient, new PluginProfile(), new PluginConfig());
+export class Plugin extends BotPlugin<PluginConfig> {
+    constructor(
+        botClient: BotClient,
+        pluginProfile: BotPluginProfile,
+        defaultConfig: PluginConfig
+    ) {
+        super(botClient, pluginProfile, defaultConfig);
         this.config = getJsonData(this, "config", new PluginConfig());
         this.client.on("system.online", () => {
             this.startLike(0);

@@ -3,7 +3,7 @@
  */
 import path from "path";
 import fs from "fs";
-import { BotPlugin } from "./plugin";
+import { BotPlugin, BotPluginConfig } from "./plugin";
 import { BotClient } from "./core/client";
 
 export class PluginFatherError {
@@ -14,7 +14,11 @@ export class PluginFatherError {
     };
 }
 /** 获取外部Json文件, 需要捕获错误 */
-export function getJsonData<T>(plugin: BotPlugin, fileName: string, defaultData: T): T {
+export function getJsonData<T>(
+    plugin: BotPlugin<BotPluginConfig>,
+    fileName: string,
+    defaultData: T
+): T {
     let dataDir = getDir(plugin);
     let dataPath = path.join(dataDir, fileName + ".json");
     let data: any;
@@ -29,7 +33,7 @@ export function getJsonData<T>(plugin: BotPlugin, fileName: string, defaultData:
     return data;
 }
 /** 保存Json对象到文件, 需要捕获错误 */
-export function saveJsonData(plugin: BotPlugin, fileName: string, obj: any): void {
+export function saveJsonData(plugin: BotPlugin<BotPluginConfig>, fileName: string, obj: any): void {
     let dataDir = getDir(plugin);
     try {
         makeJson(dataDir, fileName + ".json", obj);
@@ -38,7 +42,7 @@ export function saveJsonData(plugin: BotPlugin, fileName: string, obj: any): voi
     }
 }
 //获取插件数据目录
-export function getDir(plugin: BotPlugin): string {
+export function getDir(plugin: BotPlugin<BotPluginConfig>): string {
     return path.join(
         require?.main?.path || process.cwd(),
         "data",

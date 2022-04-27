@@ -10,10 +10,14 @@ export class PluginProfile implements BotPluginProfile {
 export class PluginConfig implements BotPluginConfig {
     Users: BotPluginUser[] = [];
 }
-export class Plugin extends BotPlugin {
-    private plugins!: Map<string, BotPlugin>;
-    constructor(botClient: BotClient) {
-        super(botClient, new PluginProfile(), new PluginConfig());
+export class Plugin extends BotPlugin<PluginConfig> {
+    private plugins!: Map<string, BotPlugin<BotPluginConfig>>;
+    constructor(
+        botClient: BotClient,
+        pluginProfile: BotPluginProfile,
+        defaultConfig: PluginConfig
+    ) {
+        super(botClient, pluginProfile, defaultConfig);
         this.plugins = this.client.pluginManager.pluginEntity;
         this.regKeyword("^插件列表$", "global", "allow_all", (message) => {
             if (this.client.isAdmin(message.sender.user_id)) {

@@ -10,9 +10,13 @@ export class PluginProfile implements BotPluginProfile {
 export class PluginConfig implements BotPluginConfig {
     Users: BotPluginUser[] = [];
 }
-export class Plugin extends BotPlugin {
-    constructor(botClient: BotClient) {
-        super(botClient, new PluginProfile(), new PluginConfig());
+export class Plugin extends BotPlugin<PluginConfig> {
+    constructor(
+        botClient: BotClient,
+        pluginProfile: BotPluginProfile,
+        defaultConfig: PluginConfig
+    ) {
+        super(botClient, pluginProfile, defaultConfig);
         this.client.on("request.friend.add", (event: FriendRequestEvent) => {
             this.client.pickFriend(event.user_id).addFriendBack(event.seq);
         });
