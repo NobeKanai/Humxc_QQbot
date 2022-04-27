@@ -2,7 +2,7 @@
  * 机器人插件的基本实现，机器人插件应继承此类
  */
 import { BotClient } from "./core/client";
-import { DiscussMessageEvent, GroupMessageEvent, Logger, PrivateMessageEvent } from "oicq";
+import { DiscussMessageEvent, GroupMessageEvent, Logger, PrivateMessageEvent, User } from "oicq";
 import log4js from "log4js";
 import { getJsonData, saveJsonData } from "./pluginFather";
 import {
@@ -16,17 +16,30 @@ import {
 import { Command, CommandFunc } from "./core/commandManager";
 import { Keyword } from "./core/keywordManager";
 
-export class BotPluginError {
-    private static MainName = "BotPluginError";
+export class PluginError extends Error {
+    private static MainName = "PluginError";
     static UnknowPluginUserType = class extends Error {
-        name: string = BotPluginError.MainName + ": " + "UnknowPluginUserType";
+        constructor(type: PluginUserType) {
+            super(type);
+            this.name = PluginError.MainName + ": " + "UnknowPluginUserType";
+        }
     };
-    static UserExist = class extends Error {
-        name: string = BotPluginError.MainName + ": " + "UserExist";
+    static UserAlreadyExist = class extends Error {
+        constructor(user: BotPluginUser) {
+            super(user.toString());
+            this.name = PluginError.MainName + ": " + "UserAlreadyExist";
+        }
     };
     static UserNotExist = class extends Error {
-        name: string = BotPluginError.MainName + ": " + "UserNotExist";
+        constructor(user: BotPluginUser) {
+            super(user.toString());
+            this.name = PluginError.MainName + ": " + "UserNotExist";
+        }
     };
+    constructor(msg: string) {
+        super(msg);
+        this.name = PluginError.MainName;
+    }
 }
 /** 插件配置接口,作为插件应实现此接口 */
 export interface BotPluginProfile {
@@ -46,10 +59,12 @@ class PluginProfile implements BotPluginProfile {
     PluginVersion: string = "0.0.0";
     Info: string = "未配置的插件";
 }
+
 /** 插件的用户类型接口 */
+export type PluginUserType = "Person" | "Group";
 export interface BotPluginUser {
     uid: uid;
-    type: "Person" | "Group";
+    type: PluginUserType;
 }
 /** config的接口 */
 export interface BotPluginConfig {
@@ -146,8 +161,17 @@ export class BotPlugin {
     }
 
     /** 是否有指定群组用户 */
-    public hasGroupUser(uid: uid): boolean {
-        return this.users.group.has(uid);
+    public hasUser(uid: uid, type: PluginUserType): boolean {
+        switch (type) {
+            case "Group":
+                return this.users.group.has(uid);
+
+            case "Person":
+                return this.users.person.has(uid);
+
+            default:
+                throw new PluginError.UnknowPluginUserType(type);
+        }
     }
 
     /** 是否有指定个人用户 */
@@ -160,20 +184,20 @@ export class BotPlugin {
         switch (user.type) {
             case "Group":
                 if (this.users.group.has(user.uid)) {
-                    throw new BotPluginError.UserExist("uid=" + user.uid.toString());
+                    throw new PluginError.UserAlreadyExist(user);
                 } else {
                     this.users.group.set(user.uid, user);
                     return true;
                 }
             case "Person":
                 if (this.users.person.has(user.uid)) {
-                    throw new BotPluginError.UserExist("uid=" + user.uid.toString());
+                    throw new PluginError.UserAlreadyExist(user);
                 } else {
                     this.users.person.set(user.uid, user);
                     return true;
                 }
             default:
-                throw new BotPluginError.UnknowPluginUserType(user.type);
+                throw new PluginError.UnknowPluginUserType(user.type);
         }
     }
 
@@ -182,20 +206,20 @@ export class BotPlugin {
         switch (user.type) {
             case "Group":
                 if (!this.users.group.has(user.uid)) {
-                    throw new BotPluginError.UserNotExist("uid=" + user.uid.toString());
+                    throw new PluginError.UserNotExist(user);
                 } else {
                     this.users.group.delete(user.uid);
                     return true;
                 }
             case "Person":
                 if (!this.users.person.has(user.uid)) {
-                    throw new BotPluginError.UserNotExist("uid=" + user.uid.toString());
+                    throw new PluginError.UserNotExist(user);
                 } else {
                     this.users.person.delete(user.uid);
                     return true;
                 }
             default:
-                throw new BotPluginError.UnknowPluginUserType(user.type);
+                throw new PluginError.UnknowPluginUserType(user.type);
         }
     }
 
@@ -204,20 +228,20 @@ export class BotPlugin {
         switch (user.type) {
             case "Group":
                 if (!this.users.group.has(user.uid)) {
-                    throw new BotPluginError.UserNotExist("uid=" + user.uid.toString());
+                    throw new PluginError.UserNotExist(user);
                 } else {
                     this.users.group.set(user.uid, user);
                     return true;
                 }
             case "Person":
                 if (!this.users.person.has(user.uid)) {
-                    throw new BotPluginError.UserNotExist("uid=" + user.uid.toString());
+                    throw new PluginError.UserNotExist(user);
                 } else {
                     this.users.person.set(user.uid, user);
                     return true;
                 }
             default:
-                throw new BotPluginError.UnknowPluginUserType(user.type);
+                throw new PluginError.UnknowPluginUserType(user.type);
         }
     }
 
