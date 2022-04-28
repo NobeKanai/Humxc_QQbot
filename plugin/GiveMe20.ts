@@ -196,12 +196,10 @@ export class Plugin extends BotPlugin<PluginConfig> {
             return -1;
         }
         this.isUpdating = true;
-        var updateNum: number = 0;
-        var list = [];
+        let updateNum: number = 0;
+        let list = [];
         try {
-            list = await this.getUpdate().catch((err) => {
-                this.logger.error(err);
-            });
+            list = await this.getUpdate();
         } catch (error) {
             this.logger.warn(error);
             this.isUpdating = false;
