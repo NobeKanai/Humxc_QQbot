@@ -25,7 +25,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
         this.client.on("bot.newday", () => {
             this.startLike(1200000);
         });
-        this.regKeyword("给我点赞", "global", "atme", (message) => {
+        this.regKeyword("给我点赞$", "global", "atme", (message) => {
             let uid = message.sender.user_id;
             if (this.client.isFriend(uid)) {
                 if (this.hasUser(uid, "Person")) {
@@ -64,7 +64,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 return;
             }
         });
-        this.regKeyword("取消点赞", "global", "atme", (message) => {
+        this.regKeyword("取消点赞$", "global", "atme", (message) => {
             let uid = message.sender.user_id;
             if (this.hasUser(uid, "Person")) {
                 if (this.rmUser(uid, "Person")) {
@@ -87,6 +87,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
         });
     }
     private async startLike(timeout: number) {
+        await sleep(timeout);
         for (const user of this.users.person.values()) {
             this.like(user.uid);
             await sleep(10000);

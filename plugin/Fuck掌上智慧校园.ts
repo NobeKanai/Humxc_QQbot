@@ -102,7 +102,7 @@ interface Response_ElectricBill_Check extends Response {
 }
 
 /** 电费查询结果 */
-type CebResult = { status: string; stateOfCharge: number; power: string; collectTime: string };
+type CebResult = { state: string; stock: number; power: string; collectTime: string };
 
 /** 水表查询结果 */
 type CwvResult = {
@@ -140,6 +140,50 @@ export class Plugin extends BotPlugin<PluginConfig> {
         super(botClient, pluginProfile, defaultConfig);
         this.PublicKey = `-----BEGIN PUBLIC KEY-----\n${this.config.PublicKey}\n-----END PUBLIC KEY-----`;
         this.init();
+        this.client.on("bot.newday", () => {
+            setTimeout(async () => {
+                for (const user of this.iUsers.values()) {
+                    let f = this.client.pickFriend(user.uid);
+                    let result: CebResult = {
+                        state: "",
+                        stock: 0,
+                        power: "",
+                        collectTime: "",
+                    };
+                    // 登录
+                    if (user.Token == "") {
+                        try {
+                            await this.login(user);
+                        } catch (error) {
+                            this.logger.error(error);
+                            f.sendMsg((<Error>error).message).catch((err) => {
+                                this.logger.error(err);
+                            });
+                            continue;
+                        }
+                    }
+                    try {
+                        result = await this.checkElectricBill(user);
+                    } catch (error) {
+                        this.logger.error(error);
+                        f.sendMsg((<Error>error).message).catch((err) => {
+                            this.logger.error(err);
+                        });
+                        continue;
+                    }
+                    if (result.stock < 10) {
+                        f.sendMsg(
+                            `状态: ${result.state}\n剩余电量: ${result.stock}\n采集功率: ${
+                                result.power
+                            }\n采集时间: ${result.collectTime.substring(5, 16)}`
+                        ).catch((err) => {
+                            this.logger.error(err);
+                        });
+                    }
+                    await sleep(10000);
+                }
+            }, 25200000);
+        });
         this.regKeyword("^开水$", "private", "plugin_user", async (message) => {
             let count = 1;
             let checkResult: CwvResult = {
@@ -156,6 +200,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     message.reply((<Error>error).message).catch((err) => {
                         this.logger.error(err);
                     });
+                    return;
                 }
             }
             // 开水
@@ -191,7 +236,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     message
                         .reply(
                             checkResult.message +
-                                `\n本次用水消耗澡币: ${checkResult.usedWaterCoin}\n剩余澡币: ${user.WaterCoinA}}`
+                                `\n本次用水消耗澡币: ${checkResult.usedWaterCoin}\n剩余澡币: ${user.WaterCoinA}`
                         )
                         .catch((err) => {
                             this.logger.error(err);
@@ -223,6 +268,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     message.reply((<Error>error).message).catch((err) => {
                         this.logger.error(err);
                     });
+                    return;
                 }
             }
             // 查询用量
@@ -251,7 +297,6 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 await this.closeWaterValue(user);
             } catch (error) {
                 if ((<Error>error).message == "关阀失败: 登录信息已过期") {
-                    user.Token = "";
                     message.reply("关阀失败: 登录信息已过期, 请重试").catch((err) => {
                         this.logger.error(err);
                     });
@@ -266,6 +311,48 @@ export class Plugin extends BotPlugin<PluginConfig> {
             message.reply(msg).catch((err) => {
                 this.logger.error(err);
             });
+        });
+        this.regKeyword("^查电$", "private", "plugin_user", async (message) => {
+            let result: CebResult = {
+                state: "",
+                stock: 0,
+                power: "",
+                collectTime: "",
+            };
+            let user = <IUser>this.iUsers.get(message.sender.user_id);
+            // 登录
+            if (user.Token == "") {
+                try {
+                    await this.login(user);
+                } catch (error) {
+                    this.logger.error(error);
+                    message.reply((<Error>error).message).catch((err) => {
+                        this.logger.error(err);
+                    });
+                    return;
+                }
+            }
+
+            // 查电
+            try {
+                result = await this.checkElectricBill(user);
+            } catch (error) {
+                this.logger.error(error);
+                message.reply((<Error>error).message).catch((err) => {
+                    this.logger.error(err);
+                });
+                return;
+            }
+
+            message
+                .reply(
+                    `状态: ${result.state}\n剩余电量: ${result.stock}\n采集功率: ${
+                        result.power
+                    }\n采集时间: ${result.collectTime.substring(5, 16)}`
+                )
+                .catch((err) => {
+                    this.logger.error(err);
+                });
         });
     }
 
@@ -325,6 +412,10 @@ export class Plugin extends BotPlugin<PluginConfig> {
         if (resp.code == "1") {
             user.Waterid = resp.rows[0].waterid;
         } else {
+            if (resp.code == "12342") {
+                resp.message += ", 请重试";
+                user.Token = "";
+            }
             throw new Error(`开阀失败: ${resp.message}`);
         }
     }
@@ -350,6 +441,10 @@ export class Plugin extends BotPlugin<PluginConfig> {
             throw error;
         }
         if (resp.code != "1") {
+            if (resp.code == "12342") {
+                resp.message += ", 请重试";
+                user.Token = "";
+            }
             throw new Error(`关阀失败: ${resp.message}`);
         }
         user.Waterid = 0;
@@ -376,6 +471,10 @@ export class Plugin extends BotPlugin<PluginConfig> {
             throw error;
         }
         if (resp.code != "1") {
+            if (resp.code == "12342") {
+                resp.message += ", 请重试";
+                user.Token = "";
+            }
             throw new Error(`水阀查询失败: ${resp.message}`);
         } else {
             let result: CwvResult = {
@@ -407,7 +506,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
         }
     }
 
-    /** 电费查询 */
+    /** 电表用量查询 */
     async checkElectricBill(user: IUser): Promise<CebResult> {
         let param = encryptAndEncode(
             `{"Studid":"${
@@ -424,11 +523,15 @@ export class Plugin extends BotPlugin<PluginConfig> {
             throw error;
         }
         if (resp.code != "1") {
+            if (resp.code == "12342") {
+                resp.message += ", 请重试";
+                user.Token = "";
+            }
             throw new Error(`电表查询失败: ${resp.message}`);
         }
         let result: CebResult = {
-            status: resp.rows[0].zhuangtai,
-            stateOfCharge: resp.rows[0].shengyupower,
+            state: resp.rows[0].zhuangtai,
+            stock: resp.rows[0].shengyupower,
             power: resp.rows[0].nowgonglv,
             collectTime: resp.rows[0].caijitime,
         };
