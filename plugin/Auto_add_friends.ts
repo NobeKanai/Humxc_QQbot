@@ -36,7 +36,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
     }
 }
 async function sleep(time: number): Promise<void> {
-    new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         setTimeout(() => resolve(), time);
     });
 }

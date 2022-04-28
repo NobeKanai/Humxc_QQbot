@@ -202,7 +202,7 @@ function parseList(str: string | undefined) {
     return retstr;
 }
 async function sleep(time: number): Promise<void> {
-    new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         setTimeout(() => resolve(), time);
     });
 }
