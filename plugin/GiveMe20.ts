@@ -49,7 +49,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
         });
 
         this.regKeyword(
-            "^更新色图$",
+            "^更新涩图$",
             "global",
             (message): boolean => {
                 return (
@@ -71,7 +71,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 });
             }
         );
-        this.regKeyword("^色图$", "global", "plugin_user", async (message) => {
+        this.regKeyword("^涩图$", "global", "plugin_user", async (message) => {
             let imgUrl: string = "";
             try {
                 imgUrl = this.config.url + "/" + encodeURI(await this.rendomImg());
