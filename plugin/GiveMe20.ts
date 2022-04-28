@@ -71,7 +71,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 });
             }
         );
-        this.regKeyword("^给我色图$", "global", "plugin_user", async (message) => {
+        this.regKeyword("^色图$", "global", "plugin_user", async (message) => {
             let imgUrl: string = "";
             try {
                 imgUrl = this.config.url + "/" + encodeURI(await this.rendomImg());
@@ -221,6 +221,9 @@ export class Plugin extends BotPlugin<PluginConfig> {
             let _path = "update";
             let r_url = new URL(_path, this.config.url);
             let reqList = http.request(r_url, (res: IncomingMessage) => {
+                res.setTimeout(5000, () => {
+                    reject(new Error("获取更新失败: 连接超时"));
+                });
                 let data: Object;
                 if (res.statusCode != 200) reject(new Error("获取更新失败: " + res.statusCode));
                 res.on("data", (d: string) => {
@@ -251,6 +254,9 @@ export class Plugin extends BotPlugin<PluginConfig> {
             let _path = "random";
             let r_url = new URL(_path, this.config.url);
             let reqList = http.request(r_url, (res: IncomingMessage) => {
+                res.setTimeout(5000, () => {
+                    reject(new Error("获取随机色图失败: 连接超时"));
+                });
                 if (res.statusCode != 200) reject(new Error("获取随机色图失败: " + res.statusCode));
                 res.on("data", (d: number[]) => {
                     resolve(d.toString());
