@@ -258,7 +258,7 @@ export class Plugin extends BotPlugin<PUConfig> {
                 for (const user of this.users.person.values()) {
                     this.logger.info(`正在发送通知到私聊: ${user.uid}`);
                     this.client
-                        .sendGroupMsg(user.uid, remind.message)
+                        .sendPrivateMsg(user.uid, remind.message)
                         .catch((err) => this.logger.error(err));
                 }
 
