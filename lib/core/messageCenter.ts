@@ -58,8 +58,18 @@ export class messageCenter {
     constructor(client: BotClient) {
         this.client = client;
         this.client.on("message", this.callMsgRegTrigger("global"));
-        this.client.on("message.group", this.callMsgRegTrigger("group"));
-        this.client.on("message.private", this.callMsgRegTrigger("private"));
+        this.client.on("message.group", (message) => {
+            if (this.client.isAdmin(message.sender.user_id)) {
+                this.client.emit("bot.admin.message.group", message);
+            }
+            this.callMsgRegTrigger("group")(message);
+        });
+        this.client.on("message.private", (message) => {
+            if (this.client.isAdmin(message.sender.user_id)) {
+                this.client.emit("bot.admin.message.private", message);
+            }
+            this.callMsgRegTrigger("private")(message);
+        });
         this.client.on("message.discuss", this.callMsgRegTrigger("discuss"));
     }
     regMsgRegTrigger(tr: MsgRegTrigger): void {

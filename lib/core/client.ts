@@ -35,7 +35,11 @@ interface BotConfig extends Config {
 /** 事件接口 */
 export interface BotEventMap<T = any> extends EventMap {
     /** 新的一天! */
-    "bot.newday": (this: T, event: null) => void;
+    "bot.newday": () => void;
+    /** 来自管理员的群聊消息 */
+    "bot.admin.messsage.group": (this: T, event: null) => void;
+    /** 来自管理员的私聊消息 */
+    "bot.admin.message.private": (this: T, event: null) => void;
 }
 export interface BotClient extends Client {
     on<T extends keyof BotEventMap>(event: T, listener: BotEventMap<this>[T]): this;
@@ -126,15 +130,6 @@ export class BotClient extends Client {
     /** 判断是否管理员 */
     isAdmin(uid: number) {
         return new Set(this.admin).has(uid);
-    }
-    /** 判断消息是否at自己的消息 */
-    isAtSelf(message: PrivateMessage | GroupMessage | DiscussMessage): boolean {
-        if (message.message_type == "private") {
-            return false;
-        } else if (message.message[0].type == "at" && message.message[0].qq == this.uin) {
-            return true;
-        }
-        return false;
     }
     /** 判断是否为好友 */
     isFriend(qq: number): boolean {
