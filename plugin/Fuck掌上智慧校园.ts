@@ -63,7 +63,7 @@ interface Response {
 }
 interface Response_Login extends Response {
     rows: [
-        userInfo: {
+        {
             studentID: string;
             phone: string;
             xh: string;
@@ -82,17 +82,17 @@ interface Response_Login extends Response {
     ];
 }
 interface Response_WaterValue_Open extends Response {
-    rows: [waterInfo: { info: "OPENOK"; dormitory: string; waterid: number }];
+    rows: [{ info: "OPENOK"; dormitory: string; waterid: number }];
 }
 interface Response_WaterValue_Close extends Response {
-    rows: [waterInfo: { info: "CLOSEOK" }];
+    rows: [{ info: "CLOSEOK" }];
 }
 interface Response_WaterValue_Check extends Response {
-    rows: [waterInfo: { userflag: string; balance: string; balance2: string; usermoney: number }];
+    rows: [{ userflag: string; balance: string; balance2: string; usermoney: number }];
 }
 interface Response_ElectricBill_Check extends Response {
     rows: [
-        electricInfo: {
+        {
             zhuangtai: string;
             shengyupower: number;
             nowgonglv: string;
