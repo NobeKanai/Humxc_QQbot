@@ -155,7 +155,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                         try {
                             await this.login(user);
                         } catch (error) {
-                            this.logger.error(error);
+                            this.logger.warn(error);
                             f.sendMsg((<Error>error).message).catch((err) => {
                                 this.logger.error(err);
                             });
@@ -165,10 +165,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     try {
                         result = await this.checkElectricBill(user);
                     } catch (error) {
-                        this.logger.error(error);
-                        f.sendMsg((<Error>error).message).catch((err) => {
-                            this.logger.error(err);
-                        });
+                        this.logger.warn(error);
                         continue;
                     }
                     if (result.stock < 10) {
@@ -207,6 +204,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
             try {
                 await this.openWaterValue(user);
             } catch (error) {
+                this.logger.warn(error);
                 if ((<Error>error).message == "开阀失败: 登录信息已过期") {
                     user.Token = "";
                     message.reply("开阀失败: 登录信息已过期, 请重试").catch((err) => {
@@ -226,8 +224,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 try {
                     checkResult = await this.checkWaterValue(user);
                 } catch (error) {
-                    this.logger.error(error);
-
+                    this.logger.warn(error);
                     message.reply((<Error>error).message).catch((err) => {
                         this.logger.error(err);
                     });
@@ -275,7 +272,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
             try {
                 checkResult = await this.checkWaterValue(user);
             } catch (error) {
-                this.logger.error(error);
+                this.logger.warn(error);
                 message.reply((<Error>error).message).catch((err) => {
                     this.logger.error(err);
                 });
@@ -296,6 +293,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
             try {
                 await this.closeWaterValue(user);
             } catch (error) {
+                this.logger.warn(error);
                 if ((<Error>error).message == "关阀失败: 登录信息已过期") {
                     message.reply("关阀失败: 登录信息已过期, 请重试").catch((err) => {
                         this.logger.error(err);
@@ -325,7 +323,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 try {
                     await this.login(user);
                 } catch (error) {
-                    this.logger.error(error);
+                    this.logger.warn(error);
                     message.reply((<Error>error).message).catch((err) => {
                         this.logger.error(err);
                     });
@@ -337,7 +335,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
             try {
                 result = await this.checkElectricBill(user);
             } catch (error) {
-                this.logger.error(error);
+                this.logger.warn(error);
                 message.reply((<Error>error).message).catch((err) => {
                     this.logger.error(err);
                 });
