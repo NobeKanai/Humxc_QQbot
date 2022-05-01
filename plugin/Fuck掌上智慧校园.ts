@@ -482,6 +482,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
             };
             user.WaterCoinA = resp.rows[0].balance;
             user.WaterCoinB = resp.rows[0].balance2;
+            result.usedWaterCoin = resp.rows[0].usermoney;
             switch (resp.rows[0].userflag) {
                 case "1":
                     result.message = "正在使用";
