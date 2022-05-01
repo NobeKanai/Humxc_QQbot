@@ -276,6 +276,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 message.reply((<Error>error).message).catch((err) => {
                     this.logger.error(err);
                 });
+                return;
             }
             if (checkResult.message !== "正在使用") {
                 message
