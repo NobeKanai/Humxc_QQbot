@@ -76,12 +76,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
         req: ReqData;
     }[] = [];
     private isGetingSetu: boolean = false;
-    constructor(
-        botClient: BotClient,
-        pluginProfile: BotPluginProfile,
-        defaultConfig: PluginConfig
-    ) {
-        super(botClient, pluginProfile, defaultConfig);
+    public init(): void {
         this.eventer.on("start", async () => {
             if (this.isGetingSetu) return;
             this.isGetingSetu = true;

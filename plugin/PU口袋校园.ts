@@ -24,17 +24,12 @@ export class PluginConfig implements PUConfig {
     Users: BotPluginUser[] = [];
 }
 export class Plugin extends BotPlugin<PUConfig> {
-    private data: PUData;
+    private data!: PUData;
     private hostName: string = "pocketuni.net";
     private remind_used: Remind[] = [];
     private intervalTimeOut: NodeJS.Timeout | undefined = undefined;
 
-    constructor(
-        botClient: BotClient,
-        pluginProfile: BotPluginProfile,
-        defaultConfig: PluginConfig
-    ) {
-        super(botClient, pluginProfile, defaultConfig);
+    public init(): void {
         this.data = this.getJsonData("data", new PUData());
         this.client.on("system.online", () => {
             this.logger.info("设置任务");

@@ -123,7 +123,7 @@ export class PluginProfile implements BotPluginProfile {
     Info: string = "实现掌上智慧校园的部分功能";
 }
 export class Plugin extends BotPlugin<PluginConfig> {
-    private PublicKey: string;
+    private PublicKey: string = "";
     private Host: string = "www.zhang.guolianrobot.com";
     private WaterValuePath_Open: string = "/Jiangapp/Home/Takeshower/iotclocksever/Iot_Open.php";
     private WaterValuePath_Close: string = "/Jiangapp/Home/Takeshower/iotclocksever/Iot_Close.php";
@@ -132,14 +132,9 @@ export class Plugin extends BotPlugin<PluginConfig> {
     private LoginPath: string = "/Jiangapp/Main/login.php";
     private ElectricBillPath_Check: string = "/Jiangapp/Home/PaymentCenter/Power/SchoolPower.php";
     private iUsers: Map<number, IUser> = new Map<number, IUser>();
-    constructor(
-        botClient: BotClient,
-        pluginProfile: BotPluginProfile,
-        defaultConfig: PluginConfig
-    ) {
-        super(botClient, pluginProfile, defaultConfig);
+    public init(): void {
         this.PublicKey = `-----BEGIN PUBLIC KEY-----\n${this.config.PublicKey}\n-----END PUBLIC KEY-----`;
-        this.init();
+        this.initUser();
         this.client.on("bot.newday", () => {
             setTimeout(async () => {
                 for (const user of this.iUsers.values()) {
@@ -356,7 +351,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
     }
 
     /** 初始化用户 */
-    async init(): Promise<void> {
+    async initUser(): Promise<void> {
         for (let i = 0; i < this.config.Users.length; i++) {
             const user = this.config.Users[i];
             let iUser = new IUser(user);

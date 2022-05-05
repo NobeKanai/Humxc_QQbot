@@ -12,12 +12,7 @@ export class PluginConfig implements BotPluginConfig {
 }
 export class Plugin extends BotPlugin<PluginConfig> {
     private plugins!: Map<string, BotPlugin<BotPluginConfig>>;
-    constructor(
-        botClient: BotClient,
-        pluginProfile: BotPluginProfile,
-        defaultConfig: PluginConfig
-    ) {
-        super(botClient, pluginProfile, defaultConfig);
+    public init(): void {
         this.plugins = this.client.pluginManager.pluginEntity;
         this.regKeyword("^插件列表$", "global", "allow_all", (message) => {
             if (this.client.isAdmin(message.sender.user_id)) {

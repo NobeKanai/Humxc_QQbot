@@ -24,15 +24,10 @@ export class PluginConfig implements BotPluginConfig {
     url: string = "https:// awebside.com";
 }
 export class Plugin extends BotPlugin<PluginConfig> {
-    private data: string[];
+    private data: string[] = [];
     private isUpdating: boolean = false;
     private intervalTimeout: NodeJS.Timeout | undefined;
-    constructor(
-        botClient: BotClient,
-        pluginProfile: BotPluginProfile,
-        defaultConfig: PluginConfig
-    ) {
-        super(botClient, pluginProfile, defaultConfig);
+    public init(): void {
         this.data = this.getJsonData("data", []);
         this.logger.debug("设置任务");
         this.intervalTimeout = setInterval(() => {
