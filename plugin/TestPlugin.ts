@@ -36,8 +36,5 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 return "这是一条 /test 的返回值";
             }
         });
-        this.regKeyword("hi", "global", "allow_all", (m) => {
-            m.reply("Hi!");
-        });
     }
 }
