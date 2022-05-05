@@ -38,7 +38,7 @@ export class PluginManager {
         for (let i = 0; i < pluginNameList.length; i++) {
             const pluginName = pluginNameList[i];
             this.client.logger.info(`正在加载插件 [${pluginName}]`);
-            let plugin: any = undefined;
+            let plugin: any | undefined = undefined;
             try {
                 plugin = require(path.join(pluginFolder, pluginName));
             } catch (error) {
@@ -52,11 +52,13 @@ export class PluginManager {
                     this.client.logger.debug(`PluginVersion: ${pluginProfile.PluginVersion}`);
                     this.client.logger.debug(`BotVersion: ${pluginProfile.BotVersion}`);
                     this.client.logger.debug(`Info: ${pluginProfile.Info}`);
+                    plugin.Plugin.pro;
                     let pluginEntity: BotPlugin<BotPluginConfig> = new plugin.Plugin(
                         this.client,
                         pluginProfile,
                         pluginConfig
                     );
+                    pluginEntity.init();
                     this.pluginEntity.set(pluginProfile.PluginName, pluginEntity);
                     this.client.logger.info("----------");
                 } catch (error) {

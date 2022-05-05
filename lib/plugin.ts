@@ -77,15 +77,15 @@ export class BotPlugin<T extends BotPluginConfig> {
         group: new Map<uid, BotPluginUser>(),
         person: new Map<uid, BotPluginUser>(),
     };
-    public logger: Logger | PluginLogger;
-    public pluginProfile: PluginProfile;
-    public client: BotClient;
-    public config: T;
-    private defaultConfig: T;
-    constructor(client: BotClient, pluginProfile: BotPluginProfile, defaultConfig: T) {
-        this.config = defaultConfig;
+    public logger!: Logger | PluginLogger;
+    public pluginProfile!: PluginProfile;
+    public client!: BotClient;
+    public config!: T;
+    public defaultConfig!: T;
+    public init() {}
+    constructor(botClient: BotClient, pluginProfile: BotPluginProfile, defaultConfig: T) {
+        this.client = botClient;
         this.defaultConfig = defaultConfig;
-        this.client = client;
         this.pluginProfile = pluginProfile;
         // 设置日志器
         if (this.client.errorCallAdmin == true) {
