@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "types": ["node"],
         "outDir": "./App",
         /* Visit https://aka.ms/tsconfig.json to read more about this file */
 
