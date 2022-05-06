@@ -72,7 +72,7 @@ export class BotPlugin<T extends BotPluginConfig> {
     };
     public logger!: Logger | PluginLogger;
     public pluginProfile!: PluginProfile;
-    protected client!: BotClient;
+    public client!: BotClient;
     protected config!: T;
     public defaultConfig!: T;
     public init() {}
