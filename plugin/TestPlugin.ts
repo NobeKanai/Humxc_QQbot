@@ -1,4 +1,3 @@
-import { BotClient } from "../lib/core/client";
 import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
 export class PluginProfile implements BotPluginProfile {
     PluginName: string = "TestPlugin";

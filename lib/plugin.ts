@@ -2,17 +2,10 @@
  * 机器人插件的基本实现，机器人插件应继承此类
  */
 import { BotClient } from "./core/client";
-import { DiscussMessageEvent, GroupMessageEvent, Logger, PrivateMessageEvent, User } from "oicq";
+import { Logger } from "oicq";
 import log4js from "log4js";
 import { getJsonData, saveJsonData } from "./pluginFather";
-import {
-    MsgArea,
-    RegFilter,
-    MsgRegTrigger,
-    RegListener,
-    RegFilterFunc,
-    RegFilterDef,
-} from "./core/messageCenter";
+import { MsgArea, RegFilter, RegListener, RegFilterFunc, RegFilterDef } from "./core/messageCenter";
 import { Command, CommandFunc } from "./core/commandManager";
 import { Keyword } from "./core/keywordManager";
 type GetElementType<T extends any[]> = T extends (infer U)[] ? U : never;
@@ -79,8 +72,8 @@ export class BotPlugin<T extends BotPluginConfig> {
     };
     public logger!: Logger | PluginLogger;
     public pluginProfile!: PluginProfile;
-    public client!: BotClient;
-    public config!: T;
+    protected client!: BotClient;
+    protected config!: T;
     public defaultConfig!: T;
     public init() {}
     constructor(botClient: BotClient, pluginProfile: BotPluginProfile, defaultConfig: T) {

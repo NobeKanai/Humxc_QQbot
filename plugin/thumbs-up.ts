@@ -1,5 +1,3 @@
-import { PrivateMessageEvent, GroupMessageEvent, DiscussMessageEvent } from "oicq";
-import { BotClient } from "../lib/core/client";
 import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
 import { getJsonData } from "../lib/pluginFather";
 export class PluginProfile implements BotPluginProfile {

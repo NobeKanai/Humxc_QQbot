@@ -11,7 +11,6 @@ import {
     MessageRet,
     Quotable,
 } from "oicq";
-import { BotClient } from "../lib/core/client";
 import {
     BotPlugin,
     BotPluginConfig,

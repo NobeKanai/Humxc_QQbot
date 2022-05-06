@@ -7,7 +7,6 @@ import {
     BotPluginUser,
     PluginUserType,
 } from "../lib/plugin";
-import { BotClient } from "../lib/core/client";
 
 /** 保存到配置文件的User */
 interface User extends BotPluginUser {

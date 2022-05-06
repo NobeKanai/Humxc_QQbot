@@ -5,10 +5,10 @@
 import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
 import https from "https";
 export class PluginProfile implements BotPluginProfile {
-    PluginName: string = "TestPlugin";
+    PluginName: string = "WhatIP";
     BotVersion: string = "0.1.1";
     PluginVersion: string = "0.0.1";
-    Info: string = "测试用的插件";
+    Info: string = "获取设备的ip";
 }
 export class PluginConfig implements BotPluginConfig {
     Users: BotPluginUser[] = [];

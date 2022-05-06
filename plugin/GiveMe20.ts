@@ -1,17 +1,7 @@
 import http from "https";
 import path from "path";
-import {
-    DiscussMessageEvent,
-    GroupMessage,
-    GroupMessageEvent,
-    MessageElem,
-    PrivateMessage,
-    PrivateMessageEvent,
-    segment,
-    XmlElem,
-} from "oicq";
+import { GroupMessage, MessageElem, PrivateMessage, segment, XmlElem } from "oicq";
 import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
-import { BotClient } from "../lib/core/client";
 import { IncomingMessage } from "http";
 export class PluginProfile implements BotPluginProfile {
     PluginName: string = "GiveMe20";

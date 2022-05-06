@@ -1,7 +1,5 @@
-import { BotClient } from "../lib/core/client";
 import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
 import { Rcon, RconOptions } from "rcon-client";
-import url from "url";
 class RconClient extends Rcon {
     private autoClose: NodeJS.Timeout;
     private commandList: string[] = [];
@@ -85,9 +83,7 @@ export class PluginProfile implements BotPluginProfile {
 }
 export class Plugin extends BotPlugin<PluginConfig> {
     private rcons: Map<string, RconClient> = new Map();
-    constructor(botClient: BotClient, pluginProfile: PluginProfile, pluginConfig: PluginConfig) {
-        super(botClient, pluginProfile, pluginConfig);
-
+    public init() {
         for (let i = 0; i < this.config.Users.length; i++) {
             const user = this.config.Users[i];
             let url: string = `${user.host}:${user.port}`;

@@ -1,5 +1,3 @@
-import { FriendRequestEvent } from "oicq";
-import { BotClient } from "../lib/core/client";
 import { BotPlugin, BotPluginProfile, BotPluginConfig, BotPluginUser } from "../lib/plugin";
 export class PluginProfile implements BotPluginProfile {
     PluginName: string = "PluginManager";
