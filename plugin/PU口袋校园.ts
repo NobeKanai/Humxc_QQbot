@@ -543,10 +543,12 @@ function sendPose(host: string, path: string, data: string) {
             method: "POST",
             headers: {
                 "Content-Length": Buffer.byteLength(data),
-                "User-Agent": "client:Android version:6.8.80 Product:Redmi K50 Pro OsVersion:12",
+                "User-Agent": "client:Android version:6.8.80 Product:Redmi K30 Pro OsVersion:12",
                 "Content-Type": "application/x-www-form-urlencoded",
                 Connection: "Keep-Alive",
                 "Accept-Encoding": "gzip",
+                Cookie: "PHPSESSID=47b98b6861a73376c83e8",
+                Cookie2: "$Version=1",
             },
         };
         var respData: string = "";
