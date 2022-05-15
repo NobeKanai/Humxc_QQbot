@@ -331,7 +331,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
 async function getSetu(reqData: ReqData): Promise<Setu[] | any> {
     let setus: Setu[];
     try {
-        let resp: any = await doPose(`api.lolicon.app`, `/setu/v2`, JSON.stringify(reqData));
+        let resp: any = await doPost(`api.lolicon.app`, `/setu/v2`, JSON.stringify(reqData));
         if (resp.error === "") {
             setus = resp.data;
             return setus;
@@ -343,7 +343,7 @@ async function getSetu(reqData: ReqData): Promise<Setu[] | any> {
     }
 }
 /** 发送post请求 */
-function doPose(host: string, path: string, data: string, timeout: number = 0): any {
+function doPost(host: string, path: string, data: string, timeout: number = 0): any {
     return new Promise((resolve, reject) => {
         let contentType: string | undefined;
         const options: https.RequestOptions = {
