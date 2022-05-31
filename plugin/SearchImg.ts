@@ -52,9 +52,9 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     if (result.length > 0) {
                         let infoMsg = "\n";
                         respMsg.push(segment.image(result[0].Img, true, 30));
-                        if (result[0].Title !== "") infoMsg += `\n标题: ${result[0].Title}`;
+                        if (result[0].Title !== "") infoMsg += `标题: ${result[0].Title}\n`;
                         if (result[0].Similarity !== 0)
-                            infoMsg += `\n相似度: ${result[0].Similarity}%`;
+                            infoMsg += `相似度: ${result[0].Similarity}%`;
                         if (result[0].Src !== "") infoMsg += `\n链接: ${result[0].Src}`;
 
                         respMsg.push(infoMsg);
