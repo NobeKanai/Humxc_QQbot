@@ -42,33 +42,55 @@ export class Plugin extends BotPlugin<PluginConfig> {
             }
         });
         this.regKeyword("搜图", "global", "allow_all", async (message) => {
-            if (message.source === undefined) return;
-            let url = this.allImage.get(message.source.rand);
-            if (url === undefined) {
-                message.reply("没有在聊天中找到图片\n尝试重发图片\n每半小时清除一次记录");
-                return;
-            }
-            let respMsg: Sendable = [];
-            try {
-                let searchResult: SearchResult = await SearchImg(url);
-                respMsg[0] = `搜索耗时: ${searchResult.UseTime}ms\n`;
-                let result = searchResult.Result;
-                respMsg[0] += `有 ${result.length} 条结果\n`;
-                if (result.length > 0) {
-                    let infoMsg = "";
-                    respMsg.push(segment.image(result[0].Img, true, 30));
-                    if (result[0].Title !== "") infoMsg += `\n标题: ${result[0].Title}`;
-                    if (result[0].Similarity !== 0) infoMsg += `\n相似度: ${result[0].Similarity}%`;
-                    if (result[0].Src !== "") infoMsg += `\n链接: ${result[0].Src}`;
+            let search = async (url: string): Promise<Sendable> => {
+                let respMsg: Sendable = [];
+                try {
+                    let searchResult: SearchResult = await SearchImg(url);
+                    respMsg[0] = `搜索耗时: ${searchResult.UseTime}ms\n`;
+                    let result = searchResult.Result;
+                    respMsg[0] += `有 ${result.length} 条结果\n`;
+                    if (result.length > 0) {
+                        let infoMsg = "";
+                        respMsg.push(segment.image(result[0].Img, true, 30));
+                        if (result[0].Title !== "") infoMsg += `\n标题: ${result[0].Title}`;
+                        if (result[0].Similarity !== 0)
+                            infoMsg += `\n相似度: ${result[0].Similarity}%`;
+                        if (result[0].Src !== "") infoMsg += `\n链接: ${result[0].Src}`;
 
-                    respMsg.push(infoMsg);
+                        respMsg.push(infoMsg);
+                    }
+                } catch (error) {
+                    respMsg = (error as Error).message;
                 }
-            } catch (error) {
-                respMsg = (error as Error).message;
+                return respMsg;
+            };
+            let reply = (msg: Sendable) => {
+                message.reply(msg).catch((e) => {
+                    this.logger.error(e);
+                });
+            };
+            let url;
+            if (message.source !== undefined) {
+                url = this.allImage.get(message.source.rand);
+                if (url === undefined) {
+                    reply("没有在聊天中找到图片\n尝试重发图片\n每半小时清除一次记录");
+                    return;
+                }
+            } else {
+                for (let i = 0; i < message.message.length; i++) {
+                    const m = message.message[i];
+                    if (m.type === "image") {
+                        url = m.url;
+                        break;
+                    }
+                }
+                if (url === undefined) {
+                    reply("无法获取图片链接");
+                    return;
+                }
             }
-            message.reply(respMsg).catch((e) => {
-                this.logger.error(e);
-            });
+            let resp = await search(url);
+            reply(resp);
         });
     }
 }
