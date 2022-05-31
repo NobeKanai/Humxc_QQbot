@@ -85,7 +85,6 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     }
                 }
                 if (url === undefined) {
-                    reply("无法获取图片链接");
                     return;
                 }
             }
