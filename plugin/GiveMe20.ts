@@ -1,9 +1,18 @@
 import http from "https";
 import path from "path";
 import { AddImg } from "./SearchImg";
-import { GroupMessage, MessageElem, MessageRet, PrivateMessage, segment, XmlElem } from "oicq";
+import {
+    GroupMessage,
+    MessageElem,
+    MessageRet,
+    PrivateMessage,
+    segment,
+    Sendable,
+    XmlElem,
+} from "oicq";
 import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
 import { IncomingMessage } from "http";
+import { merge } from "cheerio/lib/static";
 export class PluginProfile implements BotPluginProfile {
     PluginName: string = "GiveMe20";
     BotVersion: string = "0.0.1";
@@ -68,10 +77,17 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 return;
             }
             let img = segment.image(imgUrl, true, 30);
+            let reply = async (m: Sendable) => {
+                try {
+                    message.reply(m);
+                } catch (error) {
+                    this.logger.error(error);
+                }
+            };
             message
                 .reply(img)
                 .catch((err) => {
-                    this.logger.error(err);
+                    reply(err);
                 })
                 .then((msg: void | MessageRet) => {
                     if (msg === undefined) return;
@@ -291,7 +307,6 @@ export class Plugin extends BotPlugin<PluginConfig> {
             // 全部发送给自己
             try {
                 let msg = await this.client.sendSelfMsg(img);
-                AddImg(msg.rand, imgUrl);
                 // 缓解503错误
                 await sleep(200);
             } catch (error) {
@@ -331,9 +346,11 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     this.logger.debug(
                         `开始将图片发送到群聊: ${user.uid} [${i + 1}/${imgNameList.length}]`
                     );
-                    await this.client
-                        .sendGroupMsg(user.uid, e)
-                        .catch((err) => this.logger.error("一张图片发送到群聊失败:", err));
+                    await this.client.sendGroupMsg(user.uid, e).catch((err) => {
+                        this.client.sendGroupMsg(user.uid, err).catch((e) => {
+                            this.logger.error(e);
+                        });
+                    });
                 }
             }
             for (const user of this.users.person.values()) {
@@ -342,9 +359,11 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     this.logger.debug(
                         `开始将图片发送到私聊: ${user.uid} [${i + 1}/${imgNameList.length}]`
                     );
-                    await this.client
-                        .sendPrivateMsg(user.uid, e)
-                        .catch((err) => this.logger.error("一张图片发送到私聊失败:", err));
+                    await this.client.sendPrivateMsg(user.uid, e).catch((err) => {
+                        this.client.sendGroupMsg(user.uid, err).catch((e) => {
+                            this.logger.error(e);
+                        });
+                    });
                 }
             }
         } else {

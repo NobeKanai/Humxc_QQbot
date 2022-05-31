@@ -11,6 +11,7 @@ import {
     segment,
     MessageRet,
     Quotable,
+    Sendable,
 } from "oicq";
 import {
     BotPlugin,
@@ -82,6 +83,13 @@ export class Plugin extends BotPlugin<PluginConfig> {
             this.isGetingSetu = true;
             while (true) {
                 let setuReq = this.setuReqList.shift();
+                let reply = async (m: Sendable) => {
+                    try {
+                        setuReq?.message.reply(m);
+                    } catch (error) {
+                        this.logger.error(error);
+                    }
+                };
                 let setus: Setu[] = [];
                 if (setuReq != undefined) {
                     try {
@@ -107,7 +115,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                                 setuReq?.message
                                     .reply(img)
                                     .catch((err) => {
-                                        this.logger.error(err);
+                                        reply(err);
                                     })
                                     .then((value: void | MessageRet) => {
                                         if (value != null) {
