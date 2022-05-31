@@ -48,9 +48,9 @@ export class Plugin extends BotPlugin<PluginConfig> {
                     let searchResult: SearchResult = await SearchImg(url);
                     respMsg[0] = `搜索耗时: ${searchResult.UseTime}ms\n`;
                     let result = searchResult.Result;
-                    respMsg[0] += `有 ${result.length} 条结果\n`;
+                    respMsg[0] += `有 ${result.length} 条结果`;
                     if (result.length > 0) {
-                        let infoMsg = "";
+                        let infoMsg = "\n";
                         respMsg.push(segment.image(result[0].Img, true, 30));
                         if (result[0].Title !== "") infoMsg += `\n标题: ${result[0].Title}`;
                         if (result[0].Similarity !== 0)
