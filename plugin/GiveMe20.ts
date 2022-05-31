@@ -1,7 +1,7 @@
 import http from "https";
 import path from "path";
 import { AddImg } from "./SearchImg";
-import { GroupMessage, MessageElem, PrivateMessage, segment, XmlElem } from "oicq";
+import { GroupMessage, MessageElem, MessageRet, PrivateMessage, segment, XmlElem } from "oicq";
 import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
 import { IncomingMessage } from "http";
 export class PluginProfile implements BotPluginProfile {
@@ -68,9 +68,15 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 return;
             }
             let img = segment.image(imgUrl, true, 30);
-            message.reply(img).catch((err) => {
-                this.logger.error(err);
-            });
+            message
+                .reply(img)
+                .catch((err) => {
+                    this.logger.error(err);
+                })
+                .then((msg: void | MessageRet) => {
+                    if (msg === undefined) return;
+                    AddImg(msg.rand, imgUrl);
+                });
         });
         this.regKeyword(
             "^GiveMe20 开启$",
