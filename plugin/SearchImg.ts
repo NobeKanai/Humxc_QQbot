@@ -41,7 +41,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 }
             }
         });
-        this.regKeyword("搜图", "global", "allow_all", async (message) => {
+        this.regKeyword("s", "global", "allow_all", async (message) => {
             if (message.source === undefined) return;
             let url = this.allImage.get(message.source.rand);
             if (url === undefined) {
@@ -98,7 +98,9 @@ function SearchImg(url: string): Promise<SearchResult> {
             });
             resp.on("end", () => {
                 const $ = load(data);
-                let resulttables = $(".resulttable>tbody>tr");
+                let resulttables = $(
+                    ".result:not(.hidden):not(#result-hidden-notification)>.resulttable>tbody>tr"
+                );
                 let imgs: Image[] = [];
                 for (let i = 0; i < resulttables.length; i++) {
                     const resulttable = $(resulttables[i]);
