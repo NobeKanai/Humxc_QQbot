@@ -41,7 +41,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                 }
             }
         });
-        this.regKeyword("s", "global", "allow_all", async (message) => {
+        this.regKeyword("搜图", "global", "allow_all", async (message) => {
             if (message.source === undefined) return;
             let url = this.allImage.get(message.source.rand);
             if (url === undefined) {
