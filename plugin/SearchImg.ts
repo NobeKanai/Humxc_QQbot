@@ -25,18 +25,18 @@ export class PluginProfile implements BotPluginProfile {
 export class PluginConfig implements BotPluginConfig {
     Users: BotPluginUser[] = [];
 }
+var allImage: Map<number, string> = new Map<number, string>();
 export class Plugin extends BotPlugin<PluginConfig> {
-    public allImage: Map<number, string> = new Map<number, string>();
     public init() {
         setInterval(() => {
-            this.allImage.clear();
+            allImage.clear();
         }, 180000);
         this.client.on("message", (m) => {
             for (let i = 0; i < m.message.length; i++) {
                 const msg = m.message[i];
                 if (msg.type === "image") {
                     if (msg.url === undefined) return;
-                    this.allImage.set(m.rand, msg.url);
+                    allImage.set(m.rand, msg.url);
                     return;
                 }
             }
@@ -71,7 +71,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
             };
             let url;
             if (message.source !== undefined) {
-                url = this.allImage.get(message.source.rand);
+                url = allImage.get(message.source.rand);
                 if (url === undefined) {
                     reply("没有在聊天中找到图片\n尝试重发图片\n每半小时清除一次记录");
                     return;
@@ -153,4 +153,9 @@ function SearchImg(url: string): Promise<SearchResult> {
             });
         });
     });
+}
+// 导出函数，用于给搜图插件添加图片消息的索引
+export function AddImg(rand: number, url: string | undefined) {
+    if (url === undefined) return;
+    allImage.set(rand, url);
 }

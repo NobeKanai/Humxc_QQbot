@@ -3,6 +3,7 @@
  * https://api.lolicon.app/#/setu
  */
 import https from "https";
+import { AddImg } from "./SearchImg";
 import {
     PrivateMessageEvent,
     GroupMessageEvent,
@@ -111,6 +112,7 @@ export class Plugin extends BotPlugin<PluginConfig> {
                                     .then((value: void | MessageRet) => {
                                         if (value != null) {
                                             this.addSendedSetu(value, setu);
+                                            AddImg(value.rand, setu.urls.regular);
                                         }
                                     });
                             }

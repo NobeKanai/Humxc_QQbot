@@ -1,5 +1,6 @@
 import http from "https";
 import path from "path";
+import { AddImg } from "./SearchImg";
 import { GroupMessage, MessageElem, PrivateMessage, segment, XmlElem } from "oicq";
 import { BotPlugin, BotPluginConfig, BotPluginProfile, BotPluginUser } from "../lib/plugin";
 import { IncomingMessage } from "http";
@@ -283,7 +284,8 @@ export class Plugin extends BotPlugin<PluginConfig> {
             // 不采取直接单独发，所有消息全部转发
             // 全部发送给自己
             try {
-                await this.client.sendSelfMsg(img);
+                let msg = await this.client.sendSelfMsg(img);
+                AddImg(msg.rand, imgUrl);
                 // 缓解503错误
                 await sleep(200);
             } catch (error) {

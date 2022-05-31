@@ -146,7 +146,7 @@ export class BotClient extends Client {
             this.logger.error(err);
             throw err;
         });
-        return msg.message_id;
+        return msg;
     }
 }
 /** 创建一个客户端 (=new Client) */
