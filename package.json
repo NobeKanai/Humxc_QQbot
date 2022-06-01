@@ -1,0 +1,29 @@
+{
+    "name": "qqbot",
+    "version": "0.0.1",
+    "description": "一个基于 oicq 的 qq 机器人",
+    "main": "QQbot.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": "git+https://github.com/HumXC/QQbot.git",
+    "keywords": [
+        "oicq",
+        "qqbot"
+    ],
+    "author": "HumXC",
+    "license": "MPL-2.0",
+    "bugs": {
+        "url": "https://github.com/HumXC/QQbot/issues"
+    },
+    "homepage": "https://github.com/HumXC/QQbot#readme",
+    "devDependencies": {
+        "@types/node": "*",
+        "ts-node": "^10.8.0",
+        "typescript": "^4.7.2"
+    },
+    "private": false,
+    "dependencies": {
+        "oicq": "^2.2.3"
+    }
+}
