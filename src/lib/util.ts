@@ -10,7 +10,7 @@
  */
 /**
  * @description: 休眠一段时间，在休眠结束后返回，一般用于 await
- * @param {number} timeout 休眠的时间，单位毫秒(ms)
+ * @param {number} timeout - 休眠的时间，单位毫秒(ms)
  */
 export function sleep(timeout: number): Promise<void> {
     return new Promise<void>((resolve) => {

@@ -9,7 +9,7 @@
  * Copyright (c) 2022 by HumXC Hum-XC@outlook.com, All Rights Reserved.
  */
 
-export { Plugin, PluginProfile } from "./plugin/plugin";
+export * from "./plugin/plugin";
 export { Client } from "./client";
 export { Config } from "./config";
 export { PluginManager } from "./plugin/manager";

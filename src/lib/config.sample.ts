@@ -28,11 +28,9 @@ module.exports = {
     // 147258369: {
     // },
     这里填QQ号: {
-        //机器人账户的密码，如果不设置或留空将启动扫码登录
-        password: "",
-        //管理员账户
+        //管理员账户列表 number[]
         admin: [],
         //插件列表(string[]类型,plugin文件夹内js文件的名称)仅输入"ALL"将加载所有插件，留空则不添加插件
-        plugin_list: ["ALL"],
+        plugins: ["ALL"],
     },
 };

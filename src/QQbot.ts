@@ -13,6 +13,7 @@ import path from "path";
 import { Client, PluginManager } from "./lib/index";
 import log4js from "log4js";
 const logger = log4js.getLogger("BotFather");
+logger.level = log4js.levels.ALL;
 var config: any = undefined;
 const confpath = path.join(__dirname, "config.js");
 var bots: Map<number, Client> = new Map();
@@ -25,8 +26,9 @@ async function main() {
         return;
     }
     config = require(confpath);
+    // TODO: 验证 config.js 的正确性
     // 导入插件
-    PluginManager.load();
+    PluginManager.load(path.join(__dirname, "plugins"));
     // 设置日志
     logger.level = config.general.log_level;
     if (config.general.save_log_file === true)
