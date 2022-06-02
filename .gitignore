@@ -8,3 +8,5 @@ test/data
 log
 App
 yarn-error.log
+src/lib/config.js
+src/data
