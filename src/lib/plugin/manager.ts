@@ -2,7 +2,7 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
  * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-02
+ * @LastEditTime: 2022-06-03
  * @FilePath: \QQbot\src\lib\plugin\manager.ts
  * @Description:提供插件的加载，获取等功能
  *
@@ -12,9 +12,12 @@ import path from "path";
 import fs from "fs";
 import { BotPlugin, BotPluginProfile, BotPluginClass, BotPluginProfileClass } from "./plugin";
 import { getLogger, levels } from "log4js";
+import { util } from "..";
 var logger = getLogger("PluginManager");
 logger.level = levels.ALL;
 export class PluginManager {
+    // 存放插件的目录
+    public static pluginFolder: string = path.join(require?.main?.path || process.cwd(), "plugins");
     private constructor() {}
     private static readonly plugins: Map<string, [BotPluginProfileClass, BotPluginClass]> = new Map<
         string,
@@ -23,18 +26,18 @@ export class PluginManager {
 
     /**
      * @description: 加载 plugins 文件夹下的所有插件类。
-     * @param {string} pluginFolder - 插件的存放目录
      */
-    public static load(pluginFolder: string) {
+    public static load() {
+        util.mkDirsSync(this.pluginFolder);
         logger.mark("====== 准备插件 ======");
         // 插件文件的存放相对路径，相对与 "plugins" 文件夹
         let pluginPaths: string[] = [];
-        if (!fs.existsSync(pluginFolder)) {
-            fs.mkdirSync(pluginFolder);
+        if (!fs.existsSync(this.pluginFolder)) {
+            fs.mkdirSync(this.pluginFolder);
         }
         // 加载插件目录下所有文件
-        fs.readdirSync(pluginFolder).forEach((fileName: string) => {
-            let stat = fs.lstatSync(path.join(pluginFolder, fileName));
+        fs.readdirSync(this.pluginFolder).forEach((fileName: string) => {
+            let stat = fs.lstatSync(path.join(this.pluginFolder, fileName));
             if (/\.d\.ts/.exec(fileName) != null) return;
             if (stat.isFile()) {
                 if (/\.js$/.exec(fileName) != null || /\.ts/.exec(fileName)) {
@@ -43,7 +46,7 @@ export class PluginManager {
                 }
             } else {
                 // 如果是文件夹，则加载文件夹下与文件夹同名的文件
-                let file = path.join(pluginFolder, fileName, fileName);
+                let file = path.join(this.pluginFolder, fileName, fileName);
                 if (fs.existsSync(file + ".js") || fs.existsSync(file + ".ts")) {
                     pluginPaths.push(path.join(fileName, fileName));
                 }
@@ -54,7 +57,7 @@ export class PluginManager {
             logger.mark(`正在导入插件 [${pluginPath}]`);
             let plugin: any | undefined = undefined;
             try {
-                plugin = require(path.join(pluginFolder, pluginPath));
+                plugin = require(path.join(this.pluginFolder, pluginPath));
             } catch (error) {
                 logger.error("导入插件时出现错误，已跳过该插件:", error);
                 continue;
