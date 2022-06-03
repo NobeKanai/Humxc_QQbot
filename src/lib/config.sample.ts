@@ -2,14 +2,14 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
  * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-02
+ * @LastEditTime: 2022-06-03
  * @FilePath: \QQbot\src\lib\config.sample.ts
  * @Description:默认的配置示例
  *
  * Copyright (c) 2022 by HumXC Hum-XC@outlook.com, All Rights Reserved.
  */
 // 此文件必须名为config.js才能生效哦
-module.exports = {
+export default {
     // 通用配置，包含了 oicq 的配置
     // oicq 配置项: https://github.com/takayama-lily/oicq/blob/main/lib/client.ts#L617
     general: {

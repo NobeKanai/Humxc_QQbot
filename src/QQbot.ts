@@ -2,7 +2,7 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-01
  * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-02
+ * @LastEditTime: 2022-06-03
  * @FilePath: \QQbot\src\QQbot.ts
  * @Description:应用程序入口，创建和管理所有的账户
  *
@@ -15,7 +15,7 @@ import log4js from "log4js";
 const logger = log4js.getLogger("BotFather");
 logger.level = log4js.levels.ALL;
 var config: any = undefined;
-const confpath = path.join(__dirname, "config.js");
+const confpath = path.join(require?.main?.path || process.cwd(), "config.js");
 var bots: Map<number, Client> = new Map();
 
 main();
@@ -27,8 +27,9 @@ async function main() {
     }
     config = require(confpath);
     // TODO: 验证 config.js 的正确性
+    // TODO: 每个账户的 client 单独持有一个进程
     // 导入插件
-    PluginManager.load(path.join(__dirname, "plugins"));
+    PluginManager.load();
     // 设置日志
     logger.level = config.general.log_level;
     if (config.general.save_log_file === true)
