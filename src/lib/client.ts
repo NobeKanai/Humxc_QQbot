@@ -2,13 +2,13 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
  * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-02
+ * @LastEditTime: 2022-06-04
  * @FilePath: \QQbot\src\lib\client.ts
  * @Description:机器人的客户端，对 oicq 的封装
  *
  * Copyright (c) 2022 by HumXC Hum-XC@outlook.com, All Rights Reserved.
  */
-import * as oicq from "oicq";
+import * as _oicq from "oicq";
 import { Config } from "./config";
 import {
     BotPlugin,
@@ -17,20 +17,62 @@ import {
     BotPluginProfileClass,
 } from "./plugin/plugin";
 import { PluginManager } from "./plugin/manager";
-import { getStdInput } from "./util";
-export class Client {
+import { getStdInput, sleep } from "./util";
+import EventEmitter from "events";
+import { MessageHandeler } from "./message/handler";
+import { EventMap } from "./events";
+
+/** 事件接口 */
+export interface Client {
+    on<T extends keyof EventMap>(event: T, listener: EventMap<this>[T]): this;
+    on<S extends string | symbol>(
+        event: S & Exclude<S, keyof EventMap>,
+        listener: (this: this, ...args: any[]) => void
+    ): this;
+    once<T extends keyof EventMap>(event: T, listener: EventMap<this>[T]): this;
+    once<S extends string | symbol>(
+        event: S & Exclude<S, keyof EventMap>,
+        listener: (this: this, ...args: any[]) => void
+    ): this;
+    prependListener<T extends keyof EventMap>(event: T, listener: EventMap<this>[T]): this;
+    prependListener(event: string | symbol, listener: (this: this, ...args: any[]) => void): this;
+    prependOnceListener<T extends keyof EventMap>(event: T, listener: EventMap<this>[T]): this;
+    prependOnceListener(
+        event: string | symbol,
+        listener: (this: this, ...args: any[]) => void
+    ): this;
+}
+export class Client extends EventEmitter {
     // oicq 客户端
-    public _oicq: oicq.Client;
+    public oicq: _oicq.Client;
     // 存放的已经实例化的插件
     public plugins: Map<string, BotPlugin> = new Map<string, BotPlugin>();
     // 日志器
-    private logger: oicq.Logger;
+    private logger: _oicq.Logger;
+    // 管理员列表
+    public readonly admins: Set<number> = new Set<number>();
     // 配置文件
-    public readonly config: Config & oicq.Config;
-    constructor(uid: number, config: Config & oicq.Config) {
+    public readonly config: Config & _oicq.Config;
+    // 消息处理器
+    private messageHandeler: MessageHandeler;
+    constructor(uid: number, config: Config & _oicq.Config) {
+        super();
         this.config = config;
-        this._oicq = oicq.createClient(uid, config);
-        this.logger = this._oicq.logger;
+        this.oicq = _oicq.createClient(uid, config);
+        this.logger = this.oicq.logger;
+        this.messageHandeler = new MessageHandeler(this);
+
+        //一天更替事件
+        let nowDate = new Date();
+        let timeout =
+            new Date(nowDate.getFullYear(), nowDate.getMonth(), 2 + nowDate.getDate()).getTime() -
+            nowDate.getTime();
+        setTimeout(() => {
+            this.emit("newday");
+            setInterval(() => {
+                this.emit("newday");
+            }, 86400000);
+        }, timeout);
     }
     /**
      * @description: 启动机器人
@@ -57,7 +99,7 @@ export class Client {
         }
 
         // 二维码登录
-        this._oicq.on("system.login.qrcode", async () => {
+        this.oicq.on("system.login.qrcode", async () => {
             this.logger.info("输入密码开启密码登录，或者扫码之后按下回车登录。");
             let input = await getStdInput();
             if (input === "") {
@@ -74,7 +116,7 @@ export class Client {
         // 初始化插件
         for (const plugin of this.plugins.values()) {
             try {
-                plugin.init();
+                plugin.init.call(plugin);
             } catch (error) {
                 this.logger.error(`在初始化插件[${plugin.profile.Name}]时出现错误`, error);
             }
@@ -88,24 +130,25 @@ export class Client {
      */
     private login(passwd: string | undefined = undefined): Promise<boolean> {
         // 重置保存的 密码md5 值，如果不这样做，oicq 可能会使用旧密码登录。
-        this._oicq.password_md5 = undefined;
+        this.oicq.password_md5 = undefined;
         if (passwd === "") passwd = undefined;
         return new Promise<boolean>((resolve) => {
-            this._oicq.once("system.login.error", () => {
+            this.oicq.once("system.login.error", () => {
                 resolve(false);
             });
-            this._oicq.once("system.online", () => {
+            this.oicq.once("system.online", () => {
                 resolve(true);
             });
-            this._oicq.login(passwd);
+            this.oicq.login(passwd);
         });
     }
+
     /**
      * @description: 等待 oicq 完成登录
      */
     private waitOnline(): Promise<void> {
         return new Promise<void>((resolve) => {
-            this._oicq.once("system.online", () => {
+            this.oicq.once("system.online", () => {
                 resolve();
             });
         });
@@ -115,14 +158,43 @@ export class Client {
      * @description: 依次给此机器人账户的所有管理员发送消息。
      * @param {(string | oicq.MessageElem)[]} message - 需要发送的消息
      */
-    public async callAdmin(...message: (string | oicq.MessageElem)[]) {
-        for (let i = 0; i < this.config.admin.length; i++) {
-            const adm = this.config.admin[i];
+    public async callAdmin(...message: (string | _oicq.MessageElem)[]) {
+        for (const admin of this.admins.values()) {
             try {
-                await this._oicq.sendPrivateMsg(adm, message);
+                await this.oicq.sendPrivateMsg(admin, message);
+                // 发送过快可能会被检测为异常而冻结
+                await sleep(500);
             } catch (error) {
                 this.logger.error(error);
             }
+        }
+    }
+
+    /**
+     * @description: 判断 qq 号是否为此机器人的管理员。
+     * @param {number} uid - 需要判断的 qq 号
+     * @return {boolean} 如果传入的 qq 号在管理员列表内则返回 true
+     */
+    public isAdmin(uid: number): boolean {
+        return this.admins.has(uid);
+    }
+
+    /**
+     * @description: 判断 qq 号是否为此机器人的好友。
+     * @param {number} uid - 需要判断的 qq 号
+     * @return {boolean} 如果传入的 qq 号在好友列表内则返回 true
+     */
+    public isFriend(uid: number): boolean {
+        return this.oicq.fl.has(uid);
+    }
+    /** emit an event */
+    em<K extends keyof EventMap>(name: K, data?: any) {
+        let _name: string = name;
+        while (true) {
+            this.emit(_name, data);
+            let i = name.lastIndexOf(".");
+            if (i === -1) break;
+            _name = name.slice(0, i);
         }
     }
 }
