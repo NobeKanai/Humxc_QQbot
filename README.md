@@ -25,6 +25,12 @@ old 分支是我自己在使用的机器人，初衷用于练习编程，顺带�
      yarn install
     ```
 
+-   安装 typescript
+
+    ```bash
+    yarn global add typescript
+    ```
+
 -   编译 typescript
 
     ```bash
