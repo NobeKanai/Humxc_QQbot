@@ -42,7 +42,7 @@ export type MsgTrigger = {
 };
 export class MessageHandeler {
     private client: Client;
-    public msgFilters: { [key in MsgFilterPre]: MsgFilter };
+    private msgFilters: { [key in MsgFilterPre]: MsgFilter };
     constructor(client: Client) {
         this.client = client;
 

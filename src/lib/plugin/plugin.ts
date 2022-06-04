@@ -2,9 +2,9 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
  * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-03
+ * @LastEditTime: 2022-06-04
  * @FilePath: \QQbot\src\lib\plugin\plugin.ts
- * @Description:插件类，所有插件应当继承此类。
+ * @Description: 插件类，所有插件应当继承此类。
  *
  * Copyright (c) 2022 by HumXC Hum-XC@outlook.com, All Rights Reserved.
  */
@@ -15,13 +15,13 @@ import path from "path";
 import { util } from "..";
 import { Client } from "../client";
 export interface BotPluginProfile {
-    // 插件名称
+    /** 插件名称 */
     Name: string;
-    // 机器人客户端版本
+    /** 机器人客户端版本 */
     BotVersion: string;
-    // 插件版本
+    /** 插件版本 */
     PluginVersion: string;
-    // 描述信息
+    /** 描述信息 */
     Info: string;
 }
 export type BotPluginClass = { new (client: Client, profile: BotPluginProfile): BotPlugin };
@@ -46,6 +46,17 @@ export class BotPlugin {
      */
     public init() {
         throw new Error(this.profile.Name + "没有重写 init() 方法");
+    }
+
+    /**
+     * @description: 从磁盘的插件数据目录加载 json 文件并反序列化成 js 对象。
+     * @param {string} name - 保存在磁盘上的文件名称，不需要携带扩展名
+     * @param {T} defaultData - 对象的默认值，此参数不应该和类 PluginData 有重合。如果插件数据目录中不存在名为 [name].json 的文件，则会根据此参数创建一个文件。
+     * @return {PluginData & T} 一个实例对象，封装了一些方法。
+     */
+    public getData<T>(name: string, defaultData: T): PluginData & T {
+        // TODO:检查default是否含有
+        return Object.assign(new PluginData(this, name, defaultData));
     }
 }
 
@@ -104,40 +115,51 @@ class PluginLogger {
     }
 }
 
-export class PluginData<T> {
-    // 插件存放数据文件的目录
-    public readonly dataPath: string;
-    public data: T;
-    // 数据的初始值
-    private defaultData: T | undefined = undefined;
+class PluginData {
+    /** 插件存放数据文件的目录 */
+    public dataPath?: string;
+    /** 数据的初始值 */
+    public defaultData?: unknown;
+
     /**
      * @description:
      * @param {BotPlugin} plugin - 插件的实例
      * @param {string} fileName - 文件名称 (不带扩展名，扩展名被定义为 .json)
      * @param {T} defaultData - 配置的默认值，必须是能被转成 json 的对象
      */
-    constructor(plugin: BotPlugin, fileName: string, defaultData: T) {
+    constructor(plugin: BotPlugin, fileName: string, defaultData: unknown) {
         this.dataPath = path.join(plugin.client.oicq.dir, plugin.profile.Name, fileName + ".json");
         this.defaultData = defaultData;
-        this.data = this.getConfig() as T;
+        this.load();
     }
     /**
-     * @description: 从硬盘获取插件的配置，如果不存在则创建一个。
+     * @description: 从硬盘获取插件的文件，如果不存在则根据 getData 传入的对象创建一个。
      */
-    private getConfig(): unknown {
-        util.mkDirsSync(path.dirname(this.dataPath));
-        if (fs.existsSync(this.dataPath)) {
-            let obj = JSON.parse(fs.readFileSync(this.dataPath).toString());
+    public load() {
+        let dataPath = this.dataPath as string;
+        util.mkDirsSync(path.dirname(dataPath));
+        if (fs.existsSync(dataPath)) {
+            let obj = JSON.parse(fs.readFileSync(dataPath).toString());
             util.verifyExtends(obj, this.defaultData);
+            Object.assign(this, obj);
+            return;
         }
 
         // 根据 defaultConfig 创建一个新的配置文件
-        util.mkJsonFile(this.dataPath, this.defaultData);
-        return this.defaultData;
+        util.mkJsonFile(dataPath, this.defaultData);
+        Object.assign(this, this.defaultData);
     }
 
     /**
-     * @description: 保存配置文件。
+     * @description: 保存到 Json 文件。
      */
-    public saveConfig(): void {}
+    public save(): void {
+        let dataPath = this.dataPath as string;
+        let defaultData = this.defaultData;
+        delete this.dataPath;
+        delete this.defaultData;
+        util.mkJsonFile(dataPath, this);
+        this.dataPath = dataPath;
+        this.defaultData = defaultData;
+    }
 }
