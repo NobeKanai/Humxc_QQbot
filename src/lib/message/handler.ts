@@ -30,13 +30,13 @@ export type MsgHandl = (
     message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
 ) => void;
 export type MsgTrigger = {
-    // 插件实例
+    /** 插件实例 */
     plugin: BotPlugin;
-    // 触发的范围
+    /** 触发的范围 */
     area: MsgArea;
-    // 用于过滤消息的过滤器
+    /** 用于过滤消息的过滤器 */
     filter: MsgFilter;
-    // 用于匹配消息的文本
+    /** 用于匹配消息的文本 */
     regexp: RegExp | string;
     handel: MsgHandl;
 };

@@ -55,7 +55,15 @@ export class BotPlugin {
      * @return {PluginData & T} 一个实例对象，封装了一些方法。
      */
     public getData<T>(name: string, defaultData: T): PluginData & T {
-        // TODO:检查default是否含有
+        let d = defaultData as any;
+        if (
+            d.dataPath !== undefined ||
+            d.defaultData !== undefined ||
+            d.save !== undefined ||
+            d.load !== undefined
+        ) {
+            throw new Error("defaultData 不能包含 dataPath, defaultData, save, load 属性");
+        }
         return Object.assign(new PluginData(this, name, defaultData));
     }
 }
