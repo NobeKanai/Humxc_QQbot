@@ -2,7 +2,7 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
  * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-04
+ * @LastEditTime: 2022-06-06
  * @FilePath: \QQbot\src\lib\client.ts
  * @Description:机器人的客户端，对 oicq 的封装
  *
@@ -54,13 +54,13 @@ export class Client extends EventEmitter {
     // 配置文件
     public readonly config: Config & _oicq.Config;
     // 消息处理器
-    private messageHandeler: MessageHandeler;
+    public msgHandeler: MessageHandeler;
     constructor(uid: number, config: Config & _oicq.Config) {
         super();
         this.config = config;
         this.oicq = _oicq.createClient(uid, config);
         this.logger = this.oicq.logger;
-        this.messageHandeler = new MessageHandeler(this);
+        this.msgHandeler = new MessageHandeler(this);
 
         //一天更替事件
         let nowDate = new Date();
@@ -116,7 +116,9 @@ export class Client extends EventEmitter {
         // 初始化插件
         for (const plugin of this.plugins.values()) {
             try {
+                this.logger.mark(`正在初始化插件 ${plugin.profile.Name}`);
                 plugin.init.call(plugin);
+                plugin.enable.call(plugin);
             } catch (error) {
                 this.logger.error(`在初始化插件[${plugin.profile.Name}]时出现错误`, error);
             }

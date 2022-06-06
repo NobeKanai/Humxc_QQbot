@@ -2,7 +2,7 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
  * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-04
+ * @LastEditTime: 2022-06-06
  * @FilePath: \QQbot\src\lib\plugin\plugin.ts
  * @Description: 插件类，所有插件应当继承此类。
  *
@@ -10,10 +10,20 @@
  */
 import fs from "fs";
 import * as log4js from "log4js";
-import { LogLevel } from "oicq";
+import {
+    DiscussMessage,
+    DiscussMessageEvent,
+    GroupMessage,
+    GroupMessageEvent,
+    LogLevel,
+    PrivateMessage,
+    PrivateMessageEvent,
+} from "oicq";
 import path from "path";
 import { util } from "..";
 import { Client } from "../client";
+import { MsgFilter, MsgFilterPre } from "../message/filter";
+import { MsgArea, MsgHandler, MsgTrigger } from "../message/handler";
 export interface BotPluginProfile {
     /** 插件名称 */
     Name: string;
@@ -34,7 +44,7 @@ export class BotPlugin {
     public client: Client;
     public logger: PluginLogger;
     public profile: BotPluginProfile;
-
+    public keywords: MsgTrigger[] = [];
     constructor(client: Client, profile: BotPluginProfile) {
         this.client = client;
         this.profile = profile;
@@ -66,6 +76,67 @@ export class BotPlugin {
         }
         return Object.assign(new PluginData(this, name, defaultData));
     }
+
+    /**
+     * @description: 给插件添加可被触发的关键词
+     * @param {MsgArea} area - 触发的范围
+     * @param {MsgFilter | MsgFilterPre} filter - 过滤器，可以是预定义的过滤器，也可以自定义过滤器
+     * @param {string | RegExp} keyword - 匹配的关键词
+     * @param {MsgHandler} handler - 匹配成功后运行的函数
+     */
+    public addKeyword(
+        area: MsgArea,
+        filter: MsgFilter | MsgFilterPre,
+        keyword: string | RegExp,
+        handler: MsgHandler
+    ) {
+        if (typeof keyword === "string") {
+            keyword = new RegExp(keyword);
+        }
+        if (typeof filter === "string") {
+            switch (filter) {
+                case "allow_all":
+                case "atme":
+                case "bot_admin":
+                case "friend":
+                case "group_admin":
+                case "group_member":
+                case "group_owner":
+                    filter = this.client.msgHandeler.msgFilters[filter];
+                    break;
+
+                default:
+                    this.logger.warn(
+                        `在处理 keyword: "${keyword.source}" 时，指定 filter 未找到，此关键词将不会生效。`
+                    );
+                    filter = () => {
+                        return false;
+                    };
+                    break;
+            }
+        }
+        let trigger: MsgTrigger = {
+            area: area,
+            filter: filter,
+            regexp: keyword,
+            handler: (msg) => {
+                this.logger.debug(`触发了关键词: [ ${(keyword as RegExp).source} ]`);
+                handler(msg);
+            },
+            plugin: this,
+        };
+        this.keywords.push(trigger);
+    }
+
+    /**
+     * @description: 开启插件上的命令
+     */
+    public enable() {
+        for (let i = 0; i < this.keywords.length; i++) {
+            const keyword = this.keywords[i];
+            this.client.msgHandeler.msgTriggers.add(keyword);
+        }
+    }
 }
 
 /**
@@ -75,13 +146,27 @@ class PluginLogger {
     private logger: log4js.Logger;
     private client: Client;
     private pluginName: string;
-    public debug: (message: any, ...args: any[]) => void;
-    public error: (message: any, ...args: any[]) => void;
-    public fatal: (message: any, ...args: any[]) => void;
-    public info: (message: any, ...args: any[]) => void;
-    public mark: (message: any, ...args: any[]) => void;
-    public trace: (message: any, ...args: any[]) => void;
-    public warn: (message: any, ...args: any[]) => void;
+    public debug(message: any, ...args: any[]) {
+        this.logger.debug(message, ...args);
+    }
+    public error(message: any, ...args: any[]) {
+        this.logger.error(message, ...args);
+    }
+    public fatal(message: any, ...args: any[]) {
+        this.logger.fatal(message, ...args);
+    }
+    public info(message: any, ...args: any[]) {
+        this.logger.info(message, ...args);
+    }
+    public mark(message: any, ...args: any[]) {
+        this.logger.mark(message, ...args);
+    }
+    public trace(message: any, ...args: any[]) {
+        this.logger.trace(message, ...args);
+    }
+    public warn(message: any, ...args: any[]) {
+        this.logger.warn(message, ...args);
+    }
     constructor(client: Client, pluginName: string) {
         this.pluginName = pluginName;
         this.client = client;
@@ -89,14 +174,6 @@ class PluginLogger {
             `[${this.client.oicq.apk.display}:${this.client.oicq.uin}] [${pluginName}]`
         );
         this.logger.level = this.client.config.log_level as LogLevel;
-
-        this.debug = this.logger.debug;
-        this.error = this.logger.error;
-        this.fatal = this.logger.fatal;
-        this.info = this.logger.info;
-        this.mark = this.logger.mark;
-        this.trace = this.logger.trace;
-        this.warn = this.logger.warn;
         if (this.client.config.error_call_admin == true) {
             this.error = (message: any, ...args: any[]) => {
                 // this.logger.error("测试错误", "啊对对对", new Error("error"));
