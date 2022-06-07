@@ -1,9 +1,9 @@
 /*
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-03
- * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-06
- * @FilePath: \QQbot\src\lib\message\handler.ts
+ * @LastEditors: HumXC hum-xc@outlook.com
+ * @LastEditTime: 2022-06-07
+ * @FilePath: \QQbot\src\lib\message\manager.ts
  * @Description: 消息处理器，通过监听 oicq 的 message 事件来给机器人客户端提供消息相关的功能。
  *
  * Copyright (c) 2022 by HumXC Hum-XC@outlook.com, All Rights Reserved.
@@ -16,6 +16,7 @@ import {
     PrivateMessageEvent,
     GroupMessageEvent,
     DiscussMessageEvent,
+    Message,
 } from "oicq";
 import { Client } from "../client";
 import { BotPlugin } from "../plugin/plugin";
@@ -145,13 +146,13 @@ class MsgTriggerContainer {
     }
 }
 
-export class MessageHandeler {
+export class MessageManager {
     private client: Client;
-    public msgFilters: { [key in MsgFilterPre]: MsgFilter };
+    public static msgFilters: { [key in MsgFilterPre]: MsgFilter };
     public msgTriggers: MsgTriggerContainer = new MsgTriggerContainer();
     constructor(client: Client) {
         this.client = client;
-        this.msgFilters = {
+        MessageManager.msgFilters = {
             allow_all: getMsgFilter("allow_all"),
             atme: getMsgFilter("atme"),
             bot_admin: getMsgFilter("bot_admin")(client),
@@ -162,54 +163,55 @@ export class MessageHandeler {
         };
         // 监听所有消息
         this.client.oicq.on("message", (message) => {
-            // 遍历所有触发器并进行触发
-            let globalTrigger = this.msgTriggers.get("global");
-            for (const pluginName in globalTrigger) {
-                const triggers = globalTrigger[pluginName];
-                for (const key in triggers) {
-                    const trigger = triggers[key];
-                    if (trigger.filter(message)) {
-                        trigger.handler.call(trigger.plugin, message);
-                    }
-                }
-            }
+            this.triggerTrigger("global", message);
         });
+
         // 监听群聊消息
         this.client.oicq.on("message.group", (message) => {
-            if (this.msgFilters.bot_admin(message)) {
+            if (MessageManager.msgFilters.bot_admin(message)) {
                 client.em("admin.message.group", message);
             }
 
-            // 遍历所有触发器并进行触发
-            let groupTrigger = this.msgTriggers.get("group");
-            for (const pluginName in groupTrigger) {
-                const triggers = groupTrigger[pluginName];
-                for (const key in triggers) {
-                    const trigger = triggers[key];
-                    if (trigger.filter(message)) {
-                        trigger.handler.call(trigger.plugin, message);
-                    }
-                }
-            }
+            this.triggerTrigger("group", message);
         });
 
         // 监听私聊消息
         this.client.oicq.on("message.private", (message) => {
-            if (this.msgFilters.bot_admin(message)) {
+            if (MessageManager.msgFilters.bot_admin(message)) {
                 client.em("admin.message.private", message);
             }
 
-            // 遍历所有触发器并进行触发
-            let privateTrigger = this.msgTriggers.get("private");
-            for (const pluginName in privateTrigger) {
-                const triggers = privateTrigger[pluginName];
-                for (const key in triggers) {
-                    const trigger = triggers[key];
-                    if (trigger.filter(message)) {
+            this.triggerTrigger("private", message);
+        });
+    }
+    /**
+     * @description: 触发 area 下的触发器(ಥ _ ಥ)
+     */
+    private triggerTrigger(
+        area: MsgArea,
+        message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
+    ) {
+        // 遍历所有触发器并进行触发
+        let msg = "";
+        for (let i = 0; i < message.message.length; i++) {
+            const _msg = message.message[i];
+            if (_msg.type !== "text") {
+                continue;
+            }
+            msg += _msg.text;
+        }
+        let globalTrigger = this.msgTriggers.get(area);
+        for (const pluginName in globalTrigger) {
+            const triggers = globalTrigger[pluginName];
+            for (const key in triggers) {
+                const trigger = triggers[key];
+                if (trigger.filter(message)) {
+                    let regResult = trigger.regexp.exec(msg);
+                    if (regResult?.length !== undefined && regResult.length !== 0) {
                         trigger.handler.call(trigger.plugin, message);
                     }
                 }
             }
-        });
+        }
     }
 }
