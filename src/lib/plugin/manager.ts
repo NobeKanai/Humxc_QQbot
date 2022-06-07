@@ -11,7 +11,7 @@
 import path from "path";
 import fs from "fs";
 import { BotPlugin, BotPluginProfile, BotPluginClass, BotPluginProfileClass } from "./plugin";
-import { getLogger, levels, Logger } from "log4js";
+import { getLogger, levels } from "log4js";
 import { util } from "..";
 var logger = getLogger("PluginManager");
 logger.level = levels.ALL;

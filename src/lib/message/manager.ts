@@ -9,15 +9,7 @@
  * Copyright (c) 2022 by HumXC Hum-XC@outlook.com, All Rights Reserved.
  */
 
-import {
-    PrivateMessage,
-    GroupMessage,
-    DiscussMessage,
-    PrivateMessageEvent,
-    GroupMessageEvent,
-    DiscussMessageEvent,
-    Message,
-} from "oicq";
+import { PrivateMessageEvent, GroupMessageEvent, DiscussMessageEvent } from "oicq";
 import { Client } from "../client";
 import { BotPlugin } from "../plugin/plugin";
 import { getMsgFilter, MsgFilter, MsgFilterPre } from "./filter";

@@ -11,15 +11,7 @@
 
 import fs from "fs";
 import * as log4js from "log4js";
-import {
-    DiscussMessage,
-    DiscussMessageEvent,
-    GroupMessage,
-    GroupMessageEvent,
-    LogLevel,
-    PrivateMessage,
-    PrivateMessageEvent,
-} from "oicq";
+import { LogLevel } from "oicq";
 import path from "path";
 import { util } from "..";
 import { Client } from "../client";

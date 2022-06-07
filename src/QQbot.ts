@@ -10,10 +10,9 @@
  */
 import fs from "fs";
 import path from "path";
-import { BotPluginClass, BotPluginProfileClass, Client, PluginManager, util } from "./lib/index";
+import { Client, PluginManager } from "./lib/index";
 import log4js from "log4js";
 import * as child_process from "child_process";
-import { serialize, Serializer } from "v8";
 
 const args = process.argv.slice(2);
 if (args[0] === "child") {
