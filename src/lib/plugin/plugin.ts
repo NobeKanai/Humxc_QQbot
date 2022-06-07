@@ -26,6 +26,7 @@ import { Client } from "../client";
 import { MsgFilter, MsgFilterPre } from "../message/filter";
 import { MessageManager, MsgArea, MsgHandler, MsgTrigger } from "../message/manager";
 import { Keyword } from "../message/keyword";
+import { Command, CommandFunc } from "../message/command";
 export interface BotPluginProfile {
     /** 插件名称 */
     Name: string;
@@ -47,6 +48,7 @@ export class BotPlugin {
     public logger: PluginLogger;
     public profile: BotPluginProfile;
     public keywords: Keyword[] = [];
+    public commands: Command[] = [];
     constructor(client: Client, profile: BotPluginProfile) {
         this.client = client;
         this.profile = profile;
@@ -96,6 +98,26 @@ export class BotPlugin {
         this.keywords.push(_keyword);
         this.client.keywordManager.reg(_keyword);
         return _keyword;
+    }
+
+    /**
+     * @description: 给插件添加命令
+     * @param {MsgArea} area - 触发的范围
+     * @param {MsgFilter | MsgFilterPre} filter - 过滤器，可以是预定义的过滤器，也可以自定义过滤器
+     * @param {string} command - 命令
+     * @param {CommandFunc} func - 命令匹配成功后运行的函数
+     */
+    public regCommand(
+        area: MsgArea,
+        filter: MsgFilter | MsgFilterPre,
+        command: string,
+        description: string,
+        func: CommandFunc
+    ): Command {
+        let _command: Command = new Command(this, area, filter, command, description, func);
+        this.commands.push(_command);
+        this.client.commandManager.reg(_command);
+        return _command;
     }
 }
 

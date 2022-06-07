@@ -28,6 +28,7 @@ import { getMsgFilter, MsgFilter, MsgFilterPre } from "./filter";
 export type MsgArea = "global" | "private" | "group";
 
 export type MsgHandler = (
+    /** 需要处理的消息 */
     message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent
 ) => void;
 
@@ -206,8 +207,8 @@ export class MessageManager {
             for (const key in triggers) {
                 const trigger = triggers[key];
                 if (trigger.filter(message)) {
-                    let regResult = trigger.regexp.exec(msg);
-                    if (regResult?.length !== undefined && regResult.length !== 0) {
+                    let execResult = trigger.regexp.exec(msg);
+                    if (execResult?.length !== undefined && execResult.length !== 0) {
                         trigger.handler.call(trigger.plugin, message);
                     }
                 }

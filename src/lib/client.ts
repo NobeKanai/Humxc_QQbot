@@ -22,6 +22,7 @@ import EventEmitter from "events";
 import { MessageManager } from "./message/manager";
 import { EventMap } from "./events";
 import { KeywordManager } from "./message/keyword";
+import { CommandManager } from "./message/command";
 
 /** 事件接口 */
 export interface Client {
@@ -58,6 +59,8 @@ export class Client extends EventEmitter {
     private msgManager: MessageManager;
     // 关键词管理器
     public keywordManager: KeywordManager;
+    // 命令管理器
+    public commandManager: CommandManager;
     constructor(uid: number, config: Config & _oicq.Config) {
         super();
         this.config = config;
@@ -65,6 +68,7 @@ export class Client extends EventEmitter {
         this.logger = this.oicq.logger;
         this.msgManager = new MessageManager(this);
         this.keywordManager = new KeywordManager(this, this.msgManager);
+        this.commandManager = new CommandManager(this, this.msgManager);
         //一天更替事件
         let nowDate = new Date();
         let timeout =
