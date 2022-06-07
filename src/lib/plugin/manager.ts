@@ -85,7 +85,7 @@ export class PluginManager {
                     logger.mark(`PluginVersion: ${pluginProfile.PluginVersion}`);
                     logger.mark(`BotVersion: ${pluginProfile.BotVersion}`);
                     logger.mark(`Info: ${pluginProfile.Info}`);
-                    this.plugins.set(plugin.Profile.Name, [plugin.Profile, plugin.Plugin]);
+                    this.plugins.set(pluginProfile.Name, [plugin.Profile, plugin.Plugin]);
                     logger.mark("=====================");
                 } catch (error) {
                     logger.error("装载插件时出现错误，已跳过该插件\n", error);
