@@ -1,8 +1,8 @@
 /*
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
- * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-03
+ * @LastEditors: HumXC hum-xc@outlook.com
+ * @LastEditTime: 2022-06-07
  * @FilePath: \QQbot\src\lib\plugin\manager.ts
  * @Description:提供插件的加载，获取等功能
  *
@@ -11,7 +11,7 @@
 import path from "path";
 import fs from "fs";
 import { BotPlugin, BotPluginProfile, BotPluginClass, BotPluginProfileClass } from "./plugin";
-import { getLogger, levels } from "log4js";
+import { getLogger, levels, Logger } from "log4js";
 import { util } from "..";
 var logger = getLogger("PluginManager");
 logger.level = levels.ALL;
@@ -27,7 +27,10 @@ export class PluginManager {
     /**
      * @description: 加载 plugins 文件夹下的所有插件类。
      */
-    public static load() {
+    public static load(showLog: boolean = true) {
+        if (showLog === false) {
+            logger.level = levels.OFF;
+        }
         util.mkDirsSync(this.pluginFolder);
         logger.mark("====== 准备插件 ======");
         // 插件文件的存放相对路径，相对与 "plugins" 文件夹

@@ -1,14 +1,16 @@
 /*
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
- * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-02
+ * @LastEditors: HumXC hum-xc@outlook.com
+ * @LastEditTime: 2022-06-07
  * @FilePath: \QQbot\src\lib\config.ts
  * @Description:
  *
  * Copyright (c) 2022 by HumXC Hum-XC@outlook.com, All Rights Reserved.
  */
 export type Config = {
+    // 开启子进程
+    child_process: boolean;
     // 日志出现错误时发送给管理员
     error_call_admin: boolean;
     // 是否将日志输出到文件

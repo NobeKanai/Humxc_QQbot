@@ -1,8 +1,8 @@
 /*
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
- * @LastEditors: HumXC Hum-XC@outlook.com
- * @LastEditTime: 2022-06-02
+ * @LastEditors: HumXC hum-xc@outlook.com
+ * @LastEditTime: 2022-06-07
  * @FilePath: \QQbot\src\lib\config.sample.js
  * @Description:默认的配置示例的 js 版本，就是 config.sample.ts 编译后的文件。
  * 这个文件存在的意义就是为了在使用 ts-node 直接运行 QQbot.ts 时
@@ -20,6 +20,8 @@ module.exports = {
         log_level: "info",
 
         // 以下为机器人配置
+        // 开启子进程 试验功能，并没有过多测试
+        child_process: false,
         // 日志出现错误时发送给管理员
         error_call_admin: true,
         // 是否将日志输出到文件
