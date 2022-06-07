@@ -10,12 +10,7 @@
  */
 import * as _oicq from "oicq";
 import { Config } from "./config";
-import {
-    BotPlugin,
-    BotPluginClass,
-    BotPluginProfile,
-    BotPluginProfileClass,
-} from "./plugin/plugin";
+import { BotPlugin, BotPluginClass, BotPluginProfileClass } from "./plugin/plugin";
 import { PluginManager } from "./plugin/manager";
 import { getStdInput, sleep } from "./util";
 import EventEmitter from "events";
