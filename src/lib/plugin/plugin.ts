@@ -2,7 +2,7 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
  * @LastEditors: HumXC hum-xc@outlook.com
- * @LastEditTime: 2022-06-07
+ * @LastEditTime: 2022-06-09
  * @FilePath: \QQbot\src\lib\plugin\plugin.ts
  * @Description: 插件类，所有插件应当继承此类。
  *
@@ -11,7 +11,7 @@
 
 import fs from "fs";
 import * as log4js from "log4js";
-import { LogLevel } from "oicq";
+import { LogLevel, User } from "oicq";
 import path from "path";
 import { util } from "..";
 import { Client } from "../client";
@@ -220,5 +220,96 @@ class PluginData {
         util.mkJsonFile(dataPath, this);
         this.dataPath = dataPath;
         this.defaultData = defaultData;
+    }
+}
+
+type UserType = "Person" | "Group";
+
+/** 插件用户接口，可以扩展此接口实现更多功能 */
+export interface PluginUser {
+    uid: number;
+    type: UserType;
+}
+
+export class PluginUserManager<T extends PluginUser> {
+    private dataFile: PluginData & { Users: { Person: {}; Group: {} } };
+
+    /**
+     * @description: 插件的用户管理器，提供对用户信息的增删改查。对用户的操作会同步到 dataFile，但是此类不提供对文件的保存操作，需要使用 PluginData.save() 保存文件。
+     * @param {PluginData} dataFile - 保存有用户数据的文件，会查找 "Users" 节点，如果没有则会创建。
+     */
+    public constructor(dataFile: PluginData) {
+        if (!Object.prototype.hasOwnProperty.call(dataFile, "Users")) {
+            // 新建 Users 属性存储 User
+            Object.defineProperty(dataFile, "Users", {
+                value: {
+                    Person: {},
+                    Group: {},
+                },
+                writable: true,
+                enumerable: true,
+                configurable: true,
+            });
+        }
+        this.dataFile = dataFile as PluginData & { Users: { Person: {}; Group: {} } };
+    }
+    /**
+     * @description: 根据用户类型获取用户列表
+     * @param {UserType} type
+     * @return {*}
+     */
+    private getTarget(type: UserType): any {
+        switch (type) {
+            case "Group":
+                return this.dataFile.Users.Group;
+            case "Person":
+                return this.dataFile.Users.Person;
+            default:
+                throw new Error(`未知的用户类型：${type}`);
+        }
+    }
+
+    /**
+     * @description: 获取一个用户。
+     * @param {number} uid - 用户的 qq 号码
+     * @param {UserType} type - 用户类型，个人/群聊
+     * @return {T | undefined} 返回一个用户，如果没有此用户则为 undefined。
+     */
+    get(uid: number, type: UserType): T | undefined {
+        let target = this.getTarget(type);
+        if (Object.prototype.hasOwnProperty.call(target, uid)) {
+            return target[uid];
+        }
+    }
+
+    /**
+     * @description: 添加/修改 一个用户。
+     * @param {T} user - 需要被 添加/修改 的用户
+     */
+    set(user: T) {
+        let target = this.getTarget(user.type);
+        if (!Object.prototype.hasOwnProperty.call(target, user.uid)) {
+            // 新建 Users 属性存储 User
+            Object.defineProperty(this.dataFile.Users, user.uid, {
+                value: user,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+            });
+        } else {
+            target[user.uid] = user;
+        }
+    }
+
+    /**
+     * @description: 移除一个用户
+     * @param {number} uid - 用户的 qq 号码
+     * @param {UserType} type - 用户类型，个人/群聊
+     */
+    rm(uid: number, type: UserType) {
+        let target = this.getTarget(type);
+        if (Object.prototype.hasOwnProperty.call(target, uid)) {
+            delete target[uid];
+        }
     }
 }
