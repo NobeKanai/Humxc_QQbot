@@ -2,7 +2,7 @@
  * @Author: error: git config user.name && git config user.email & please set dead value or install git
  * @Date: 2022-06-07
  * @LastEditors: HumXC hum-xc@outlook.com
- * @LastEditTime: 2022-06-07
+ * @LastEditTime: 2022-06-09
  * @FilePath: \QQbot\src\lib\message\command.ts
  * @Description:提供 [命令] 相关内容
  *
@@ -20,10 +20,15 @@ import { MessageManager, MsgArea, MsgHandler, MsgTrigger } from "./manager";
  * @param {string[]} args - 除命令本身之外的字符串会被按空格解析成字符串数组传递
  * @return {boolean} 表示此命令是否执行成功，这个值是自由的。如果返回 false，将给调用者回复命令的描述 Command.description
  */
-export type CommandFunc = (
-    message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
-    ...args: string[]
-) => boolean;
+export type CommandFunc =
+    | ((
+          message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
+          ...args: string[]
+      ) => boolean)
+    | ((
+          message: PrivateMessageEvent | GroupMessageEvent | DiscussMessageEvent,
+          ...args: string[]
+      ) => Promise<boolean>);
 
 /** 命令类，提供类似于 "命令行程序的交互" */
 export class Command {
