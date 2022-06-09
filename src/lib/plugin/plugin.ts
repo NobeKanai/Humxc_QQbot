@@ -19,6 +19,7 @@ import { MsgFilter, MsgFilterPre } from "../message/filter";
 import { MessageManager, MsgArea, MsgHandler, MsgTrigger } from "../message/manager";
 import { Keyword } from "../message/keyword";
 import { Command, CommandFunc } from "../message/command";
+import { verify } from "crypto";
 export interface BotPluginProfile {
     /** 插件名称 */
     Name: string;
@@ -179,16 +180,25 @@ class PluginData {
     public dataPath?: string;
     /** 数据的初始值 */
     public defaultData?: unknown;
+    /** 是否开启验证 */
+    private isEnableVerify: boolean;
 
     /**
      * @description:
      * @param {BotPlugin} plugin - 插件的实例
      * @param {string} fileName - 文件名称 (不带扩展名，扩展名被定义为 .json)
      * @param {T} defaultData - 配置的默认值，必须是能被转成 json 的对象
+     * @param {boolean} isEnableVerify - 是否开启验证，如果为 true，将会在加载文件后验证类与 defaultData 的继承关系。
      */
-    constructor(plugin: BotPlugin, fileName: string, defaultData: unknown) {
+    constructor(
+        plugin: BotPlugin,
+        fileName: string,
+        defaultData: unknown,
+        isEnableVerify: boolean = true
+    ) {
         this.dataPath = path.join(plugin.client.oicq.dir, plugin.profile.Name, fileName + ".json");
         this.defaultData = defaultData;
+        this.isEnableVerify = isEnableVerify;
         this.load();
     }
     /**
@@ -199,7 +209,7 @@ class PluginData {
         util.mkDirsSync(path.dirname(dataPath));
         if (fs.existsSync(dataPath)) {
             let obj = JSON.parse(fs.readFileSync(dataPath).toString());
-            util.verifyExtends(obj, this.defaultData);
+            if (this.isEnableVerify) util.verifyExtends(obj, this.defaultData);
             Object.assign(this, obj);
             return;
         }
