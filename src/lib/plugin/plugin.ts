@@ -11,7 +11,7 @@
 
 import fs from "fs";
 import * as log4js from "log4js";
-import { LogLevel, User } from "oicq";
+import { LogLevel, MessageRet, Quotable, Sendable, User } from "oicq";
 import path from "path";
 import { util } from "..";
 import { Client } from "../client";
@@ -19,7 +19,6 @@ import { MsgFilter, MsgFilterPre } from "../message/filter";
 import { MessageManager, MsgArea, MsgHandler, MsgTrigger } from "../message/manager";
 import { Keyword } from "../message/keyword";
 import { Command, CommandFunc } from "../message/command";
-import { verify } from "crypto";
 export interface BotPluginProfile {
     /** 插件名称 */
     Name: string;
@@ -42,8 +41,29 @@ export class BotPlugin {
     public profile: BotPluginProfile;
     public keywords: Keyword[] = [];
     public commands: Command[] = [];
+    /**
+     * @description: 发送私聊消息。
+     */
+    public sendPrivateMsg: (
+        user_id: number,
+        message: Sendable,
+        source?: Quotable | undefined
+    ) => Promise<MessageRet>;
+    /**
+     * @description: 发送群聊消息。
+     */
+    public sendGroupMsg: (
+        user_id: number,
+        message: Sendable,
+        source?: Quotable | undefined
+    ) => Promise<MessageRet>;
+
     constructor(client: Client, profile: BotPluginProfile) {
         this.client = client;
+
+        this.sendPrivateMsg = this.client.oicq.sendPrivateMsg;
+        this.sendGroupMsg = this.client.oicq.sendGroupMsg;
+
         this.profile = profile;
         this.logger = new PluginLogger(client, profile.Name);
     }
@@ -116,6 +136,38 @@ export class BotPlugin {
         this.commands.push(_command);
         this.client.commandManager.reg(_command);
         return _command;
+    }
+
+    /**
+     * @description: 发送私聊消息，此方法不会返会错误。当内部有错误时，返回 undeffined。
+     * @returns {Promise<MessageRet | undefined>}
+     */
+    public async unsafeSendPrivateMsg(
+        user_id: number,
+        message: Sendable,
+        source?: Quotable | undefined
+    ): Promise<MessageRet | undefined> {
+        try {
+            return await this.client.oicq.sendPrivateMsg(user_id, message, source);
+        } catch (error) {
+            this.logger.error(error);
+        }
+    }
+
+    /**
+     * @description: 发送群聊消息，此方法不会返会错误。当内部有错误时，返回 undeffined。
+     * @returns {Promise<MessageRet | undefined>}
+     */
+    public async unsafeSendGroupMsg(
+        user_id: number,
+        message: Sendable,
+        source?: Quotable | undefined
+    ): Promise<MessageRet | undefined> {
+        try {
+            return await this.client.oicq.sendGroupMsg(user_id, message, source);
+        } catch (error) {
+            this.logger.error(error);
+        }
     }
 }
 
@@ -248,7 +300,7 @@ export interface PluginUser {
 
 export class PluginUserManager<T extends PluginUser> {
     private dataFile: PluginData & { Users: T[] };
-    private users: { Group: Map<number, T>; Person: Map<number, T> } = {
+    public userMap: { Group: Map<number, T>; Person: Map<number, T> } = {
         Group: new Map(),
         Person: new Map(),
     };
@@ -281,9 +333,9 @@ export class PluginUserManager<T extends PluginUser> {
     private getTarget(type: UserType): Map<number, T> {
         switch (type) {
             case "Group":
-                return this.users.Group;
+                return this.userMap.Group;
             case "Person":
-                return this.users.Person;
+                return this.userMap.Person;
             default:
                 throw new Error(`未知的用户类型：${type}`);
         }
@@ -294,10 +346,10 @@ export class PluginUserManager<T extends PluginUser> {
      */
     private sync() {
         let userList = [];
-        for (const user of this.users.Group.values()) {
+        for (const user of this.userMap.Group.values()) {
             userList.push(user);
         }
-        for (const user of this.users.Person.values()) {
+        for (const user of this.userMap.Person.values()) {
             userList.push(user);
         }
         this.dataFile.Users = userList;
