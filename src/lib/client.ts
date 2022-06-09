@@ -2,7 +2,7 @@
  * @Author: HumXC Hum-XC@outlook.com
  * @Date: 2022-06-02
  * @LastEditors: HumXC hum-xc@outlook.com
- * @LastEditTime: 2022-06-07
+ * @LastEditTime: 2022-06-09
  * @FilePath: \QQbot\src\lib\client.ts
  * @Description:机器人的客户端，对 oicq 的封装
  *
@@ -75,6 +75,11 @@ export class Client extends EventEmitter {
                 this.emit("newday");
             }, 86400000);
         }, timeout);
+
+        // 导入管理员列表
+        for (let i = 0; i < config.admin.length; i++) {
+            this.admins.add(config.admin[i]);
+        }
     }
     /**
      * @description: 启动机器人
