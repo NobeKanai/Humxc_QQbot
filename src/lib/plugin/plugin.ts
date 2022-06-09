@@ -223,7 +223,7 @@ class PluginData {
     }
 }
 
-type UserType = "Person" | "Group";
+export type UserType = "Person" | "Group";
 
 /** 插件用户接口，可以扩展此接口实现更多功能 */
 export interface PluginUser {
