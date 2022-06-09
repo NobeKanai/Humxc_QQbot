@@ -119,7 +119,7 @@ export class Command {
             }
 
             // 运行子命令
-            if (args[0] === this.subCommand?.command) {
+            if (args[0] !== undefined && args[0] === this.subCommand?.command) {
                 this.subCommand.trigger.handler.call(this.subCommand.trigger.plugin, msg);
                 return;
             }
