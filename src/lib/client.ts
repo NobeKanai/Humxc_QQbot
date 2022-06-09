@@ -200,9 +200,9 @@ export class Client extends EventEmitter {
         let _name: string = name;
         while (true) {
             this.emit(_name, data);
-            let i = name.lastIndexOf(".");
+            let i = _name.lastIndexOf(".");
             if (i === -1) break;
-            _name = name.slice(0, i);
+            _name = _name.slice(0, i);
         }
     }
 }
