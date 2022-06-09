@@ -59,9 +59,14 @@ export class BotPlugin {
      * @description: 从磁盘的插件数据目录加载 json 文件并反序列化成 js 对象。
      * @param {string} name - 保存在磁盘上的文件名称，不需要携带扩展名
      * @param {T} defaultData - 对象的默认值，此参数不应该和类 PluginData 有重合。如果插件数据目录中不存在名为 [name].json 的文件，则会根据此参数创建一个文件。
+     * @param {boolean} isEnableVerify - 是否开启验证，如果为 true，将会在加载文件后验证类与 defaultData 的继承关系。
      * @return {PluginData & T} 一个实例对象，封装了一些方法。
      */
-    public getData<T>(name: string, defaultData: T): PluginData & T {
+    public getData<T>(
+        name: string,
+        defaultData: T,
+        isEnableVerify: boolean = true
+    ): PluginData & T {
         let d = defaultData as any;
         if (
             d.dataPath !== undefined ||
@@ -71,7 +76,7 @@ export class BotPlugin {
         ) {
             throw new Error("defaultData 不能包含 dataPath, defaultData, save, load 属性");
         }
-        return Object.assign(new PluginData(this, name, defaultData));
+        return Object.assign(new PluginData(this, name, defaultData, isEnableVerify));
     }
 
     /**
