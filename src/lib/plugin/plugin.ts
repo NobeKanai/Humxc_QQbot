@@ -247,7 +247,11 @@ export interface PluginUser {
 }
 
 export class PluginUserManager<T extends PluginUser> {
-    private dataFile: PluginData & { Users: { Person: {}; Group: {} } };
+    private dataFile: PluginData & { Users: T[] };
+    private users: { Group: Map<number, T>; Person: Map<number, T> } = {
+        Group: new Map(),
+        Person: new Map(),
+    };
 
     /**
      * @description: 插件的用户管理器，提供对用户信息的增删改查。对用户的操作会同步到 dataFile，但是此类不提供对文件的保存操作，需要使用 PluginData.save() 保存文件。
@@ -257,31 +261,46 @@ export class PluginUserManager<T extends PluginUser> {
         if (!Object.prototype.hasOwnProperty.call(dataFile, "Users")) {
             // 新建 Users 属性存储 User
             Object.defineProperty(dataFile, "Users", {
-                value: {
-                    Person: {},
-                    Group: {},
-                },
+                value: [],
                 writable: true,
                 enumerable: true,
                 configurable: true,
             });
         }
-        this.dataFile = dataFile as PluginData & { Users: { Person: {}; Group: {} } };
+        this.dataFile = dataFile as PluginData & { Users: T[] };
+        for (let i = 0; i < this.dataFile.Users.length; i++) {
+            const user = this.dataFile.Users[i];
+            this.getTarget(user.type).set(user.uid, user);
+        }
     }
     /**
      * @description: 根据用户类型获取用户列表
      * @param {UserType} type
      * @return {*}
      */
-    private getTarget(type: UserType): any {
+    private getTarget(type: UserType): Map<number, T> {
         switch (type) {
             case "Group":
-                return this.dataFile.Users.Group;
+                return this.users.Group;
             case "Person":
-                return this.dataFile.Users.Person;
+                return this.users.Person;
             default:
                 throw new Error(`未知的用户类型：${type}`);
         }
+    }
+
+    /**
+     * @description: 同步 users 到 dataFile
+     */
+    private sync() {
+        let userList = [];
+        for (const user of this.users.Group.values()) {
+            userList.push(user);
+        }
+        for (const user of this.users.Person.values()) {
+            userList.push(user);
+        }
+        this.dataFile.Users = userList;
     }
 
     /**
@@ -292,39 +311,28 @@ export class PluginUserManager<T extends PluginUser> {
      */
     get(uid: number, type: UserType): T | undefined {
         let target = this.getTarget(type);
-        if (Object.prototype.hasOwnProperty.call(target, uid)) {
-            return target[uid];
-        }
+        return target.get(uid);
     }
 
     /**
-     * @description: 添加/修改 一个用户。
+     * @description: 添加/修改 一个用户。此方法会遍历所有用户。
      * @param {T} user - 需要被 添加/修改 的用户
      */
     set(user: T) {
         let target = this.getTarget(user.type);
-        if (!Object.prototype.hasOwnProperty.call(target, user.uid)) {
-            // 新建 Users 属性存储 User
-            Object.defineProperty(this.dataFile.Users, user.uid, {
-                value: user,
-                writable: true,
-                enumerable: true,
-                configurable: true,
-            });
-        } else {
-            target[user.uid] = user;
-        }
+        target.set(user.uid, user);
+        this.sync();
     }
-
     /**
-     * @description: 移除一个用户
+     * @description: 移除一个用户。如果用户存在，此方法会遍历所有用户。
      * @param {number} uid - 用户的 qq 号码
      * @param {UserType} type - 用户类型，个人/群聊
      */
     rm(uid: number, type: UserType) {
         let target = this.getTarget(type);
-        if (Object.prototype.hasOwnProperty.call(target, uid)) {
-            delete target[uid];
+        if (target.has(uid)) {
+            target.delete(uid);
+            this.sync();
         }
     }
 }
