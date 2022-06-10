@@ -1,22 +1,24 @@
-/*
- * @Author: HumXC Hum-XC@outlook.com
- * @Date: 2022-06-02
- * @LastEditors: HumXC hum-xc@outlook.com
- * @LastEditTime: 2022-06-07
- * @FilePath: \QQbot\src\lib\config.ts
- * @Description:
- *
- * Copyright (c) 2022 by HumXC Hum-XC@outlook.com, All Rights Reserved.
- */
-export type Config = {
-    // 开启子进程
-    child_process: boolean;
-    // 日志出现错误时发送给管理员
-    error_call_admin: boolean;
-    // 是否将日志输出到文件
-    save_log_file: boolean;
-    // 管理员列表
-    admin: number[];
-    // 插件列表
-    plugins: string[];
+import { Config as OICQConfig } from "oicq";
+
+export interface Config {
+    oicq: OICQConfig;
+    admins: number[];
+    id?: number;
+}
+
+let defaultConfig: Config = {
+    oicq: {
+        platform: 3,
+        log_level: "info",
+    },
+    admins: [],
 };
+
+export function makeConfig(cfg: object): Config {
+    let merged = { ...defaultConfig, ...cfg };
+
+    if (!merged.id) throw new Error("id is required");
+    if (!merged.admins.includes(merged.id)) merged.admins.unshift(merged.id);
+
+    return merged;
+}
