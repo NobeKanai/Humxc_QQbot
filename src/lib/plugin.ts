@@ -2,23 +2,25 @@ import { BotShell } from "./bot";
 
 export interface Plugin {
     Profile(): {};
-    PlugOn(sh: BotShell): void;
-    PlugOff(): void;
+    PlugOn(sh: BotShell): Promise<void>;
+    PlugOff(): Promise<void>;
 }
 
-export const pingPlugin = {
-    sh: undefined as BotShell | undefined,
+export class PingPlugin implements Plugin {
+    private sh?: BotShell;
+
     Profile() {
         return {};
-    },
-    PlugOn(sh: BotShell): void {
-        sh.registerGroupCommand("ping", async (e) => {
-            await sh.sendGroupMsg(e.group_id, "pong!");
-        });
+    }
 
+    async PlugOn(sh: BotShell) {
         this.sh = sh;
-    },
-    PlugOff(): void {
+        this.sh.registerGroupCommand("ping", async (e) => {
+            await this.sh!.sendGroupMsg(e.group_id, "pong!");
+        });
+    }
+
+    async PlugOff() {
         this.sh!.unregisterAllCommands();
-    },
-};
+    }
+}
