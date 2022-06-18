@@ -2,6 +2,7 @@ import { Level } from "level";
 import log4js from "log4js";
 import { Logger } from "log4js";
 import { Client, GroupMessageEvent, Sendable } from "oicq";
+import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
 
 export type GroupCommmandMatcher = (e: GroupMessageEvent) => boolean;
@@ -44,7 +45,7 @@ export class Bot {
         let status: State<{ [key: string]: boolean }> = await sh.get("status", {});
 
         const registerDisablePlugin = async (plugin: PluginInfo) => {
-            const eid = sh.registerGroupCommand(`disable ${plugin.name}`, async (e) => {
+            const eid = sh.registerGroupCommand(`disable ${plugin.name}`, "", async (e) => {
                 plugin.shell!.unregisterAll();
 
                 status.val[plugin.name] = false;
@@ -57,7 +58,7 @@ export class Bot {
             });
         };
         const registerEnablePlugin = async (plugin: PluginInfo) => {
-            const eid = sh.registerGroupCommand(`enable ${plugin.name}`, async (e) => {
+            const eid = sh.registerGroupCommand(`enable ${plugin.name}`, "", async (e) => {
                 const logger = log4js.getLogger(plugin.name);
                 const shell = new BotShell(
                     plugin,
@@ -183,6 +184,7 @@ export class BotShell {
 
     registerGroupCommand(
         cmd: string | ((text: string) => boolean),
+        permissions: string,
         callback: GroupCommmandCallback,
     ): number {
         let matcher: GroupCommmandMatcher;
@@ -193,21 +195,28 @@ export class BotShell {
             matcher = (e) => cmd(e.raw_message);
         }
 
-        return this.registerGroupCommandWithGroupCommandMatcher(matcher, callback);
+        return this.registerGroupCommandWithGroupCommandMatcher(matcher, permissions, callback);
     }
 
-    registerGroupCommandWithRegex(exp: RegExp, callback: GroupCommmandCallback): number {
-        return this.registerGroupCommand((text) => {
-            return exp.test(text);
-        }, callback);
+    registerGroupCommandWithRegex(exp: RegExp, permissions: string, callback: GroupCommmandCallback): number {
+        return this.registerGroupCommand(
+            (text) => {
+                return exp.test(text);
+            },
+            permissions,
+            callback,
+        );
     }
 
     registerGroupCommandWithGroupCommandMatcher(
         matcher: GroupCommmandMatcher,
+        permissions: string,
         callback: GroupCommmandCallback,
     ): number {
         const cmd_id = this.bot.firstAvalible(this.bot.groupCommandHandlers);
-        this.bot.groupCommandHandlers[cmd_id] = [matcher, callback];
+        this.bot.groupCommandHandlers[cmd_id] = [(e) => {
+            return checkPermission(permissions, e) && matcher(e);
+        }, callback];
         this.groupCommands.add(cmd_id);
         return cmd_id;
     }
@@ -246,4 +255,39 @@ export class BotShell {
     async set<T = any>(key: string, val: T): Promise<void> {
         return await this.db.put(key, val);
     }
+}
+
+/*
+* <group_id>:<user_id>
+* <group_id>:owner
+* <group_id>:admin
+* <group_id>:member
+* all:member
+*/
+function checkPermission(permissions: string, e: GroupMessageEvent): boolean {
+    if (cfg.admins.indexOf(e.sender.user_id) !== -1) return true;
+
+    for (const permission of permissions.split(",")) {
+        const idx = permission.indexOf(":");
+        if (idx === -1) continue;
+
+        let group_id = permission.substring(0, idx);
+        if (group_id === "all" || group_id === String(e.group_id)) {
+            let tag = permission.substring(idx + 1);
+            switch (tag) {
+                case String(e.sender.user_id):
+                    return true;
+                case "owner":
+                    if (e.sender.role === "owner") return true;
+                    break;
+                case "admin":
+                    if (e.sender.role === "admin" || e.sender.role === "owner") return true;
+                    break;
+                case "member":
+                    return true;
+            }
+        }
+    }
+
+    return false;
 }

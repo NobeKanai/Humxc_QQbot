@@ -6,7 +6,7 @@ export interface Config {
     id?: number;
 }
 
-let defaultConfig: Config = {
+export let cfg: Config = {
     oicq: {
         platform: 3,
         log_level: "info",
@@ -14,11 +14,11 @@ let defaultConfig: Config = {
     admins: [],
 };
 
-export function makeConfig(cfg: object): Config {
-    let merged = { ...defaultConfig, ...cfg };
+export function initConfig(_cfg: object): void {
+    let merged = { ...cfg, ..._cfg };
 
     if (!merged.id) throw new Error("id is required");
     if (!merged.admins.includes(merged.id)) merged.admins.unshift(merged.id);
 
-    return merged;
+    cfg = merged;
 }

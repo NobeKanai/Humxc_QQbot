@@ -1,12 +1,11 @@
 import { Level } from "level";
 import { createClient } from "oicq";
 import { Bot } from "./lib/bot";
-import { Config, makeConfig } from "./lib/config";
+import { cfg, initConfig } from "./lib/config";
 
 async function main() {
-    let cfg: Config;
     try {
-        cfg = makeConfig(require("./config"));
+        initConfig(require("./config"));
     } catch (err) {
         console.log(err);
         return;
