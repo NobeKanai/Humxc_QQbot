@@ -41,14 +41,14 @@ export class Bot {
     }
 
     private async startCore(sh: BotShell): Promise<void> {
-        let status: { [key: string]: boolean } = (await sh.get("status")) || {};
+        let status: State<{ [key: string]: boolean }> = await sh.get("status", {});
 
         const registerDisablePlugin = async (plugin: PluginInfo) => {
             const eid = sh.registerGroupCommand(`disable ${plugin.name}`, async (e) => {
                 plugin.shell!.unregisterAll();
 
-                status[plugin.name] = false;
-                await sh.set("status", status);
+                status.val[plugin.name] = false;
+                await status.update();
 
                 sh.unregisterGroupCommand(eid);
                 sh.sendGroupMsg(e.group_id, `Plugin [${plugin.name}] is now disabled.`);
@@ -69,8 +69,8 @@ export class Bot {
                 await plugin.func(shell);
                 plugin.shell = shell;
 
-                status[plugin.name] = true;
-                await sh.set("status", status);
+                status.val[plugin.name] = true;
+                await status.update();
 
                 sh.unregisterGroupCommand(eid);
                 sh.sendGroupMsg(e.group_id, `Plugin [${plugin.name}] is now enabled.`);
@@ -80,9 +80,9 @@ export class Bot {
         };
 
         for (const plugin of plugins) {
-            if (status[plugin.name] === undefined) {
-                status[plugin.name] = true;
-            } else if (!status[plugin.name]) {
+            if (status.val[plugin.name] === undefined) {
+                status.val[plugin.name] = true;
+            } else if (!status.val[plugin.name]) {
                 registerEnablePlugin(plugin);
                 continue;
             }
@@ -108,7 +108,7 @@ export class Bot {
             }
         }
 
-        await sh.set("status", status);
+        await status.update();
     }
 
     async start() {
@@ -146,11 +146,27 @@ export class Bot {
     }
 }
 
+export class State<T> {
+    private db: Level<string, any>;
+    private key: string;
+    val: T;
+
+    constructor(db: Level, key: string, val: T) {
+        this.db = db;
+        this.key = key;
+        this.val = val;
+    }
+
+    async update() {
+        await this.db.put(this.key, this.val);
+    }
+}
+
 export class BotShell {
     private bot: Bot;
     private groupCommands = new Set<number>();
     private pluginInfo: PluginInfo;
-    private db: Level;
+    private db: Level<string, any>;
 
     readonly logger: Logger;
 
@@ -216,18 +232,18 @@ export class BotShell {
         this.unregisterAllCommands();
     }
 
-    async get(key: string): Promise<any> {
+    async get<T = any>(key: string, default_val: T): Promise<State<T>> {
         try {
-            return await this.db.get(key);
+            return new State<T>(this.db, key, await this.db.get(key));
         } catch (err: any) {
             if (err.code === "LEVEL_NOT_FOUND") {
-                return null;
+                return new State<T>(this.db, key, default_val);
             }
             throw err;
         }
     }
 
-    async set(key: string, val: any): Promise<void> {
+    async set<T = any>(key: string, val: T): Promise<void> {
         return await this.db.put(key, val);
     }
 }
