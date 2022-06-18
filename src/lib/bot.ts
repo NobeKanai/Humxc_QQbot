@@ -1,9 +1,10 @@
 import { Level } from "level";
 import log4js, { Logger } from "log4js";
-import { Client, GroupMessageEvent, Sendable } from "oicq";
+import { Client, Forwardable, GroupMessageEvent, PrivateMessage, Sendable, User } from "oicq";
 import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
 import { giveMe20 } from "./plugins/giveme20";
+import { sleep, timestamp } from "./utils";
 
 export type GroupCommmandMatcher = (e: GroupMessageEvent) => boolean;
 export type GroupCommmandCallback = (e: GroupMessageEvent) => Promise<void>;
@@ -176,6 +177,7 @@ export class BotShell {
     private intervalJobs = new Set<number>();
     private pluginInfo: PluginInfo;
     private db: Level<string, any>;
+    private self: User;
 
     readonly logger: Logger;
 
@@ -184,10 +186,79 @@ export class BotShell {
         this.logger = logger;
         this.pluginInfo = pluginInfo;
         this.db = db;
+        this.self = bot.client.pickUser(bot.client.uin);
     }
 
     async sendGroupMsg(group_id: number, message: Sendable) {
         return await this.bot.client.sendGroupMsg(group_id, message);
+    }
+
+    async sendPrivateMsg(user_id: number, message: Sendable) {
+        return await this.bot.client.sendPrivateMsg(user_id, message);
+    }
+
+    async sendSelfMsg(message: Sendable) {
+        return await this.sendPrivateMsg(this.bot.client.uin, message);
+    }
+
+    /** this function cannot ensure every message could be found */
+    private async getRecentSelfMsgs(msgs_id: string[], max_history: number = 40) {
+        let t: number;
+        let cnt: number;
+        let msgs = new Map<string, PrivateMessage>();
+
+        const nextPieces = async () => {
+            const his = await this.self.getChatHistory(t, Math.min(20, max_history));
+
+            for (const h of his) {
+                msgs.set(h.message_id, h);
+                t = Math.min(t, h.time);
+            }
+
+            if (his.length < Math.min(20, max_history)) {
+                cnt = max_history;
+            } else {
+                cnt += his.length;
+            }
+        };
+
+        let ret: PrivateMessage[] = [];
+        let i = 0;
+
+        for (let tried = 0; i < msgs_id.length && tried < 3; tried++) {
+            await sleep(3000);
+            t = timestamp();
+            cnt = 0;
+            while (i < msgs_id.length && cnt < max_history) {
+                await nextPieces();
+                while (msgs.has(msgs_id[i])) ret.push(msgs.get(msgs_id[i++])!);
+            }
+        }
+        while (i < msgs_id.length) {
+            if (msgs.has(msgs_id[i])) {
+                ret.push(msgs.get(msgs_id[i])!);
+            }
+            i++;
+        }
+        return ret;
+    }
+
+    async sendForwardMsgFromSelfToGroup(group_id: number, msgs_id: string[]) {
+        let message: Forwardable[] = (await this.getRecentSelfMsgs(msgs_id)).map((val) => {
+            return {
+                user_id: val.sender.user_id,
+                message: val.message,
+                nickname: this.bot.client.nickname,
+            };
+        });
+        if (message.length !== msgs_id.length) {
+            this.logger.warn(
+                "forwarding message: some message lost: need to send %d messages, but only got %d",
+                msgs_id.length,
+                message.length,
+            );
+        }
+        return await this.sendGroupMsg(group_id, await this.bot.client.makeForwardMsg(message));
     }
 
     registerGroupCommand(

@@ -6,6 +6,8 @@ export interface Config {
     id: number;
     giveme20: {
         base_url: string;
+        groups_id: number[];
+        update_interval: number;
     };
 }
 
@@ -18,11 +20,14 @@ export let cfg: Config = {
     admins: [],
     giveme20: {
         base_url: "",
+        groups_id: [],
+        update_interval: 300, // 5 minutes
     },
 };
 
 export function initConfig(_cfg: object): void {
     let merged = { ...cfg, ..._cfg };
+    console.log(merged);
 
     if (merged.id === -1) throw new Error("id is required");
     if (!merged.admins.includes(merged.id)) merged.admins.unshift(merged.id);

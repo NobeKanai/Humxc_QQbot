@@ -3,7 +3,6 @@ import { BotShell } from "../bot";
 import { cfg } from "../config";
 import { sleep } from "../utils";
 
-const GROUP_ID = 717552407;
 let setulock = false;
 let schedulinglock = false;
 
@@ -32,7 +31,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
 
             for (let i = 1; i <= 3; i++) {
                 try {
-                    await e.reply(segment.image((new URL(url, BASE_URL)).toString()));
+                    await e.reply(segment.image((new URL(url, BASE_URL)).toString(), true, 30));
                     return;
                 } catch (err) {
                     sh.logger.error("when sending image", err, "sleep 3s");
@@ -48,19 +47,56 @@ export async function giveMe20(sh: BotShell): Promise<void> {
         await e.reply("failed");
     });
 
-    sh.registerJobWithInterval(300 * 1000, async () => {
+    sh.registerJobWithInterval(cfg.giveme20.update_interval * 1000, async () => {
         if (schedulinglock) return;
         schedulinglock = true;
         sh.logger.info("start updating");
         try {
-            let urls: string[] = await ((await fetch(new URL("/update", BASE_URL))).json());
-            for (let url of urls) {
-                if (!hasImage(url)) {
+            const urls = (await (await fetch(new URL("/update", BASE_URL))).json() as string[]).filter(
+                (url) => {
+                    return !hasImage(url);
+                },
+            );
+
+            if (urls.length <= 0) {
+                for (const group_id of cfg.giveme20.groups_id) {
+                    for (const url of urls) {
+                        try {
+                            await sh.sendGroupMsg(
+                                group_id,
+                                segment.image((new URL(url, BASE_URL)).toString(), true, 30),
+                            );
+                            addImage(url);
+                        } catch (err) {
+                            sh.logger.error("scheduling: when sending image", err);
+                        }
+                    }
+                }
+            } else {
+                let msgs_id: string[] = [];
+
+                for (const url of urls) {
                     try {
-                        await sh.sendGroupMsg(GROUP_ID, segment.image((new URL(url, BASE_URL)).toString()));
+                        const msg = await sh.sendSelfMsg(segment.image((new URL(url, BASE_URL)).toString(), true, 30));
                         addImage(url);
+                        msgs_id.push(msg.message_id);
                     } catch (err) {
-                        sh.logger.error("scheduling: when sending image", err);
+                        sh.logger.error("sending message to self for future forwarding:", err);
+                    }
+                }
+
+                try {
+                    const msg = await sh.sendSelfMsg(`Total ${urls.length}. Sent ${msgs_id.length}`);
+                    msgs_id.push(msg.message_id);
+                } catch (err) {
+                    sh.logger.error(err);
+                }
+
+                for (const group_id of cfg.giveme20.groups_id) {
+                    try {
+                        await sh.sendForwardMsgFromSelfToGroup(group_id, msgs_id);
+                    } catch (err) {
+                        sh.logger.error("forwarding message:", err);
                     }
                 }
             }

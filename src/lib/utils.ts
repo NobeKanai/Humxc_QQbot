@@ -3,3 +3,5 @@ export const sleep = (ms: number) => {
         setTimeout(resolve, ms);
     });
 };
+
+export const timestamp = () => Math.floor(Date.now() / 1000);

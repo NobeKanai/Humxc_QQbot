@@ -8,3 +8,6 @@ admins:
 
 giveme20:
   base_url: ${GIVEME20_URL}
+  update_interval: ${GIVEME20_UPDATE_INTERVAL}
+  groups_id:
+    - ${GIVEME20_GROUP_ID}
