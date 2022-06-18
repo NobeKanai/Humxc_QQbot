@@ -4,6 +4,7 @@ import { Logger } from "log4js";
 import { Client, GroupMessageEvent, Sendable } from "oicq";
 import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
+import { giveMe20 } from "./plugins/giveme20";
 
 export type GroupCommmandMatcher = (e: GroupMessageEvent) => boolean;
 export type GroupCommmandCallback = (e: GroupMessageEvent) => Promise<void>;
@@ -18,6 +19,10 @@ const plugins: PluginInfo[] = [
     {
         name: "ping",
         func: pingPlugin,
+    },
+    {
+        name: "giveme20",
+        func: giveMe20,
     },
 ];
 
@@ -60,6 +65,8 @@ export class Bot {
         const registerEnablePlugin = async (plugin: PluginInfo) => {
             const eid = sh.registerGroupCommand(`enable ${plugin.name}`, "", async (e) => {
                 const logger = log4js.getLogger(plugin.name);
+                logger.level = log4js.levels.ALL;
+
                 const shell = new BotShell(
                     plugin,
                     this,
@@ -89,6 +96,7 @@ export class Bot {
             }
 
             const logger = log4js.getLogger(plugin.name);
+            logger.level = log4js.levels.ALL;
             const shell = new BotShell(
                 plugin,
                 this,
@@ -98,8 +106,8 @@ export class Bot {
 
             try {
                 await plugin.func(shell);
-
                 plugin.shell = shell;
+                this.logger.info("plugin [%s] is started", plugin.name);
                 registerDisablePlugin(plugin);
             } catch (err) {
                 shell.unregisterAll();
