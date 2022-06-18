@@ -174,6 +174,7 @@ export class State<T> {
 export class BotShell {
     private bot: Bot;
     private groupCommands = new Set<number>();
+    private intervalJobs = new Set<number>();
     private pluginInfo: PluginInfo;
     private db: Level<string, any>;
 
@@ -245,8 +246,22 @@ export class BotShell {
         this.groupCommands.clear();
     }
 
+    registerJobWithInterval(ms: number, callback: () => void): number {
+        const job_id = setInterval(callback, ms)[Symbol.toPrimitive]();
+        this.intervalJobs.add(job_id);
+        return job_id;
+    }
+
+    unregisterJobWithInterval(...job_ids: number[]) {
+        for (let job_id of job_ids) {
+            clearInterval(job_id);
+            this.intervalJobs.delete(job_id);
+        }
+    }
+
     unregisterAll() {
         this.unregisterAllCommands();
+        this.unregisterJobWithInterval(...this.intervalJobs);
     }
 
     async get<T = any>(key: string, default_val: T): Promise<State<T>> {
