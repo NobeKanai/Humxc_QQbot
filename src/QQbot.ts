@@ -1,3 +1,4 @@
+import { Level } from "level";
 import { createClient } from "oicq";
 import { Bot } from "./lib/bot";
 import { Config, makeConfig } from "./lib/config";
@@ -12,7 +13,8 @@ async function main() {
     }
 
     const client = createClient(cfg.id!, cfg.oicq);
-    (new Bot(client)).start();
+    const db = new Level<string, any>("./App/db_data", { valueEncoding: "json" });
+    (new Bot(client, db)).start();
 }
 
 main();

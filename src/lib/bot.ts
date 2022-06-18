@@ -1,3 +1,4 @@
+import { Level } from "level";
 import log4js from "log4js";
 import { Logger } from "log4js";
 import { Client, GroupMessageEvent, Sendable } from "oicq";
@@ -22,11 +23,13 @@ const plugins: PluginInfo[] = [
 export class Bot {
     readonly logger: Logger;
     readonly client: Client;
+    readonly db: Level;
 
     groupCommandHandlers: Array<[GroupCommmandMatcher, GroupCommmandCallback] | undefined> = [];
 
-    constructor(client: Client) {
+    constructor(client: Client, db: Level) {
         this.client = client;
+        this.db = db;
         this.logger = log4js.getLogger("Bot");
         this.logger.level = log4js.levels.ALL;
 
@@ -38,34 +41,59 @@ export class Bot {
     }
 
     private async startCore(sh: BotShell): Promise<void> {
-        const registerDisablePlugin = (plugin: PluginInfo) => {
+        let status: { [key: string]: boolean } = (await sh.get("status")) || {};
+
+        const registerDisablePlugin = async (plugin: PluginInfo) => {
             const eid = sh.registerGroupCommand(`disable ${plugin.name}`, async (e) => {
                 plugin.shell!.unregisterAll();
+
+                status[plugin.name] = false;
+                await sh.set("status", status);
 
                 sh.unregisterGroupCommand(eid);
                 sh.sendGroupMsg(e.group_id, `Plugin [${plugin.name}] is now disabled.`);
 
-                registerEnablePlugin(plugin);
+                await registerEnablePlugin(plugin);
             });
         };
         const registerEnablePlugin = async (plugin: PluginInfo) => {
             const eid = sh.registerGroupCommand(`enable ${plugin.name}`, async (e) => {
                 const logger = log4js.getLogger(plugin.name);
-                const shell = new BotShell(plugin, this, logger);
+                const shell = new BotShell(
+                    plugin,
+                    this,
+                    logger,
+                    this.db.sublevel(plugin.name, { valueEncoding: "json" }) as any,
+                );
 
                 await plugin.func(shell);
                 plugin.shell = shell;
 
+                status[plugin.name] = true;
+                await sh.set("status", status);
+
                 sh.unregisterGroupCommand(eid);
                 sh.sendGroupMsg(e.group_id, `Plugin [${plugin.name}] is now enabled.`);
 
-                registerDisablePlugin(plugin);
+                await registerDisablePlugin(plugin);
             });
         };
 
         for (const plugin of plugins) {
+            if (status[plugin.name] === undefined) {
+                status[plugin.name] = true;
+            } else if (!status[plugin.name]) {
+                registerEnablePlugin(plugin);
+                continue;
+            }
+
             const logger = log4js.getLogger(plugin.name);
-            const shell = new BotShell(plugin, this, logger);
+            const shell = new BotShell(
+                plugin,
+                this,
+                logger,
+                this.db.sublevel(plugin.name, { valueEncoding: "json" }) as any,
+            );
 
             try {
                 await plugin.func(shell);
@@ -79,6 +107,8 @@ export class Bot {
                 // TODO: call admin
             }
         }
+
+        await sh.set("status", status);
     }
 
     async start() {
@@ -99,7 +129,14 @@ export class Bot {
             }
         });
 
-        await this.startCore(new BotShell({ name: "core", func: this.start }, this, this.logger));
+        await this.startCore(
+            new BotShell(
+                { name: "core", func: this.start },
+                this,
+                this.logger,
+                this.db.sublevel("core", { valueEncoding: "json" }) as any,
+            ),
+        );
     }
 
     firstAvalible(arr: any[]): number {
@@ -113,13 +150,15 @@ export class BotShell {
     private bot: Bot;
     private groupCommands = new Set<number>();
     private pluginInfo: PluginInfo;
+    private db: Level;
 
     readonly logger: Logger;
 
-    constructor(pluginInfo: PluginInfo, bot: Bot, logger: Logger) {
+    constructor(pluginInfo: PluginInfo, bot: Bot, logger: Logger, db: Level) {
         this.bot = bot;
         this.logger = logger;
         this.pluginInfo = pluginInfo;
+        this.db = db;
     }
 
     async sendGroupMsg(group_id: number, message: Sendable) {
@@ -175,5 +214,20 @@ export class BotShell {
 
     unregisterAll() {
         this.unregisterAllCommands();
+    }
+
+    async get(key: string): Promise<any> {
+        try {
+            return await this.db.get(key);
+        } catch (err: any) {
+            if (err.code === "LEVEL_NOT_FOUND") {
+                return null;
+            }
+            throw err;
+        }
+    }
+
+    async set(key: string, val: any): Promise<void> {
+        return await this.db.put(key, val);
     }
 }
