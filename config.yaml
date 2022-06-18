@@ -1,0 +1,10 @@
+oicq:
+  platform: 3
+  log_level: info
+
+id: ${BOT_ID}
+admins: 
+  - ${ADMIN_ID}
+
+giveme20:
+  base_url: ${GIVEME20_URL}

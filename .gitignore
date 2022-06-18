@@ -11,3 +11,4 @@ yarn-error.log
 src/lib/config.js
 src/data
 src/plugins
+.env

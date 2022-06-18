@@ -48,7 +48,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
         await e.reply("failed");
     });
 
-    sh.registerJobWithInterval(10000, async () => {
+    sh.registerJobWithInterval(300 * 1000, async () => {
         if (schedulinglock) return;
         schedulinglock = true;
         sh.logger.info("start updating");

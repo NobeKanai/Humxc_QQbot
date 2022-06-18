@@ -1,6 +1,5 @@
 import { Level } from "level";
-import log4js from "log4js";
-import { Logger } from "log4js";
+import log4js, { Logger } from "log4js";
 import { Client, GroupMessageEvent, Sendable } from "oicq";
 import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
