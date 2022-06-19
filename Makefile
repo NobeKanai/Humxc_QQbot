@@ -6,5 +6,9 @@ run:
 	@ - tsc
 	@ - cd App && node ./QQbot.js ../config.yaml
 
+init:
+	npm install
+	npm install typescript -g
+
 docker:
 	$(DBUILD) -t nobekanai/qqbot .

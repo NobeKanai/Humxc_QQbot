@@ -1,47 +1,36 @@
 # QQbot
 
-当前仓库正在开发的初级阶段，有许多不稳定因素，也没有什么功能。
+A stupid bot.
 
-使用的协议库 [oicq](https://github.com/takayama-lily/oicq)。
+## How to start?
 
-这是一个正在重构的 QQ 机器人，缓慢迭代中。基于此仓库的 old 分支。
+```bash
+make init
+```
 
-old 分支是我自己在使用的机器人，初衷用于练习编程，顺带也能解决自己的需求。但是由于代码质量的问题，日后想要维护就是雪上加霜，于是乎想要重构。基于先前的经验，打算重新设计。
+Edit the `config.yaml` or configure the appropriate environment variables, then
 
-这个机器人的目标是插件化，插件开发应当非常舒服，不应该去过多考虑机器人客户端这边的事。
+```bash
+make run
+```
 
-## 编译过程
+## Production
 
--   克隆当前仓库:
+Example `docker-compose.yml`:
 
-    ```bash
-    git clone https://github.com/HumXC/QQbot
-    ```
+```yaml
+version: "3"
 
--   初始化项目引用的包
+services:
+  qqbot:
+    image: nobekanai/qqbot
+    container_name: qqbot
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/config.yaml:ro
+      - ./data:/data
+    environment:
+      - DATA_DIR=/data
+```
 
-    ```bash
-     cd QQbot
-     yarn install
-    ```
-
--   安装 typescript
-
-    ```bash
-    yarn global add typescript
-    ```
-
--   编译 typescript
-
-    ```bash
-     tsc
-    ```
-
--   运行机器人
-
-    执行 tsc 编译之后会在 App 目录下生成可直接通过 nodejs 运行的 js 代码
-
-    ```bash
-     cd App
-     node QQbot.js
-    ```
+Copy `config.yaml` to the current directory, edit the configuration file and start the service, note that you may not want to change the `data_dir` as it corresponds to the value of the environment variable above.
