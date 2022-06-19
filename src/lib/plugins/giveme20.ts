@@ -47,6 +47,35 @@ export async function giveMe20(sh: BotShell): Promise<void> {
         await e.reply("failed");
     });
 
+    const sendByForwarding = async (urls: string[]) => {
+        let msgs_id: string[] = [];
+
+        for (const url of urls) {
+            try {
+                const msg = await sh.sendSelfMsg(segment.image((new URL(url, BASE_URL)).toString(), true, 30));
+                addImage(url);
+                msgs_id.push(msg.message_id);
+            } catch (err) {
+                sh.logger.error("sending message to self for future forwarding:", err);
+            }
+        }
+
+        try {
+            const msg = await sh.sendSelfMsg(`Total ${urls.length}. Sent ${msgs_id.length}`);
+            msgs_id.push(msg.message_id);
+        } catch (err) {
+            sh.logger.error(err);
+        }
+
+        for (const group_id of cfg.giveme20.groups_id) {
+            try {
+                await sh.sendForwardMsgFromSelfToGroup(group_id, msgs_id);
+            } catch (err) {
+                sh.logger.error("forwarding message:", err);
+            }
+        }
+    };
+
     sh.registerJobWithInterval(cfg.giveme20.update_interval * 1000, async () => {
         if (schedulinglock) return;
         schedulinglock = true;
@@ -58,7 +87,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                 },
             );
 
-            if (urls.length <= 0) {
+            if (urls.length <= 3) {
                 for (const group_id of cfg.giveme20.groups_id) {
                     for (const url of urls) {
                         try {
@@ -67,38 +96,17 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                                 segment.image((new URL(url, BASE_URL)).toString(), true, 30),
                             );
                             addImage(url);
-                        } catch (err) {
+                        } catch (err: any) {
+                            if (err.code === -80) {
+                                await sendByForwarding(urls);
+                                return;
+                            }
                             sh.logger.error("scheduling: when sending image", err);
                         }
                     }
                 }
             } else {
-                let msgs_id: string[] = [];
-
-                for (const url of urls) {
-                    try {
-                        const msg = await sh.sendSelfMsg(segment.image((new URL(url, BASE_URL)).toString(), true, 30));
-                        addImage(url);
-                        msgs_id.push(msg.message_id);
-                    } catch (err) {
-                        sh.logger.error("sending message to self for future forwarding:", err);
-                    }
-                }
-
-                try {
-                    const msg = await sh.sendSelfMsg(`Total ${urls.length}. Sent ${msgs_id.length}`);
-                    msgs_id.push(msg.message_id);
-                } catch (err) {
-                    sh.logger.error(err);
-                }
-
-                for (const group_id of cfg.giveme20.groups_id) {
-                    try {
-                        await sh.sendForwardMsgFromSelfToGroup(group_id, msgs_id);
-                    } catch (err) {
-                        sh.logger.error("forwarding message:", err);
-                    }
-                }
+                await sendByForwarding(urls);
             }
         } catch (err) {
             sh.logger.error("scheduling", err);
