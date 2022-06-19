@@ -22,7 +22,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
     };
 
     sh.logger.info("BASE_URL is %s", BASE_URL);
-    sh.registerGroupCommand("涩图", "717552407:member", async (e) => {
+    sh.registerGroupCommandWithRegex("(来点)?(涩|色)图", "717552407:member", async (e) => {
         if (setulock) return;
         setulock = true;
 

@@ -277,10 +277,18 @@ export class BotShell {
         return this.registerGroupCommandWithGroupCommandMatcher(matcher, permissions, callback);
     }
 
-    registerGroupCommandWithRegex(exp: RegExp, permissions: string, callback: GroupCommmandCallback): number {
+    registerGroupCommandWithRegex(exp: RegExp | string, permissions: string, callback: GroupCommmandCallback): number {
+        let _exp: RegExp;
+        if (typeof exp === "string") {
+            if (!exp.startsWith("^")) exp = "^".concat(exp);
+            if (!exp.endsWith("$")) exp = exp.concat("$");
+            _exp = new RegExp(exp);
+        } else {
+            _exp = exp;
+        }
         return this.registerGroupCommand(
             (text) => {
-                return exp.test(text);
+                return _exp.test(text);
             },
             permissions,
             callback,
