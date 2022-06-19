@@ -26,6 +26,8 @@ services:
     image: nobekanai/qqbot
     container_name: qqbot
     restart: unless-stopped
+    tty: true
+    stdin_open: true
     volumes:
       - ./config.yaml:/config.yaml:ro
       - ./data:/data
