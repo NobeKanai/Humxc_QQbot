@@ -115,4 +115,53 @@ export async function giveMe20(sh: BotShell): Promise<void> {
             sh.logger.info("updating done");
         }
     });
+
+    sh.registerGroupCommandWithRegex("更新(涩|色)图", "717552407:admin", async (e) => {
+        if (schedulinglock) {
+            await sh.sendGroupMsg(e.group_id, "更新中...");
+            return;
+        }
+        schedulinglock = true;
+        sh.logger.info("start updating (triggered by command)");
+        try {
+            const urls = (await (await fetch(new URL("/update", BASE_URL))).json() as string[]).filter(
+                (url) => {
+                    return !hasImage(url);
+                },
+            );
+
+            if (urls.length > 0) {
+                await sh.sendGroupMsg(e.group_id, `更新了 ${urls.length} 张瑟图`);
+            } else {
+                await sh.sendGroupMsg(e.group_id, `暂无更新`);
+            }
+
+            if (urls.length <= 3) {
+                for (const group_id of cfg.giveme20.groups_id) {
+                    for (const url of urls) {
+                        try {
+                            await sh.sendGroupMsg(
+                                group_id,
+                                segment.image((new URL(url, BASE_URL)).toString(), true, 30),
+                            );
+                            addImage(url);
+                        } catch (err: any) {
+                            if (err.code === -80) {
+                                await sendByForwarding(urls);
+                                return;
+                            }
+                            sh.logger.error("scheduling: when sending image", err);
+                        }
+                    }
+                }
+            } else {
+                await sendByForwarding(urls);
+            }
+        } catch (err) {
+            sh.logger.error("updating", err);
+        } finally {
+            schedulinglock = false;
+            sh.logger.info("updating done");
+        }
+    });
 }
