@@ -4,7 +4,7 @@ DBUILD := docker build --network=host --build-arg "http_proxy=$(http_proxy)" --b
 
 run:
 	@ - tsc
-	@ - node ./App/QQbot.js
+	@ - cd App && node ./QQbot.js ../config.yaml
 
 docker:
 	$(DBUILD) -t nobekanai/qqbot .
