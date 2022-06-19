@@ -5,6 +5,7 @@ oicq:
 id: ${BOT_ID}
 admins: 
   - ${ADMIN_ID}
+data_dir: ${DATA_DIR}
 
 giveme20:
   base_url: ${GIVEME20_URL}

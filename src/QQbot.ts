@@ -1,6 +1,7 @@
 import fs from "fs";
 import { Level } from "level";
 import { createClient } from "oicq";
+import { join } from "path";
 import process from "process";
 import YAML from "yaml";
 import { Bot } from "./lib/bot";
@@ -22,7 +23,7 @@ async function main() {
     }
 
     const client = createClient(cfg.id, cfg.oicq);
-    const db = new Level("./App/db_data", { valueEncoding: "json" });
+    const db = new Level(join(cfg.data_dir, "db_data"), { valueEncoding: "json" });
     (new Bot(client, db)).start();
 }
 
