@@ -98,17 +98,22 @@ export async function b23Live(sh: BotShell): Promise<void> {
     });
 
     sh.registerGroupCommandWithRegex("(直播|订阅)列表", "all:member", async (e) => {
-        await e.reply(`已订阅直播间：\n\n${
-            lives.val.map((live) => {
-                if (live.group_id === e.group_id) {
-                    return `主播：${live.username}
+        const rooms = lives.val.filter((live) => live.group_id === e.group_id);
+        if (rooms.length === 0) {
+            await e.reply(`暂无订阅`);
+        } else {
+            await e.reply(`已订阅直播间：\n\n${
+                rooms.map((live) => {
+                    if (live.group_id === e.group_id) {
+                        return `主播：${live.username}
 标题：${live.title}
 状态：${live.status === false ? "未在直播" : "正在直播"}
 直播间：https://live.bilibili.com/${live.live_id}
 更新于：${live.last_update.toLocaleString("en-GB", { timeZone: "Asia/Shanghai" })}`;
-                }
-            }).join("\n\n")
-        }`);
+                    }
+                }).join("\n\n")
+            }`);
+        }
     });
 
     sh.registerJobWithInterval(cfg.b23live.update_interval * 1000, async () => {
@@ -128,7 +133,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
                 if (!live.status && rsp.data.live_status === 1) {
                     let msg = [
                         segment.image(rsp.data.keyframe, true, 10),
-                        `${live.username} 正在直播 ${live.title}\n$https://live.bilibili.com/${live.live_id}`,
+                        `${live.username} 正在直播 ${live.title}\nhttps://live.bilibili.com/${live.live_id}`,
                     ];
                     await sh.sendGroupMsg(
                         live.group_id,
