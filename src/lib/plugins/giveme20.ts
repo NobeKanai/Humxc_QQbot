@@ -22,7 +22,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
     };
 
     sh.logger.info("BASE_URL is %s", BASE_URL);
-    sh.registerGroupCommandWithRegex("(来点)?(涩|色)图", "717552407:member", async (e) => {
+    sh.registerGroupCommandWithRegex("(来点)?(涩|色|瑟|铯)图", "717552407:member", async (e) => {
         if (setulock) return;
         setulock = true;
 
@@ -39,7 +39,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                 }
             }
         } catch (err) {
-            sh.logger.error("when fetch random url", err);
+            sh.logger.error("when fetching random url", err);
         } finally {
             setulock = false;
         }
@@ -116,7 +116,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommandWithRegex("更新(涩|色)图", "717552407:admin", async (e) => {
+    sh.registerGroupCommandWithRegex("更新(涩|色|瑟|铯)图", "717552407:admin", async (e) => {
         if (schedulinglock) {
             await sh.sendGroupMsg(e.group_id, "更新中...");
             return;

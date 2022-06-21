@@ -12,3 +12,7 @@ giveme20:
   update_interval: ${GIVEME20_UPDATE_INTERVAL}
   groups_id:
     - ${GIVEME20_GROUP_ID}
+
+b23live:
+  permissions: ${B23LIVE_PERMISSIONS}
+  update_interval: ${B23LIVE_UPDATE_INTERVAL}

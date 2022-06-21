@@ -3,6 +3,7 @@ import log4js, { Logger } from "log4js";
 import { Client, Forwardable, GroupMessageEvent, PrivateMessage, Sendable, User } from "oicq";
 import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
+import { b23Live } from "./plugins/b23live";
 import { giveMe20 } from "./plugins/giveme20";
 import { sleep, timestamp } from "./utils";
 
@@ -23,6 +24,10 @@ const plugins: PluginInfo[] = [
     {
         name: "giveme20",
         func: giveMe20,
+    },
+    {
+        name: "b23live",
+        func: b23Live,
     },
 ];
 
@@ -324,15 +329,32 @@ export class BotShell {
         this.groupCommands.clear();
     }
 
-    registerJobWithInterval(ms: number, callback: () => void): number {
-        const job_id = setInterval(callback, ms)[Symbol.toPrimitive]();
+    private jobs: Array<undefined | 1 | 2> = [];
+
+    private nextJobIdx(): number {
+        let i = 0;
+        while (this.jobs[i] !== undefined) i++;
+        this.jobs[i] = 1;
+        return i;
+    }
+
+    registerJobWithInterval(ms: number, callback: () => Promise<void>): number {
+        const job_id = this.nextJobIdx();
+        const f = async () => {
+            while (this.jobs[job_id] === 1) {
+                await sleep(ms);
+                if (this.jobs[job_id] === 1) await callback();
+            }
+            this.jobs[job_id] = undefined;
+        };
+        f();
         this.intervalJobs.add(job_id);
         return job_id;
     }
 
     unregisterJobWithInterval(...job_ids: number[]) {
         for (let job_id of job_ids) {
-            clearInterval(job_id);
+            this.jobs[job_id] = 2;
             this.intervalJobs.delete(job_id);
         }
     }
