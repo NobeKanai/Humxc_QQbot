@@ -8,6 +8,7 @@ interface Live {
     title: string;
     status: boolean;
     last_update: Date;
+    username: string;
 }
 
 function liveAPI(live_id: number | string) {
@@ -47,6 +48,16 @@ export async function b23Live(sh: BotShell): Promise<void> {
             return;
         }
 
+        let user;
+        try {
+            user = await (await fetch(`https://api.bilibili.com/x/space/acc/info?mid=${rsp.data.uid}`)).json();
+            if (user.code !== 0) throw user.msg;
+        } catch (err) {
+            sh.logger.error(err);
+            await e.reply(`其它错误， 请检查日志`);
+            return;
+        }
+
         try {
             await addLive({
                 group_id: e.group_id,
@@ -54,8 +65,11 @@ export async function b23Live(sh: BotShell): Promise<void> {
                 title: rsp.data.title,
                 status: Boolean(rsp.data.live_status),
                 last_update: new Date(),
+                username: user.data.name,
             });
-            await e.reply(`已添加直播间: ${rsp.data.title}\n当前状态: ${rsp.data.live_status === 0 ? "未在直播" : "正在直播"}`);
+            await e.reply(
+                `已添加 ${user.data.name} 的直播间： ${rsp.data.title}\n当前状态：${rsp.data.live_status === 0 ? "未在直播" : "正在直播"}`,
+            );
         } catch (err: any) {
             sh.logger.error(err);
             await e.reply(`其它错误， 请检查日志`);
@@ -74,13 +88,14 @@ export async function b23Live(sh: BotShell): Promise<void> {
     });
 
     sh.registerGroupCommand("直播列表", "all:member", async (e) => {
-        await e.reply(`已订阅直播间:\n\n${
+        await e.reply(`已订阅直播间：\n\n${
             lives.val.map((live) => {
                 if (live.group_id === e.group_id) {
-                    return `直播间: https://live.bilibili.com/${live.live_id}
-标题: ${live.title}
-状态: ${live.status === false ? "未在直播" : "正在直播"}
-更新于: ${live.last_update.toLocaleString("en-GB", { timeZone: "Asia/Shanghai" })}`;
+                    return `主播：${live.username}
+标题：${live.title}
+状态：${live.status === false ? "未在直播" : "正在直播"}
+直播间：https://live.bilibili.com/${live.live_id}
+更新于：${live.last_update.toLocaleString("en-GB", { timeZone: "Asia/Shanghai" })}`;
                 }
             }).join("\n\n")
         }`);
@@ -92,15 +107,17 @@ export async function b23Live(sh: BotShell): Promise<void> {
         for (const live of lives.val) {
             try {
                 const rsp = await (await fetch(liveAPI(live.live_id))).json();
-                if (rsp.code !== 0) {
-                    throw rsp.msg;
-                }
+                if (rsp.code !== 0) throw rsp.msg;
+                const user = await (await fetch(`https://api.bilibili.com/x/space/acc/info?mid=${rsp.data.uid}`))
+                    .json();
+                if (user.code !== 0) throw rsp.msg;
 
+                live.username = user.data.name;
                 live.title = rsp.data.title;
                 live.last_update = new Date();
                 if (!live.status && rsp.data.live_status === 1) {
                     let msg = [
-                        `房间 ${live.live_id} 正在直播 ${live.title}\n$https://live.bilibili.com/${live.live_id}`,
+                        `${live.username} 正在直播 ${live.title}\n$https://live.bilibili.com/${live.live_id}`,
                         segment.image(rsp.data.keyframe, true, 10),
                     ];
                     await sh.sendGroupMsg(
