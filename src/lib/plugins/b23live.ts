@@ -33,8 +33,18 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     };
 
-    sh.registerGroupCommandWithRegex("订阅直播 \\d+", cfg.b23live.permissions, async (e) => {
+    sh.registerGroupCommandWithRegex("订阅(直播)? \\d+", cfg.b23live.permissions, async (e) => {
         const live_id = parseInt(e.raw_message.split(" ")[1]);
+
+        if (
+            lives.val.findIndex((val) => {
+                return val.group_id === e.group_id && val.live_id === live_id;
+            }) !== -1
+        ) {
+            e.reply("订阅重复");
+            return;
+        }
+
         let rsp;
         try {
             rsp = await (await fetch(liveAPI(live_id))).json();
@@ -76,7 +86,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommandWithRegex("退订直播 \\d+", cfg.b23live.permissions, async (e) => {
+    sh.registerGroupCommandWithRegex("退订(直播)? \\d+", cfg.b23live.permissions, async (e) => {
         const live_id = parseInt(e.raw_message.split(" ")[1]);
         try {
             await deleteLive({ group_id: e.group_id, live_id: live_id });
@@ -87,7 +97,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommand("直播列表", "all:member", async (e) => {
+    sh.registerGroupCommandWithRegex("(直播|订阅)列表", "all:member", async (e) => {
         await e.reply(`已订阅直播间：\n\n${
             lives.val.map((live) => {
                 if (live.group_id === e.group_id) {
