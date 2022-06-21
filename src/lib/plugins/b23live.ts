@@ -127,8 +127,8 @@ export async function b23Live(sh: BotShell): Promise<void> {
                 live.last_update = new Date();
                 if (!live.status && rsp.data.live_status === 1) {
                     let msg = [
-                        `${live.username} 正在直播 ${live.title}\n$https://live.bilibili.com/${live.live_id}`,
                         segment.image(rsp.data.keyframe, true, 10),
+                        `${live.username} 正在直播 ${live.title}\n$https://live.bilibili.com/${live.live_id}`,
                     ];
                     await sh.sendGroupMsg(
                         live.group_id,
