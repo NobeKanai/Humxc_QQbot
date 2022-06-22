@@ -206,63 +206,14 @@ export class BotShell {
         return await this.sendPrivateMsg(this.bot.client.uin, message);
     }
 
-    /** this function cannot ensure every message could be found */
-    private async getRecentSelfMsgs(msgs_id: string[], max_history: number = 40) {
-        let t: number;
-        let cnt: number;
-        let msgs = new Map<string, PrivateMessage>();
-
-        const nextPieces = async () => {
-            const his = await this.self.getChatHistory(t, Math.min(20, max_history));
-
-            for (const h of his) {
-                msgs.set(h.message_id, h);
-                t = Math.min(t, h.time);
-            }
-
-            if (his.length < Math.min(20, max_history)) {
-                cnt = max_history;
-            } else {
-                cnt += his.length;
-            }
-        };
-
-        let ret: PrivateMessage[] = [];
-        let i = 0;
-
-        for (let tried = 0; i < msgs_id.length && tried < 3; tried++) {
-            await sleep(3000);
-            t = timestamp();
-            cnt = 0;
-            while (i < msgs_id.length && cnt < max_history) {
-                await nextPieces();
-                while (msgs.has(msgs_id[i])) ret.push(msgs.get(msgs_id[i++])!);
-            }
-        }
-        while (i < msgs_id.length) {
-            if (msgs.has(msgs_id[i])) {
-                ret.push(msgs.get(msgs_id[i])!);
-            }
-            i++;
-        }
-        return ret;
-    }
-
-    async sendForwardMsgFromSelfToGroup(group_id: number, msgs_id: string[]) {
-        let message: Forwardable[] = (await this.getRecentSelfMsgs(msgs_id)).map((val) => {
+    async sendForwardMsgToGroup(group_id: number, msgs: Sendable[]) {
+        let message: Forwardable[] = msgs.map((val) => {
             return {
-                user_id: val.sender.user_id,
-                message: val.message,
+                user_id: this.bot.client.uin,
+                message: val,
                 nickname: this.bot.client.nickname,
             };
         });
-        if (message.length !== msgs_id.length) {
-            this.logger.warn(
-                "forwarding message: some message lost: need to send %d messages, but only got %d",
-                msgs_id.length,
-                message.length,
-            );
-        }
         return await this.sendGroupMsg(group_id, await this.bot.client.makeForwardMsg(message));
     }
 

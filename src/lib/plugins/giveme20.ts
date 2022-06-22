@@ -1,4 +1,4 @@
-import { segment } from "oicq";
+import { segment, Sendable } from "oicq";
 import { BotShell } from "../bot";
 import { cfg } from "../config";
 import { safeImageStream, sleep } from "../utils";
@@ -31,7 +31,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
 
             for (let i = 1; i <= 3; i++) {
                 try {
-                    await e.reply(segment.image(await safeImageStream((new URL(url, BASE_URL)).toString()), true, 30));
+                    await e.reply(segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())));
                     return;
                 } catch (err) {
                     sh.logger.error("when sending image", err, "sleep 3s");
@@ -48,32 +48,23 @@ export async function giveMe20(sh: BotShell): Promise<void> {
     });
 
     const sendByForwarding = async (urls: string[]) => {
-        let msgs_id: string[] = [];
+        let msgs: Sendable[] = [];
 
         for (const url of urls) {
-            try {
-                const msg = await sh.sendSelfMsg(
-                    segment.image(await safeImageStream((new URL(url, BASE_URL)).toString()), true, 30),
-                );
-                addImage(url);
-                msgs_id.push(msg.message_id);
-            } catch (err) {
-                sh.logger.error("sending message to self for future forwarding:", err);
-            }
+            msgs.push(segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())));
+            addImage(url); // TODO
         }
 
-        try {
-            const msg = await sh.sendSelfMsg(`Total ${urls.length}. Sent ${msgs_id.length}`);
-            msgs_id.push(msg.message_id);
-        } catch (err) {
-            sh.logger.error(err);
-        }
+        msgs.push(`Total ${urls.length}`);
 
         for (const group_id of cfg.giveme20.groups_id) {
             try {
-                await sh.sendForwardMsgFromSelfToGroup(group_id, msgs_id);
+                await sh.sendForwardMsgToGroup(group_id, msgs);
             } catch (err) {
                 sh.logger.error("forwarding message:", err);
+                for (const admin of cfg.admins) {
+                    await sh.sendPrivateMsg(admin, `转发消息失败: ${err}`);
+                }
             }
         }
     };
@@ -95,7 +86,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                         try {
                             await sh.sendGroupMsg(
                                 group_id,
-                                segment.image(await safeImageStream((new URL(url, BASE_URL)).toString()), true, 30),
+                                segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())),
                             );
                             addImage(url);
                         } catch (err: any) {
@@ -144,7 +135,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                         try {
                             await sh.sendGroupMsg(
                                 group_id,
-                                segment.image(await safeImageStream((new URL(url, BASE_URL)).toString()), true, 30),
+                                segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())),
                             );
                             addImage(url);
                         } catch (err: any) {
