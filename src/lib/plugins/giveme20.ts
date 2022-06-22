@@ -1,7 +1,7 @@
 import { segment } from "oicq";
 import { BotShell } from "../bot";
 import { cfg } from "../config";
-import { sleep } from "../utils";
+import { safeImageStream, sleep } from "../utils";
 
 let setulock = false;
 let schedulinglock = false;
@@ -31,7 +31,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
 
             for (let i = 1; i <= 3; i++) {
                 try {
-                    await e.reply(segment.image((new URL(url, BASE_URL)).toString(), true, 30));
+                    await e.reply(segment.image(await safeImageStream((new URL(url, BASE_URL)).toString()), true, 30));
                     return;
                 } catch (err) {
                     sh.logger.error("when sending image", err, "sleep 3s");
@@ -52,7 +52,9 @@ export async function giveMe20(sh: BotShell): Promise<void> {
 
         for (const url of urls) {
             try {
-                const msg = await sh.sendSelfMsg(segment.image((new URL(url, BASE_URL)).toString(), true, 30));
+                const msg = await sh.sendSelfMsg(
+                    segment.image(await safeImageStream((new URL(url, BASE_URL)).toString()), true, 30),
+                );
                 addImage(url);
                 msgs_id.push(msg.message_id);
             } catch (err) {
@@ -93,7 +95,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                         try {
                             await sh.sendGroupMsg(
                                 group_id,
-                                segment.image((new URL(url, BASE_URL)).toString(), true, 30),
+                                segment.image(await safeImageStream((new URL(url, BASE_URL)).toString()), true, 30),
                             );
                             addImage(url);
                         } catch (err: any) {
@@ -142,7 +144,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                         try {
                             await sh.sendGroupMsg(
                                 group_id,
-                                segment.image((new URL(url, BASE_URL)).toString(), true, 30),
+                                segment.image(await safeImageStream((new URL(url, BASE_URL)).toString()), true, 30),
                             );
                             addImage(url);
                         } catch (err: any) {
