@@ -1,11 +1,11 @@
 import { Level } from "level";
 import log4js, { Logger } from "log4js";
-import { Client, Forwardable, GroupMessageEvent, PrivateMessage, Sendable, User } from "oicq";
+import { Client, Forwardable, GroupMessageEvent, Sendable } from "oicq";
 import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
 import { b23Live } from "./plugins/b23live";
 import { giveMe20 } from "./plugins/giveme20";
-import { sleep, timestamp } from "./utils";
+import { sleep } from "./utils";
 
 export type GroupCommmandMatcher = (e: GroupMessageEvent) => boolean;
 export type GroupCommmandCallback = (e: GroupMessageEvent) => Promise<void>;
@@ -182,7 +182,6 @@ export class BotShell {
     private intervalJobs = new Set<number>();
     private pluginInfo: PluginInfo;
     private db: Level<string, any>;
-    private self: User;
 
     readonly logger: Logger;
 
@@ -191,7 +190,6 @@ export class BotShell {
         this.logger = logger;
         this.pluginInfo = pluginInfo;
         this.db = db;
-        this.self = bot.client.pickUser(bot.client.uin);
     }
 
     async sendGroupMsg(group_id: number, message: Sendable) {
