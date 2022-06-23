@@ -33,7 +33,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     };
 
-    sh.registerGroupCommandWithRegex("订阅(直播)? \\d+", cfg.b23live.permissions, async (e) => {
+    sh.registerGroupCommandWithRegex("订阅(直播)? \\d+", "subscribe_b23live", async (e) => {
         const live_id = parseInt(e.raw_message.split(" ")[1]);
 
         if (
@@ -86,7 +86,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommandWithRegex("退订(直播)? \\d+", cfg.b23live.permissions, async (e) => {
+    sh.registerGroupCommandWithRegex("退订(直播)? \\d+", "unsubscribe_b23live", async (e) => {
         const live_id = parseInt(e.raw_message.split(" ")[1]);
         try {
             await deleteLive({ group_id: e.group_id, live_id: live_id });
@@ -97,7 +97,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommandWithRegex("(直播|订阅)列表", "all:member", async (e) => {
+    sh.registerGroupCommandWithRegex("(直播|订阅)列表", "b23live_list", async (e) => {
         const rooms = lives.val.filter((live) => live.group_id === e.group_id);
         if (rooms.length === 0) {
             await e.reply(`暂无订阅`);
