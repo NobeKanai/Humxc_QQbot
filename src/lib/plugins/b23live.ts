@@ -145,9 +145,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
                 lives.update();
             } catch (err: any) {
                 sh.logger.error(err);
-                for (const user_id of cfg.admins) {
-                    await sh.sendPrivateMsg(user_id, `when updating b23live(${live.live_id}): ` + err.toString());
-                }
+                sh.sendAdminsMsg(`when updating b23live(${live.live_id}): ` + err.toString());
             }
         }
 

@@ -206,6 +206,12 @@ export class BotShell {
         return await this.sendPrivateMsg(this.bot.client.uin, message);
     }
 
+    async sendAdminsMsg(message: Sendable) {
+        for (const admin of cfg.admins) {
+            await this.sendPrivateMsg(admin, message);
+        }
+    }
+
     async sendForwardMsgToGroup(group_id: number, msgs: Sendable[]) {
         let message: Forwardable[] = msgs.map((val) => {
             return {
@@ -294,7 +300,14 @@ export class BotShell {
         const f = async () => {
             while (this.jobs[job_id] === 1) {
                 await sleep(ms);
-                if (this.jobs[job_id] === 1) await callback();
+                if (this.jobs[job_id] === 1) {
+                    try {
+                        await callback();
+                    } catch (err: any) {
+                        this.logger.error("in interval job: ", err);
+                        this.sendAdminsMsg(err.toString());
+                    }
+                }
             }
             this.jobs[job_id] = undefined;
         };

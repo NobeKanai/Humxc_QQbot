@@ -62,9 +62,7 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                 await sh.sendForwardMsgToGroup(group_id, msgs);
             } catch (err) {
                 sh.logger.error("forwarding message:", err);
-                for (const admin of cfg.admins) {
-                    await sh.sendPrivateMsg(admin, `转发消息失败: ${err}`);
-                }
+                sh.sendAdminsMsg(`转发消息失败: ${err}`);
             }
         }
     };
