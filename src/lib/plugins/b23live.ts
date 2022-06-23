@@ -97,7 +97,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommandWithRegex("(直播|订阅)列表", "b23live_list", async (e) => {
+    sh.registerGroupCommandWithRegex("(直播|订阅)列表", "list_b23lives", async (e) => {
         const rooms = lives.val.filter((live) => live.group_id === e.group_id);
         if (rooms.length === 0) {
             await e.reply(`暂无订阅`);
