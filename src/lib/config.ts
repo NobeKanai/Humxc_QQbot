@@ -12,7 +12,6 @@ export interface Config {
         update_interval: number;
     };
     b23live: {
-        permissions: string; // TODO: use list permissions
         update_interval: number;
     };
 }
@@ -31,7 +30,6 @@ export let cfg: Config = {
         update_interval: 300, // 5 minutes
     },
     b23live: {
-        permissions: "",
         update_interval: 300, // 5 minutes
     },
 };

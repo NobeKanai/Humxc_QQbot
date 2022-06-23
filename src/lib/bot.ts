@@ -5,7 +5,7 @@ import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
 import { b23Live } from "./plugins/b23live";
 import { giveMe20 } from "./plugins/giveme20";
-import { sleep } from "./utils";
+import { closestWord, sleep } from "./utils";
 
 export type GroupCommmandMatcher = (e: GroupMessageEvent) => boolean;
 export type GroupCommmandCallback = (e: GroupMessageEvent) => Promise<void>;
@@ -131,12 +131,39 @@ export class Bot {
         }
 
         // dynamic permissions
+        const hintCommandName = async (command_name: string, e: GroupMessageEvent): Promise<string> => {
+            const word = closestWord(
+                command_name,
+                this.groupCommandHandlers.filter((v) => v !== undefined && v.name === v.name.toLowerCase()).map((v) =>
+                    v!.name
+                ),
+            );
+            if (word === undefined) {
+                await e.reply(`Command name "${command_name}" not found`);
+                throw "Not Found";
+            }
+
+            await e.reply(`Command name "${command_name}" not found. Did you mean "${word}"?`);
+            return new Promise((resolve, reject) => {
+                const cmd_id = sh.registerGroupCommandWithRegex(/^(是|嗯|y|yes)$/i, "WAITING_FOR_SURE", async () => {
+                    resolve(word);
+                });
+                setTimeout(() => {
+                    sh.unregisterGroupCommand(cmd_id);
+                    reject("TimeOut");
+                }, 30000);
+            });
+        };
+
         sh.registerGroupCommandWithRegex("grant [0-9:a-z]+ [a-z_0-9]+", "GRANT_PERMISSION", async (e) => {
             let [, permission, command_name] = e.raw_message.split(" ");
             if (this.groupCommandHandlers.findIndex((v) => v?.name === command_name) === -1) {
-                // TODO: ED hint
-                await e.reply(`Command name "${command_name}" not found`);
-                return;
+                try {
+                    command_name = await hintCommandName(command_name, e);
+                } catch (err) {
+                    sh.logger.debug(err);
+                    return;
+                }
             }
             if (this.groupCommandPermissions!.val[command_name] === undefined) {
                 this.groupCommandPermissions!.val[command_name] = [];
@@ -152,9 +179,12 @@ export class Bot {
         sh.registerGroupCommandWithRegex("revoke [0-9:a-z]+ [a-z_0-9]+", "REVOKE_PERMISSION", async (e) => {
             let [, permission, command_name] = e.raw_message.split(" ");
             if (this.groupCommandHandlers.findIndex((v) => v?.name === command_name) === -1) {
-                // TODO: ED hint
-                await e.reply(`Command name "${command_name}" not found`);
-                return;
+                try {
+                    command_name = await hintCommandName(command_name, e);
+                } catch (err) {
+                    sh.logger.debug(err);
+                    return;
+                }
             }
             if (this.groupCommandPermissions!.val[command_name] === undefined) {
                 this.groupCommandPermissions!.val[command_name] = [];
@@ -166,7 +196,7 @@ export class Bot {
             if (idx === -1) {
                 await e.reply(`Permission "${permission}" does not exists`);
             } else {
-                this.groupCommandPermissions!.val[command_name].splice(idx);
+                this.groupCommandPermissions!.val[command_name].splice(idx, 1);
                 await this.groupCommandPermissions!.update();
                 await e.reply("Done");
             }
@@ -175,9 +205,12 @@ export class Bot {
         sh.registerGroupCommandWithRegex("permissions [a-z_0-9]+", "LIST_PERMISSIONS", async (e) => {
             let command_name = e.raw_message.split(" ")[1];
             if (this.groupCommandHandlers.findIndex((v) => v?.name === command_name) === -1) {
-                // TODO: ED hint
-                await e.reply(`Command name "${command_name}" not found`);
-                return;
+                try {
+                    command_name = await hintCommandName(command_name, e);
+                } catch (err) {
+                    sh.logger.debug(err);
+                    return;
+                }
             }
             if (this.groupCommandPermissions!.val[command_name] === undefined) {
                 this.groupCommandPermissions!.val[command_name] = [];
