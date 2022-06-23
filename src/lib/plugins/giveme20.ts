@@ -54,14 +54,15 @@ export async function giveMe20(sh: BotShell): Promise<void> {
             msgs.push(segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())));
             addImage(url); // TODO
         }
-
         msgs.push(`Total ${urls.length}`);
+
+        const forwardMsg = await sh.makeForwardMsg(msgs);
 
         for (const group_id of cfg.giveme20.groups_id) {
             try {
-                await sh.sendForwardMsgToGroup(group_id, msgs);
+                await sh.sendGroupMsg(group_id, forwardMsg);
             } catch (err) {
-                sh.logger.error("forwarding message:", err);
+                sh.logger.error("forwarding message to group:", group_id, err);
                 sh.sendAdminsMsg(`转发消息失败: ${err}`);
             }
         }

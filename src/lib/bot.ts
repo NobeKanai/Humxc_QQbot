@@ -329,7 +329,7 @@ export class BotShell {
         }
     }
 
-    async sendForwardMsgToGroup(group_id: number, msgs: Sendable[]) {
+    async makeForwardMsg(msgs: Sendable[]) {
         let message: Forwardable[] = msgs.map((val) => {
             return {
                 user_id: this.bot.client.uin,
@@ -337,7 +337,7 @@ export class BotShell {
                 nickname: this.bot.client.nickname,
             };
         });
-        return await this.sendGroupMsg(group_id, await this.bot.client.makeForwardMsg(message));
+        return await this.bot.client.makeForwardMsg(message);
     }
 
     registerGroupCommand(
