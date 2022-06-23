@@ -29,14 +29,24 @@ export const safeImageStream = async (url: string) => {
     });
 };
 
-const editDistance = (a: string, b: string): number => {
+const editDistance = (
+    a: string,
+    b: string,
+    remove_a: number = 1,
+    remove_b: number = 1,
+    replace: number = 1,
+): number => {
     const n = a.length, m = b.length;
     const dp = new Array(n + 1).fill(0).map(() => new Array(m + 1).fill(0));
     for (let i = 1; i <= n; i++) dp[i][0] = i;
     for (let i = 1; i <= m; i++) dp[0][i] = i;
     for (let i = 1; i <= n; i++) {
         for (let j = 1; j <= m; j++) {
-            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+            dp[i][j] = Math.min(
+                dp[i - 1][j] + remove_a,
+                dp[i][j - 1] + remove_b,
+                dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : replace),
+            );
         }
     }
     return dp[n][m];
@@ -47,7 +57,7 @@ export const closestWord = (word: string, candidates: string[]): string | undefi
 
     let midx: number = 0, mv = Infinity;
     for (let i = 0; i < candidates.length; i++) {
-        const ed = editDistance(word, candidates[i]);
+        const ed = editDistance(word, candidates[i], 0);
         if (ed < mv) {
             mv = ed;
             midx = i;

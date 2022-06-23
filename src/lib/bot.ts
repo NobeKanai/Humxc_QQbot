@@ -63,41 +63,49 @@ export class Bot {
         this.groupCommandPermissions = await sh.get("permissions", {});
 
         const registerDisablePlugin = async (plugin: PluginInfo) => {
-            const eid = sh.registerGroupCommand(`disable ${plugin.name}`, "", async (e) => {
-                plugin.shell!.unregisterAll();
+            const eid = sh.registerGroupCommand(
+                `disable ${plugin.name}`,
+                `DISABLE_${plugin.name.toUpperCase()}}`,
+                async (e) => {
+                    plugin.shell!.unregisterAll();
 
-                status.val[plugin.name] = false;
-                await status.update();
+                    status.val[plugin.name] = false;
+                    await status.update();
 
-                sh.unregisterGroupCommand(eid);
-                sh.sendGroupMsg(e.group_id, `Plugin [${plugin.name}] is now disabled.`);
+                    sh.unregisterGroupCommand(eid);
+                    sh.sendGroupMsg(e.group_id, `Plugin [${plugin.name}] is now disabled.`);
 
-                await registerEnablePlugin(plugin);
-            });
+                    await registerEnablePlugin(plugin);
+                },
+            );
         };
         const registerEnablePlugin = async (plugin: PluginInfo) => {
-            const eid = sh.registerGroupCommand(`enable ${plugin.name}`, "", async (e) => {
-                const logger = log4js.getLogger(plugin.name);
-                logger.level = log4js.levels.ALL;
+            const eid = sh.registerGroupCommand(
+                `enable ${plugin.name}`,
+                `ENABLE_${plugin.name.toUpperCase()}`,
+                async (e) => {
+                    const logger = log4js.getLogger(plugin.name);
+                    logger.level = log4js.levels.ALL;
 
-                const shell = new BotShell(
-                    plugin,
-                    this,
-                    logger,
-                    this.db.sublevel(plugin.name, { valueEncoding: "json" }) as any,
-                );
+                    const shell = new BotShell(
+                        plugin,
+                        this,
+                        logger,
+                        this.db.sublevel(plugin.name, { valueEncoding: "json" }) as any,
+                    );
 
-                await plugin.func(shell);
-                plugin.shell = shell;
+                    await plugin.func(shell);
+                    plugin.shell = shell;
 
-                status.val[plugin.name] = true;
-                await status.update();
+                    status.val[plugin.name] = true;
+                    await status.update();
 
-                sh.unregisterGroupCommand(eid);
-                sh.sendGroupMsg(e.group_id, `Plugin [${plugin.name}] is now enabled.`);
+                    sh.unregisterGroupCommand(eid);
+                    sh.sendGroupMsg(e.group_id, `Plugin [${plugin.name}] is now enabled.`);
 
-                await registerDisablePlugin(plugin);
-            });
+                    await registerDisablePlugin(plugin);
+                },
+            );
         };
 
         for (const plugin of plugins) {
@@ -143,15 +151,20 @@ export class Bot {
                 throw "Not Found";
             }
 
-            await e.reply(`Command name "${command_name}" not found. Did you mean "${word}"?`);
-            return new Promise((resolve, reject) => {
-                const cmd_id = sh.registerGroupCommandWithRegex(/^(是|嗯|y|yes)$/i, "WAITING_FOR_SURE", async () => {
-                    resolve(word);
-                });
-                setTimeout(() => {
-                    sh.unregisterGroupCommand(cmd_id);
-                    reject("TimeOut");
-                }, 30000);
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const cmd_id = sh.registerGroupCommandWithRegex(/^(是|嗯|y|yes)$/i, "WAITING_FOR_SURE", async () => {
+                        resolve(word);
+                    });
+                    await e.reply(`Command name "${command_name}" not found. Did you mean "${word}"?`);
+                    setTimeout(() => {
+                        sh.unregisterGroupCommand(cmd_id);
+                        reject("TimeOut");
+                    }, 30000);
+                } catch (err) {
+                    await e.reply(`Command name "${command_name}" not found`);
+                    reject(err);
+                }
             });
         };
 
@@ -366,6 +379,10 @@ export class BotShell {
         name: string,
         callback: GroupCommmandCallback,
     ): number {
+        if (this.bot.groupCommandHandlers.findIndex((v) => v?.name === name) !== -1) {
+            throw new Error(`Duplicated command name "${name}"`);
+        }
+
         const cmd_id = this.bot.firstAvalible(this.bot.groupCommandHandlers);
         this.bot.groupCommandHandlers[cmd_id] = {
             name: name,
