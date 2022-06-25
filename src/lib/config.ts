@@ -5,6 +5,7 @@ export interface Config {
     oicq: OICQConfig;
     admins: number[];
     id: number;
+    password: string;
     data_dir: string;
     giveme20: {
         base_url: string;
@@ -22,6 +23,7 @@ export let cfg: Config = {
         log_level: "info",
     },
     id: -1,
+    password: "",
     admins: [],
     data_dir: "./data",
     giveme20: {

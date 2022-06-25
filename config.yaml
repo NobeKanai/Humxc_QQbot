@@ -3,6 +3,7 @@ oicq:
   log_level: info
 
 id: ${BOT_ID}
+password: ${BOT_PASSWORD}
 admins: 
   - ${ADMIN_ID}
 data_dir: ${DATA_DIR}

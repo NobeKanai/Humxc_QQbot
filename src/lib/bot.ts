@@ -55,7 +55,7 @@ export class Bot {
             process.stdin.once("data", () => {
                 this.login();
             });
-        }).login();
+        }).login(cfg.password || undefined);
     }
 
     private async startCore(sh: BotShell): Promise<void> {
