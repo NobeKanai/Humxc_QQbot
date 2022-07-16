@@ -57,7 +57,7 @@ export const closestWord = (word: string, candidates: string[]): string | undefi
 
     let midx: number = 0, mv = Infinity;
     for (let i = 0; i < candidates.length; i++) {
-        const ed = editDistance(word, candidates[i], 0);
+        const ed = editDistance(word, candidates[i]);
         if (ed < mv) {
             mv = ed;
             midx = i;

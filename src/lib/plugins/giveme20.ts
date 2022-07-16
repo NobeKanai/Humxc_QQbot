@@ -1,5 +1,6 @@
 import { segment, Sendable } from "oicq";
 import { BotShell } from "../bot";
+import { groupCommandMatcherFromRegex } from "../command";
 import { cfg } from "../config";
 import { safeImageStream, sleep } from "../utils";
 
@@ -22,7 +23,12 @@ export async function giveMe20(sh: BotShell): Promise<void> {
     };
 
     sh.logger.info("BASE_URL is %s", BASE_URL);
-    sh.registerGroupCommandWithRegex("(来点)?(涩|色|瑟|铯)图", "setu", async (e) => {
+
+    sh.initializePermissions("色图", "更新色图");
+
+    sh.registerGroupCommand(groupCommandMatcherFromRegex("(来点)?(涩|色|瑟|铯)图"), async (e) => {
+        sh.checkPermission(e, "色图");
+
         if (setulock) return;
         setulock = true;
 
@@ -114,7 +120,9 @@ export async function giveMe20(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommandWithRegex("更新(涩|色|瑟|铯)图", "update_setu", async (e) => {
+    sh.registerGroupCommand(groupCommandMatcherFromRegex("更新(涩|色|瑟|铯)图"), async (e) => {
+        sh.checkPermission(e, "更新色图");
+
         if (schedulinglock) {
             await sh.sendGroupMsg(e.group_id, "更新中...");
             return;

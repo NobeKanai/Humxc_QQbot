@@ -1,6 +1,6 @@
 debug: true
 oicq:
-  platform: 3
+  platform: 4
   log_level: info
 
 id: ${BOT_ID}

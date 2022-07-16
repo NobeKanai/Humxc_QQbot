@@ -1,20 +1,18 @@
 import { Level } from "level";
 import log4js, { Logger } from "log4js";
 import { Client, Forwardable, GroupMessageEvent, Sendable } from "oicq";
+import {
+    GroupCommandCallback,
+    GroupCommandHandler,
+    GroupCommandMatcher,
+    groupCommandMatcherFromRegex,
+    groupCommandMatcherFromText,
+} from "./command";
 import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
 import { b23Live } from "./plugins/b23live";
 import { giveMe20 } from "./plugins/giveme20";
 import { closestWord, sleep } from "./utils";
-
-export type GroupCommmandMatcher = (e: GroupMessageEvent) => boolean;
-export type GroupCommmandCallback = (e: GroupMessageEvent) => Promise<void>;
-
-interface GroupCommandHandler {
-    name: string;
-    matcher: GroupCommmandMatcher;
-    callback: GroupCommmandCallback;
-}
 
 interface PluginInfo {
     name: string;
@@ -43,7 +41,7 @@ export class Bot {
     readonly db: Level;
 
     groupCommandHandlers: Array<GroupCommandHandler | undefined> = [];
-    private groupCommandPermissions: State<{ [key: string]: string[] }> | undefined;
+    groupCommandPermissions: State<{ [key: string]: string[] }> | undefined;
 
     constructor(client: Client, db: Level) {
         this.client = client;
@@ -59,13 +57,28 @@ export class Bot {
     }
 
     private async startCore(sh: BotShell): Promise<void> {
+        this.client.on("message.group", (e) => {
+            for (const handler of this.groupCommandHandlers) {
+                if (handler && handler.matcher(e)) {
+                    handler.callback(e).catch((err) => {
+                        switch (err) {
+                            case ErrNotAuthorized:
+                                break;
+                            default:
+                                this.logger.trace(`Unhandled error: ${err}`);
+                                sh.sendAdminsMsg(`Unhandled error: ${err}`);
+                        }
+                    });
+                }
+            }
+        });
+
         let status: State<{ [key: string]: boolean }> = await sh.get("status", {});
         this.groupCommandPermissions = await sh.get("permissions", {});
 
         const registerDisablePlugin = async (plugin: PluginInfo) => {
             const eid = sh.registerGroupCommand(
-                `disable ${plugin.name}`,
-                `DISABLE_${plugin.name.toUpperCase()}}`,
+                groupCommandMatcherFromText(`disable ${plugin.name}`),
                 async (e) => {
                     plugin.shell!.unregisterAll();
 
@@ -81,8 +94,7 @@ export class Bot {
         };
         const registerEnablePlugin = async (plugin: PluginInfo) => {
             const eid = sh.registerGroupCommand(
-                `enable ${plugin.name}`,
-                `ENABLE_${plugin.name.toUpperCase()}`,
+                groupCommandMatcherFromText(`enable ${plugin.name}`),
                 async (e) => {
                     const logger = log4js.getLogger(plugin.name);
                     logger.level = log4js.levels.ALL;
@@ -142,9 +154,7 @@ export class Bot {
         const hintCommandName = async (command_name: string, e: GroupMessageEvent): Promise<string> => {
             const word = closestWord(
                 command_name,
-                this.groupCommandHandlers.filter((v) => v !== undefined && v.name === v.name.toLowerCase()).map((v) =>
-                    v!.name
-                ),
+                Object.keys(this.groupCommandPermissions!.val),
             );
             if (word === undefined) {
                 await e.reply(`Command name "${command_name}" not found`);
@@ -153,9 +163,12 @@ export class Bot {
 
             return new Promise(async (resolve, reject) => {
                 try {
-                    const cmd_id = sh.registerGroupCommandWithRegex(/^(是|嗯|y|yes)$/i, "WAITING_FOR_SURE", async () => {
-                        resolve(word);
-                    });
+                    const cmd_id = sh.registerGroupCommand(
+                        groupCommandMatcherFromRegex(/^(是|嗯|y|yes)$/i),
+                        async () => {
+                            resolve(word);
+                        },
+                    );
                     await e.reply(`Command name "${command_name}" not found. Did you mean "${word}"?`);
                     setTimeout(() => {
                         sh.unregisterGroupCommand(cmd_id);
@@ -168,75 +181,77 @@ export class Bot {
             });
         };
 
-        sh.registerGroupCommandWithRegex("grant [0-9:a-z]+ [a-z_0-9]+", "GRANT_PERMISSION", async (e) => {
-            let [, permission, command_name] = e.raw_message.split(" ");
-            if (this.groupCommandHandlers.findIndex((v) => v?.name === command_name) === -1) {
-                try {
-                    command_name = await hintCommandName(command_name, e);
-                } catch (err) {
-                    sh.logger.debug(err);
-                    return;
+        sh.registerGroupCommand(
+            groupCommandMatcherFromRegex("grant [0-9:a-z]+ \\S+"),
+            async (e) => {
+                let [, permission, command_name] = e.raw_message.split(" ");
+                const perms = this.groupCommandPermissions!.val;
+                if (perms[command_name] === undefined) {
+                    try {
+                        command_name = await hintCommandName(command_name, e);
+                    } catch (err) {
+                        sh.logger.debug(err);
+                        return;
+                    }
                 }
-            }
-            if (this.groupCommandPermissions!.val[command_name] === undefined) {
-                this.groupCommandPermissions!.val[command_name] = [];
-            }
 
-            if (permission.indexOf(":") === -1) permission = `${e.group_id}:${permission}`;
+                if (permission.indexOf(":") === -1) permission = `${e.group_id}:${permission}`;
 
-            this.groupCommandPermissions!.val[command_name].push(permission);
-            await this.groupCommandPermissions!.update();
-            await e.reply("Done");
-        });
-
-        sh.registerGroupCommandWithRegex("revoke [0-9:a-z]+ [a-z_0-9]+", "REVOKE_PERMISSION", async (e) => {
-            let [, permission, command_name] = e.raw_message.split(" ");
-            if (this.groupCommandHandlers.findIndex((v) => v?.name === command_name) === -1) {
-                try {
-                    command_name = await hintCommandName(command_name, e);
-                } catch (err) {
-                    sh.logger.debug(err);
-                    return;
-                }
-            }
-            if (this.groupCommandPermissions!.val[command_name] === undefined) {
-                this.groupCommandPermissions!.val[command_name] = [];
-            }
-
-            if (permission.indexOf(":") === -1) permission = `${e.group_id}:${permission}`;
-
-            const idx = this.groupCommandPermissions!.val[command_name].indexOf(permission);
-            if (idx === -1) {
-                await e.reply(`Permission "${permission}" does not exists`);
-            } else {
-                this.groupCommandPermissions!.val[command_name].splice(idx, 1);
+                perms[command_name].push(permission);
                 await this.groupCommandPermissions!.update();
                 await e.reply("Done");
-            }
-        });
+            },
+        );
 
-        sh.registerGroupCommandWithRegex("permissions [a-z_0-9]+", "LIST_PERMISSIONS", async (e) => {
-            let command_name = e.raw_message.split(" ")[1];
-            if (this.groupCommandHandlers.findIndex((v) => v?.name === command_name) === -1) {
-                try {
-                    command_name = await hintCommandName(command_name, e);
-                } catch (err) {
-                    sh.logger.debug(err);
-                    return;
+        sh.registerGroupCommand(
+            groupCommandMatcherFromRegex("revoke [0-9:a-z]+ \\S+"),
+            async (e) => {
+                let [, permission, command_name] = e.raw_message.split(" ");
+                const perms = this.groupCommandPermissions!.val;
+                if (perms[command_name] === undefined) {
+                    try {
+                        command_name = await hintCommandName(command_name, e);
+                    } catch (err) {
+                        sh.logger.debug(err);
+                        return;
+                    }
                 }
-            }
-            if (this.groupCommandPermissions!.val[command_name] === undefined) {
-                this.groupCommandPermissions!.val[command_name] = [];
-            }
+                if (permission.indexOf(":") === -1) permission = `${e.group_id}:${permission}`;
 
-            await e.reply(
-                `Command: ${command_name}\n- super admin\n${
-                    this.groupCommandPermissions!.val[command_name].map((v) => {
-                        return `- ${v}`;
-                    }).join("\n")
-                }`,
-            );
-        });
+                const idx = perms[command_name].indexOf(permission);
+                if (idx === -1) {
+                    await e.reply(`Permission "${permission}" does not exists`);
+                } else {
+                    perms[command_name].splice(idx, 1);
+                    await this.groupCommandPermissions!.update();
+                    await e.reply("Done");
+                }
+            },
+        );
+
+        sh.registerGroupCommand(
+            groupCommandMatcherFromRegex("perm(ission)?s? \\S+"),
+            async (e) => {
+                let command_name = e.raw_message.split(" ")[1];
+                const perms = this.groupCommandPermissions!.val;
+                if (perms[command_name] === undefined) {
+                    try {
+                        command_name = await hintCommandName(command_name, e);
+                    } catch (err) {
+                        sh.logger.debug(err);
+                        return;
+                    }
+                }
+
+                await e.reply(
+                    `Command: ${command_name}\n- super admin\n${
+                        perms[command_name].map((v) => {
+                            return `- ${v}`;
+                        }).join("\n")
+                    }`,
+                );
+            },
+        );
 
         await status.update();
     }
@@ -248,19 +263,6 @@ export class Bot {
             });
         });
         this.logger.info("Bot is now online!");
-
-        this.client.on("message.group", (e) => {
-            for (const handler of this.groupCommandHandlers) {
-                if (
-                    handler && handler.matcher(e) &&
-                    checkPermission(this.groupCommandPermissions!.val[handler.name] || [], e)
-                ) {
-                    handler.callback(e).catch((err) => {
-                        this.logger.error(`unhandled error: ${err}`);
-                    });
-                }
-            }
-        });
 
         await this.startCore(
             new BotShell(
@@ -311,6 +313,25 @@ export class BotShell {
         this.db = db;
     }
 
+    initializePermissions(...names: string[]) {
+        for (const name of names) {
+            if (this.bot.groupCommandPermissions!.val[name] === undefined) {
+                this.bot.groupCommandPermissions!.val[name] = [];
+            }
+        }
+        this.bot.groupCommandPermissions!.update();
+    }
+
+    checkPermission(e: GroupMessageEvent, name: string) {
+        if (this.bot.groupCommandPermissions!.val[name] === undefined) {
+            this.bot.groupCommandPermissions!.val[name] = [];
+            this.bot.groupCommandPermissions!.update();
+        }
+        if (!checkPermission(this.bot.groupCommandPermissions!.val[name], e)) {
+            throw ErrNotAuthorized;
+        }
+    }
+
     async sendGroupMsg(group_id: number, message: Sendable) {
         return await this.bot.client.sendGroupMsg(group_id, message);
     }
@@ -341,51 +362,11 @@ export class BotShell {
     }
 
     registerGroupCommand(
-        cmd: string | ((text: string) => boolean),
-        name: string,
-        callback: GroupCommmandCallback,
+        matcher: GroupCommandMatcher,
+        callback: GroupCommandCallback,
     ): number {
-        let matcher: GroupCommmandMatcher;
-
-        if (typeof cmd === "string") {
-            matcher = (e) => cmd === e.raw_message;
-        } else {
-            matcher = (e) => cmd(e.raw_message);
-        }
-
-        return this.registerGroupCommandWithGroupCommandMatcher(matcher, name, callback);
-    }
-
-    registerGroupCommandWithRegex(exp: RegExp | string, name: string, callback: GroupCommmandCallback): number {
-        let _exp: RegExp;
-        if (typeof exp === "string") {
-            if (!exp.startsWith("^")) exp = "^".concat(exp);
-            if (!exp.endsWith("$")) exp = exp.concat("$");
-            _exp = new RegExp(exp);
-        } else {
-            _exp = exp;
-        }
-        return this.registerGroupCommand(
-            (text) => {
-                return _exp.test(text);
-            },
-            name,
-            callback,
-        );
-    }
-
-    registerGroupCommandWithGroupCommandMatcher(
-        matcher: GroupCommmandMatcher,
-        name: string,
-        callback: GroupCommmandCallback,
-    ): number {
-        if (this.bot.groupCommandHandlers.findIndex((v) => v?.name === name) !== -1) {
-            throw new Error(`Duplicated command name "${name}"`);
-        }
-
         const cmd_id = this.bot.firstAvalible(this.bot.groupCommandHandlers);
         this.bot.groupCommandHandlers[cmd_id] = {
-            name: name,
             matcher: matcher,
             callback: callback,
         };
@@ -466,6 +447,8 @@ export class BotShell {
         return await this.db.put(key, val);
     }
 }
+
+export const ErrNotAuthorized = new Error("Not Authorized.");
 
 /*
 * <group_id>:<user_id>

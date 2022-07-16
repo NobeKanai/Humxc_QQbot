@@ -1,5 +1,6 @@
 import { segment } from "oicq";
 import { BotShell } from "../bot";
+import { groupCommandMatcherFromRegex } from "../command";
 import { cfg } from "../config";
 
 interface Live {
@@ -33,7 +34,8 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     };
 
-    sh.registerGroupCommandWithRegex("订阅(直播)? \\d+", "subscribe_b23live", async (e) => {
+    sh.registerGroupCommand(groupCommandMatcherFromRegex("订阅(直播)? \\d+"), async (e) => {
+        sh.checkPermission(e, "订阅直播");
         const live_id = parseInt(e.raw_message.split(" ")[1]);
 
         if (
@@ -86,7 +88,8 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommandWithRegex("退订(直播)? \\d+", "unsubscribe_b23live", async (e) => {
+    sh.registerGroupCommand(groupCommandMatcherFromRegex("退订(直播)? \\d+"), async (e) => {
+        sh.checkPermission(e, "退订直播");
         const live_id = parseInt(e.raw_message.split(" ")[1]);
         try {
             await deleteLive({ group_id: e.group_id, live_id: live_id });
@@ -97,7 +100,7 @@ export async function b23Live(sh: BotShell): Promise<void> {
         }
     });
 
-    sh.registerGroupCommandWithRegex("(直播|订阅)列表", "list_b23lives", async (e) => {
+    sh.registerGroupCommand(groupCommandMatcherFromRegex("(直播|订阅)列表"), async (e) => {
         const rooms = lives.val.filter((live) => live.group_id === e.group_id);
         if (rooms.length === 0) {
             await e.reply(`暂无订阅`);
@@ -145,7 +148,15 @@ export async function b23Live(sh: BotShell): Promise<void> {
                 lives.update();
             } catch (err: any) {
                 sh.logger.error(err);
-                sh.sendAdminsMsg(`when updating b23live(${live.live_id}): ` + err.toString());
+                if (err.code === 110) {
+                    lives.val = lives.val.filter((v) => {
+                        return v.group_id !== live.group_id;
+                    });
+                    lives.update();
+                    sh.sendAdminsMsg(`[b23live] 已删除群 ${live.group_id} 的所有订阅`);
+                } else {
+                    sh.sendAdminsMsg(`when updating b23live(${live.live_id}): ` + err.toString());
+                }
             }
         }
 
