@@ -2,6 +2,7 @@ import { Config as OICQConfig } from "oicq";
 import { join } from "path";
 
 export interface Config {
+    debug: boolean;
     oicq: OICQConfig;
     admins: number[];
     id: number;
@@ -18,6 +19,7 @@ export interface Config {
 }
 
 export let cfg: Config = {
+    debug: false,
     oicq: {
         platform: 3,
         log_level: "info",

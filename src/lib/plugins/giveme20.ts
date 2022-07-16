@@ -51,9 +51,13 @@ export async function giveMe20(sh: BotShell): Promise<void> {
         let msgs: Sendable[] = [];
 
         for (const url of urls) {
-            msgs.push(segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())));
+            if (!cfg.debug) {
+                msgs.push(segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())));
+            }
             addImage(url); // TODO
         }
+        if (cfg.debug) return;
+
         msgs.push(`Total ${urls.length}`);
 
         const forwardMsg = await sh.makeForwardMsg(msgs);
@@ -83,10 +87,12 @@ export async function giveMe20(sh: BotShell): Promise<void> {
                 for (const group_id of cfg.giveme20.groups_id) {
                     for (const url of urls) {
                         try {
-                            await sh.sendGroupMsg(
-                                group_id,
-                                segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())),
-                            );
+                            if (!cfg.debug) {
+                                await sh.sendGroupMsg(
+                                    group_id,
+                                    segment.image(await safeImageStream((new URL(url, BASE_URL)).toString())),
+                                );
+                            }
                             addImage(url);
                         } catch (err: any) {
                             if (err.code === -80) {
