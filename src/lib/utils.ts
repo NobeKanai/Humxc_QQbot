@@ -9,8 +9,8 @@ export const sleep = (ms: number) => {
 
 export const timestamp = () => Math.floor(Date.now() / 1000);
 
-export const safeImageStream = async (url: string) => {
-    const reader = (await fetch(url)).body!.getReader();
+export const safeImageStream = async (url: string, init?: RequestInit) => {
+    const reader = (await fetch(url, init)).body!.getReader();
     return new Readable({
         async read() {
             try {

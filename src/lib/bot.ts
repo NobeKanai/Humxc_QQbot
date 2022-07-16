@@ -12,6 +12,7 @@ import { cfg } from "./config";
 import { pingPlugin, Plugin } from "./plugin";
 import { b23Live } from "./plugins/b23live";
 import { giveMe20 } from "./plugins/giveme20";
+import { loliconAPI } from "./plugins/loliconapi";
 import { closestWord, sleep } from "./utils";
 
 interface PluginInfo {
@@ -32,6 +33,10 @@ const plugins: PluginInfo[] = [
     {
         name: "b23live",
         func: b23Live,
+    },
+    {
+        name: "loliconapi",
+        func: loliconAPI,
     },
 ];
 
