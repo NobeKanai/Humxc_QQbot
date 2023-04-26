@@ -1,4 +1,4 @@
-import { Config as OICQConfig } from "oicq";
+import { Config as OICQConfig } from "icqq";
 import { join } from "path";
 
 export interface Config {

@@ -1,6 +1,6 @@
 import { Level } from "level";
 import log4js, { Logger } from "log4js";
-import { Client, Forwardable, GroupMessageEvent, Sendable } from "oicq";
+import { Client, Forwardable, GroupMessageEvent, Sendable } from "icqq";
 import {
     GroupCommandCallback,
     GroupCommandHandler,
@@ -54,11 +54,36 @@ export class Bot {
         this.logger = log4js.getLogger("Bot");
         this.logger.level = log4js.levels.ALL;
 
-        client.once("system.login.qrcode", function () {
-            process.stdin.once("data", () => {
-                this.login();
+        client.on("system.login.slider", (e) => {
+            console.log("输入滑块地址获取的ticket后继续。\n滑块地址:    " + e.url);
+            process.stdin.once("data", (data) => {
+                client.submitSlider(data.toString().trim());
             });
-        }).login(cfg.password || undefined);
+        });
+        client.on("system.login.qrcode", (e) => {
+            console.log("扫码完成后回车继续:    ");
+            process.stdin.once("data", () => {
+                client.login();
+            });
+        });
+        client.on("system.login.device", (e) => {
+            console.log("请选择验证方式:(1：短信验证   其他：扫码验证)");
+            process.stdin.once("data", (data) => {
+                if (data.toString().trim() === "1") {
+                    client.sendSmsCode();
+                    console.log("请输入手机收到的短信验证码:");
+                    process.stdin.once("data", (res) => {
+                        client.submitSmsCode(res.toString().trim());
+                    });
+                } else {
+                    console.log("扫码完成后回车继续：" + e.url);
+                    process.stdin.once("data", () => {
+                        client.login();
+                    });
+                }
+            });
+        });
+        client.login(cfg.id, cfg.password);
     }
 
     private async startCore(sh: BotShell): Promise<void> {
@@ -456,12 +481,12 @@ export class BotShell {
 export const ErrNotAuthorized = new Error("Not Authorized.");
 
 /*
-* <group_id>:<user_id>
-* <group_id>:owner
-* <group_id>:admin
-* <group_id>:member
-* all:member
-*/
+ * <group_id>:<user_id>
+ * <group_id>:owner
+ * <group_id>:admin
+ * <group_id>:member
+ * all:member
+ */
 function checkPermission(permissions: string[], e: GroupMessageEvent): boolean {
     if (cfg.admins.indexOf(e.sender.user_id) !== -1) return true;
 

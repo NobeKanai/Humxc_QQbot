@@ -1,4 +1,4 @@
-import { segment, Sendable } from "oicq";
+import { segment, Sendable } from "icqq";
 import { BotShell } from "../bot";
 import { groupCommandMatcherFromRegex } from "../command";
 import { cfg } from "../config";

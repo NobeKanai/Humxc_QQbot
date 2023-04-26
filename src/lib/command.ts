@@ -1,4 +1,4 @@
-import { GroupMessageEvent } from "oicq";
+import { GroupMessageEvent } from "icqq";
 
 export type GroupCommandMatcher = (e: GroupMessageEvent) => boolean;
 export type GroupCommandCallback = (e: GroupMessageEvent) => Promise<void>;

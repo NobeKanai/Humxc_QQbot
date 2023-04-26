@@ -24,9 +24,9 @@
     },
     "private": false,
     "dependencies": {
+        "icqq": "^0.3.1",
         "level": "^8.0.0",
-        "log4js": "^6.5.2",
-        "oicq": "^2.2.3",
+        "log4js": "^6.9.1",
         "yaml": "^2.1.1"
     }
 }

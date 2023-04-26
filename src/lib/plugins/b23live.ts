@@ -1,4 +1,4 @@
-import { segment } from "oicq";
+import { segment } from "icqq";
 import { BotShell } from "../bot";
 import { groupCommandMatcherFromRegex } from "../command";
 import { cfg } from "../config";
@@ -80,7 +80,9 @@ export async function b23Live(sh: BotShell): Promise<void> {
                 username: user.data.name,
             });
             await e.reply(
-                `已添加 ${user.data.name} 的直播间： ${rsp.data.title}\n当前状态：${rsp.data.live_status === 0 ? "未在直播" : "正在直播"}`,
+                `已添加 ${user.data.name} 的直播间： ${rsp.data.title}\n当前状态：${
+                    rsp.data.live_status === 0 ? "未在直播" : "正在直播"
+                }`,
             );
         } catch (err: any) {
             sh.logger.error(err);
@@ -110,7 +112,11 @@ export async function b23Live(sh: BotShell): Promise<void> {
                     if (live.group_id === e.group_id) {
                         return `主播：${live.username}
 标题：${live.title}
-状态：${live.status === false ? "未在直播" : "正在直播"}
+状态：${
+                            live.status === false
+                                ? "未在直播"
+                                : "正在直播"
+                        }
 直播间：https://live.bilibili.com/${live.live_id}
 更新于：${live.last_update.toLocaleString("en-GB", { timeZone: "Asia/Shanghai" })}`;
                     }

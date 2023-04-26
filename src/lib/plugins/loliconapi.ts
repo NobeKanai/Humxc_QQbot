@@ -3,7 +3,7 @@
  * https://api.lolicon.app/#/setu
  */
 import https from "https";
-import { segment } from "oicq";
+import { segment } from "icqq";
 import { BotShell } from "../bot";
 import { groupCommandMatcherFromRegex, groupCommandMatcherFromText } from "../command";
 import { safeImageStream, sleep } from "../utils";
