@@ -221,10 +221,10 @@
   dependencies:
     "safer-buffer" ">= 2.1.2 < 3"
 
-"icqq@^0.3.15":
-  "integrity" "sha512-Dwfz9ZKxW0JYNc/7Tl7VL1+G5bZxCCBB/bKgs7D00V9E6Qu8C0NKQy+jsuz9AhjevkCFFWbQrGAV+hzvddsECQ=="
-  "resolved" "https://registry.npmjs.org/icqq/-/icqq-0.3.15.tgz"
-  "version" "0.3.15"
+"icqq@^0.4.8":
+  "integrity" "sha512-aCOJR6TFwe9VISZwY2scPzFfNgdVMdj0aSLRd+gN96PvjiUGO/W7/iVjiBKwCietOX+D/BTma4hKBQxuhYJYKg=="
+  "resolved" "https://registry.npmjs.org/icqq/-/icqq-0.4.8.tgz"
+  "version" "0.4.8"
   dependencies:
     "axios" "^1.1.2"
     "log4js" "^6.3.0"
