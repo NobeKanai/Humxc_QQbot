@@ -1,11 +1,12 @@
 debug: true
 oicq:
-  platform: 4
+  platform: 1
   log_level: info
+  sign_api_addr: ""
 
 id: ${BOT_ID}
 password: ${BOT_PASSWORD}
-admins: 
+admins:
   - ${ADMIN_ID}
 data_dir: ${DATA_DIR}
 

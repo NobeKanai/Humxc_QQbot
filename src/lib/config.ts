@@ -23,6 +23,7 @@ export let cfg: Config = {
     oicq: {
         platform: 3,
         log_level: "info",
+        sign_api_addr: "",
     },
     id: -1,
     password: "",
