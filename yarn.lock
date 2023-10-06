@@ -221,10 +221,10 @@ iconv-lite@^0.4.4:
   dependencies:
     safer-buffer ">= 2.1.2 < 3"
 
-icqq@^0.5.3:
-  version "0.5.3"
-  resolved "https://registry.npmjs.org/icqq/-/icqq-0.5.3.tgz"
-  integrity sha512-uWSOTLGfbm17WfHgalZ/wUrMfGLZmywEZmBdscA06/NOQ7XyHG1I6FAfg3gTDRdtGUd4LOR7NPIk8X5xWVzWcQ==
+icqq@^0.5.4:
+  version "0.5.4"
+  resolved "https://registry.npmjs.org/icqq/-/icqq-0.5.4.tgz"
+  integrity sha512-Y1GYo99/QbCsxOCdRlxa5PVzfq+uYW31ZW7Uzt9MAjvozYSZZmeoRjDDP6nPOBOSkkofAOA/ArzaF8X6prhaJQ==
   dependencies:
     axios "^1.1.2"
     log4js "^6.3.0"
